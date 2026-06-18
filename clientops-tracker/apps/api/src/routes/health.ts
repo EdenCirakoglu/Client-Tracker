@@ -9,4 +9,3 @@ healthRouter.get('/', (_req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
-
