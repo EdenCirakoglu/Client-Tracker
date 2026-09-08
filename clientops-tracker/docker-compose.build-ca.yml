@@ -1,0 +1,12 @@
+# Optional for a trusted organisation/antivirus TLS proxy. Not needed on GitHub.
+# The public CA is mounted only during dependency installation, never copied to images.
+services:
+  api:
+    build:
+      secrets: [build_ca]
+  web:
+    build:
+      secrets: [build_ca]
+secrets:
+  build_ca:
+    file: ${BUILD_CA_FILE:?Set the path to your already-trusted public CA PEM}

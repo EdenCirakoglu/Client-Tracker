@@ -356,7 +356,7 @@ async function createTicket(
     });
 
   expect(response.status).toBe(201);
-  expect(response.body.data.triageSuggestion).toBeDefined();
+  if (token !== clientToken) expect(response.body.data.triageSuggestion).toBeDefined();
 
   return response;
 }

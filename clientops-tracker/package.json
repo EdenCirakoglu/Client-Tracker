@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "engines": {
-    "node": ">=20.11.0",
+    "node": ">=24.0.0 <25",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
@@ -13,11 +13,14 @@
     "dev:web": "pnpm --filter @clientops/web dev",
     "build": "pnpm -r --if-present build",
     "lint": "eslint .",
-    "typecheck": "pnpm -r --if-present typecheck",
+    "typecheck": "pnpm -r --if-present typecheck && tsc -p tsconfig.e2e.json --noEmit",
     "test": "pnpm -r --if-present test",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "test:e2e": "playwright test",
+    "format": "prettier --write . ../README.md ../CONTRIBUTING.md ../SECURITY.md ../.github",
+    "format:check": "prettier --check . ../README.md ../CONTRIBUTING.md ../SECURITY.md ../.github",
     "db:up": "docker compose up -d postgres",
+    "db:test:up": "docker compose -p clientops-tests -f docker-compose.test.yml up -d --wait",
+    "db:test:down": "docker compose -p clientops-tests -f docker-compose.test.yml down",
     "db:down": "docker compose down",
     "db:generate": "pnpm --filter @clientops/api db:generate",
     "db:migrate": "pnpm --filter @clientops/api db:migrate",
@@ -25,8 +28,11 @@
     "db:studio": "pnpm --filter @clientops/api db:studio"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.18.0",
     "@next/eslint-plugin-next": "^15.1.4",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "22.10.7",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.14.0",

@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import { pathToFileURL } from 'node:url';
 
 import { db, pool } from './client';
+import { env } from '../config/env';
+import { assertDisposableDatabase } from './safety';
 import {
   clients,
   projects,
@@ -14,7 +16,16 @@ import {
 } from './schema';
 
 export async function seedDatabase() {
+  assertDisposableDatabase(env.DATABASE_URL, process.env.DISPOSABLE_DATABASE_NAME, 'seed');
+  if (env.NODE_ENV === 'production' || process.env.SEED_RESET !== 'true') {
+    throw new Error(
+      'Seed resets require NODE_ENV=development or test and SEED_RESET=true. Never seed production.',
+    );
+  }
   const passwordHash = await bcrypt.hash('password123', 12);
+  const reference = new Date();
+  reference.setUTCHours(0, 0, 0, 0);
+  const daysAgo = (days: number) => new Date(reference.getTime() - days * 86_400_000);
 
   await db.transaction(async (tx) => {
     await tx.delete(triageSuggestions);
@@ -30,12 +41,12 @@ export async function seedDatabase() {
       .insert(clients)
       .values([
         {
-          name: 'Northstar Logistics',
+          name: 'Northstar Logistics (Demo)',
           contactEmail: 'ops@northstar.example',
           phone: '+1-555-0142',
         },
         {
-          name: 'Bluewave Health',
+          name: 'Bluewave Health (Demo)',
           contactEmail: 'support@bluewave.example',
         },
       ])
@@ -45,32 +56,39 @@ export async function seedDatabase() {
       throw new Error('Failed to seed clients.');
     }
 
-    const [admin, developer, clientUser] = await tx
+    const [admin, developer, clientUser, bluewaveUser] = await tx
       .insert(users)
       .values([
         {
-          name: 'Admin User',
+          name: 'Demo Administrator',
           email: 'admin@example.com',
           passwordHash,
           role: 'ADMIN',
         },
         {
-          name: 'Developer User',
+          name: 'Demo Developer',
           email: 'developer@example.com',
           passwordHash,
           role: 'DEVELOPER',
         },
         {
-          name: 'Client User',
+          name: 'Northstar Demo Contact',
           email: 'client@example.com',
           passwordHash,
           role: 'CLIENT',
           clientId: northstar.id,
         },
+        {
+          name: 'Bluewave Demo Contact',
+          email: 'bluewave@example.com',
+          passwordHash,
+          role: 'CLIENT',
+          clientId: bluewave.id,
+        },
       ])
       .returning();
 
-    if (!admin || !developer || !clientUser) {
+    if (!admin || !developer || !clientUser || !bluewaveUser) {
       throw new Error('Failed to seed users.');
     }
 
@@ -145,7 +163,8 @@ export async function seedDatabase() {
           category: 'BUG',
           priority: 'MEDIUM',
           status: 'RESOLVED',
-          resolvedAt: new Date('2026-06-03T14:00:00.000Z'),
+          createdAt: daysAgo(4),
+          resolvedAt: daysAgo(2),
         },
         {
           projectId: mobile.id,
@@ -156,7 +175,8 @@ export async function seedDatabase() {
           category: 'SUPPORT',
           priority: 'LOW',
           status: 'CLOSED',
-          resolvedAt: new Date('2026-05-28T11:30:00.000Z'),
+          createdAt: daysAgo(7),
+          resolvedAt: daysAgo(5),
         },
         {
           projectId: reporting.id,
@@ -171,7 +191,7 @@ export async function seedDatabase() {
         },
         {
           projectId: reporting.id,
-          createdById: clientUser.id,
+          createdById: bluewaveUser.id,
           title: 'Add PDF download for monthly report',
           description: 'Account managers need a printable version of monthly analytics reports.',
           category: 'FEATURE_REQUEST',
@@ -295,14 +315,14 @@ export async function seedDatabase() {
         version: '1.4.0',
         title: 'Operations Queue Improvements',
         notes: 'Improved queue filtering and added internal escalation indicators.',
-        releaseDate: new Date('2026-05-30T10:00:00.000Z'),
+        releaseDate: daysAgo(7),
       },
       {
         projectId: reporting.id,
         version: '2.1.0',
         title: 'Reporting Performance Update',
         notes: 'Optimized report generation and added export progress states.',
-        releaseDate: new Date('2026-06-06T10:00:00.000Z'),
+        releaseDate: daysAgo(2),
       },
     ]);
 
@@ -312,9 +332,10 @@ export async function seedDatabase() {
         suggestedCategory: 'BUG',
         suggestedPriority: 'HIGH',
         summary: 'Archived shipment records fail during lookup from global search.',
-        suggestedNextAction: 'Inspect archive query filters and reproduce against seeded data.',
+        suggestedNextAction:
+          'Inspect archive query filters and reproduce with an archived shipment.',
         confidenceScore: 91,
-        accepted: true,
+        accepted: false,
       },
       {
         ticketId: exportTicket.id,
@@ -331,9 +352,12 @@ export async function seedDatabase() {
         summary: 'Failed login spike may indicate credential stuffing or misconfigured clients.',
         suggestedNextAction: 'Review IP distribution, user agents, and recent authentication logs.',
         confidenceScore: 94,
-        accepted: true,
+        accepted: false,
       },
     ]);
+    await tx.update(clients).set({ createdAt: daysAgo(30), updatedAt: daysAgo(7) });
+    await tx.update(users).set({ createdAt: daysAgo(28), updatedAt: daysAgo(7) });
+    await tx.update(projects).set({ createdAt: daysAgo(14), updatedAt: daysAgo(7) });
   });
 }
 

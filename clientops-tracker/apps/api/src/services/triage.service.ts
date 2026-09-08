@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 import { db } from '../db/client';
 import { projects, ticketEvents, tickets, triageSuggestions } from '../db/schema';
@@ -9,6 +9,7 @@ type TicketRecord = typeof tickets.$inferSelect;
 type ProjectRecord = typeof projects.$inferSelect;
 type TicketCategory = TicketRecord['category'];
 type TicketPriority = TicketRecord['priority'];
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type TriageDraft = {
   suggestedCategory: TicketCategory;
@@ -139,34 +140,53 @@ export function evaluateTicketTriage(
 }
 
 export async function generateTriageSuggestionForTicket(user: AuthenticatedUser, ticketId: string) {
-  const ticket = await getTicketForTriage(user, ticketId);
-  return saveTriageSuggestion(ticket.id, evaluateTicketTriage(ticket));
+  await getTicketForTriage(user, ticketId);
+  return db.transaction(async (tx) => {
+    const [ticket] = await tx.select().from(tickets).where(eq(tickets.id, ticketId)).for('update');
+    if (!ticket) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    return saveTriageSuggestion(ticket.id, evaluateTicketTriage(ticket), tx);
+  });
 }
 
 export async function generateInitialTriageSuggestion(
   ticket: Pick<TicketRecord, 'id' | 'title' | 'description'>,
+  connection: Transaction | typeof db = db,
 ) {
-  return saveTriageSuggestion(ticket.id, evaluateTicketTriage(ticket));
+  return saveTriageSuggestion(ticket.id, evaluateTicketTriage(ticket), connection);
+}
+
+export async function getLatestTriageSuggestion(ticketId: string) {
+  const [suggestion] = await db
+    .select()
+    .from(triageSuggestions)
+    .where(eq(triageSuggestions.ticketId, ticketId))
+    .orderBy(desc(triageSuggestions.createdAt), desc(triageSuggestions.id))
+    .limit(1);
+  return suggestion ?? null;
 }
 
 export async function applyLatestTriageSuggestion(user: AuthenticatedUser, ticketId: string) {
-  const ticket = await getTicketForTriage(user, ticketId);
-  const [latestSuggestion] = await db
-    .select()
-    .from(triageSuggestions)
-    .where(eq(triageSuggestions.ticketId, ticket.id))
-    .orderBy(desc(triageSuggestions.createdAt))
-    .limit(1);
-
-  if (!latestSuggestion) {
-    throw new ApiError(
-      404,
-      'TRIAGE_SUGGESTION_NOT_FOUND',
-      'No triage suggestion exists for this ticket.',
-    );
-  }
-
+  await getTicketForTriage(user, ticketId);
   return db.transaction(async (tx) => {
+    // Serialize generation and application for this ticket before reading the latest suggestion.
+    const [ticket] = await tx.select().from(tickets).where(eq(tickets.id, ticketId)).for('update');
+    if (!ticket) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    const [latestSuggestion] = await tx
+      .select()
+      .from(triageSuggestions)
+      .where(eq(triageSuggestions.ticketId, ticket.id))
+      .orderBy(desc(triageSuggestions.createdAt), desc(triageSuggestions.id))
+      .limit(1);
+
+    if (!latestSuggestion) {
+      throw new ApiError(
+        404,
+        'TRIAGE_SUGGESTION_NOT_FOUND',
+        'No triage suggestion exists for this ticket.',
+      );
+    }
+
+    if (latestSuggestion.accepted) return { ticket, triageSuggestion: latestSuggestion };
     const [updatedTicket] = await tx
       .update(tickets)
       .set({
@@ -204,12 +224,17 @@ export async function applyLatestTriageSuggestion(user: AuthenticatedUser, ticke
   });
 }
 
-async function saveTriageSuggestion(ticketId: string, suggestion: TriageDraft) {
-  const [savedSuggestion] = await db
+async function saveTriageSuggestion(
+  ticketId: string,
+  suggestion: TriageDraft,
+  connection: Transaction | typeof db = db,
+) {
+  const [savedSuggestion] = await connection
     .insert(triageSuggestions)
     .values({
       ticketId,
       ...suggestion,
+      createdAt: sql`clock_timestamp()`,
     })
     .returning();
 
@@ -225,6 +250,8 @@ async function saveTriageSuggestion(ticketId: string, suggestion: TriageDraft) {
 }
 
 async function getTicketForTriage(user: AuthenticatedUser, ticketId: string) {
+  if (user.role === 'CLIENT')
+    throw new ApiError(403, 'FORBIDDEN', 'Triage is available to internal users only.');
   const [row] = await db
     .select({ ticket: tickets, project: projects })
     .from(tickets)
@@ -255,9 +282,5 @@ function summarizeTicket(ticket: Pick<TicketRecord, 'title' | 'description'>, fa
   const source = ticket.description.trim() || ticket.title.trim() || fallback;
   const compact = source.replace(/\s+/g, ' ');
 
-  if (compact.length <= 140) {
-    return compact;
-  }
-
-  return `${compact.slice(0, 137).trimEnd()}...`;
+  return `${fallback} ${compact.length <= 140 ? compact : `${compact.slice(0, 137).trimEnd()}...`}`;
 }

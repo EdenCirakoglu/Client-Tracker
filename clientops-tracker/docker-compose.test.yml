@@ -1,0 +1,17 @@
+# A separate cluster, user, port and volume from development and production.
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: clientops_test
+      POSTGRES_PASSWORD: disposable_test_password
+      POSTGRES_DB: clientops_test
+    ports:
+      - '127.0.0.1:55433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U clientops_test -d clientops_test']
+      interval: 2s
+      timeout: 5s
+      retries: 20

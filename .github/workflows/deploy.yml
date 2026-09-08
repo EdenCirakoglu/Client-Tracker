@@ -1,0 +1,77 @@
+name: Deploy to DigitalOcean
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Full 40-character commit SHA with successful CI and both GHCR images
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Require pinned SSH identity
+        env:
+          SSH_FINGERPRINT: ${{ secrets.DO_SSH_FINGERPRINT }}
+          APP_DIR: ${{ vars.DO_APP_DIR }}
+        run: |
+          test -n "$APP_DIR"
+          [[ "$SSH_FINGERPRINT" == SHA256:* ]] || { echo 'Configure DO_SSH_FINGERPRINT from the trusted VPS console.'; exit 1; }
+      - name: Validate revision and CI
+        uses: actions/github-script@v7
+        env:
+          DEPLOY_SHA: ${{ inputs.commit_sha }}
+        with:
+          script: |
+            const sha = process.env.DEPLOY_SHA;
+            if (!/^[a-f0-9]{40}$/.test(sha)) return core.setFailed('Use a full lowercase commit SHA.');
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner, repo: context.repo.repo,
+              workflow_id: 'ci.yml', head_sha: sha,
+              branch: 'main', status: 'success', event: 'push', per_page: 1
+            });
+            if (!data.workflow_runs.length) core.setFailed('This revision has no successful main CI run.');
+      - name: Deploy approved revision over verified SSH
+        uses: appleboy/ssh-action@v1.2.2
+        env:
+          APP_DIR: ${{ vars.DO_APP_DIR }}
+          DEPLOY_SHA: ${{ inputs.commit_sha }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.DO_SSH_FINGERPRINT }}
+          envs: APP_DIR,DEPLOY_SHA,GHCR_USERNAME,GHCR_TOKEN
+          command_timeout: 20m
+          script: |
+            set -eu
+            test -n "$APP_DIR"
+            test -n "$GHCR_USERNAME"
+            test -n "$GHCR_TOKEN"
+            cd "$APP_DIR"
+            test -z "$(git status --porcelain)"
+            git fetch origin main
+            git merge-base --is-ancestor "$DEPLOY_SHA" origin/main
+            git checkout --detach "$DEPLOY_SHA"
+            cd clientops-tracker
+            test -f .env.production
+            printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
+            trap 'docker logout ghcr.io >/dev/null 2>&1' EXIT
+            export IMAGE_TAG="$DEPLOY_SHA"
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml config --quiet
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml pull
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --wait postgres
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml run --rm --no-deps api node dist/migrate.js
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --no-build --wait
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --no-deps --force-recreate --wait nginx
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml ps

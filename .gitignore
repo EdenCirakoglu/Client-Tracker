@@ -1,0 +1,9 @@
+# Local handoff copies are not application source.
+/clientops-tracker-changed-files-for-gpt/
+/artifacts/
+.env
+.env.*
+!.env.example
+!.env.production.example
+!.env.test.example
+!.env.verify.example

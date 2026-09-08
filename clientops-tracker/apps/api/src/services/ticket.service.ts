@@ -1,16 +1,23 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns } from 'drizzle-orm';
 
 import { db } from '../db/client';
-import { projects, ticketComments, ticketEvents, tickets } from '../db/schema';
+import { projects, ticketComments, ticketEvents, tickets, users } from '../db/schema';
 import type { AuthenticatedUser } from '../types/auth';
 import { ApiError } from '../utils/http';
-import { generateInitialTriageSuggestion } from './triage.service';
+import { generateInitialTriageSuggestion, getLatestTriageSuggestion } from './triage.service';
 import { findDeveloperById } from './user.service';
 
 type TicketRecord = typeof tickets.$inferSelect;
 type ProjectRecord = typeof projects.$inferSelect;
 type TicketWithProject = TicketRecord & {
   project: ProjectRecord;
+  assignee: { id: string; name: string } | null;
+};
+
+const ticketSelection = {
+  ticket: tickets,
+  project: projects,
+  assignee: { id: users.id, name: users.name },
 };
 
 type CreateTicketInput = {
@@ -41,9 +48,10 @@ export async function listTicketsForUser(user: AuthenticatedUser) {
     }
 
     const rows = await db
-      .select({ ticket: tickets, project: projects })
+      .select(ticketSelection)
       .from(tickets)
       .innerJoin(projects, eq(tickets.projectId, projects.id))
+      .leftJoin(users, eq(tickets.assignedToId, users.id))
       .where(eq(projects.clientId, user.clientId))
       .orderBy(desc(tickets.createdAt));
 
@@ -51,9 +59,10 @@ export async function listTicketsForUser(user: AuthenticatedUser) {
   }
 
   const rows = await db
-    .select({ ticket: tickets, project: projects })
+    .select(ticketSelection)
     .from(tickets)
     .innerJoin(projects, eq(tickets.projectId, projects.id))
+    .leftJoin(users, eq(tickets.assignedToId, users.id))
     .orderBy(desc(tickets.createdAt));
 
   return rows.map(toTicketWithProject);
@@ -66,7 +75,16 @@ export async function getTicketForUser(user: AuthenticatedUser, ticketId: string
     throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
   }
 
-  return row;
+  if (user.role === 'CLIENT') return row;
+  const [triageSuggestion, events] = await Promise.all([
+    getLatestTriageSuggestion(ticketId),
+    db
+      .select()
+      .from(ticketEvents)
+      .where(eq(ticketEvents.ticketId, ticketId))
+      .orderBy(ticketEvents.createdAt, ticketEvents.id),
+  ]);
+  return { ...row, triageSuggestion, events };
 }
 
 export async function createTicketForUser(user: AuthenticatedUser, data: CreateTicketInput) {
@@ -84,38 +102,36 @@ export async function createTicketForUser(user: AuthenticatedUser, data: CreateT
     await assertDeveloperExists(data.assignedToId);
   }
 
-  const [ticket] = await db
-    .insert(tickets)
-    .values({
-      projectId: data.projectId,
-      createdById: user.id,
-      assignedToId: data.assignedToId ?? null,
-      title: data.title,
-      description: data.description,
-      category: data.category,
-      priority: data.priority ?? 'MEDIUM',
-      status: 'OPEN',
-    })
-    .returning();
+  const createdId = await db.transaction(async (tx) => {
+    const [ticket] = await tx
+      .insert(tickets)
+      .values({
+        projectId: data.projectId,
+        createdById: user.id,
+        assignedToId: data.assignedToId ?? null,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        priority: data.priority ?? 'MEDIUM',
+        status: 'OPEN',
+      })
+      .returning();
 
-  if (!ticket) {
-    throw new ApiError(500, 'TICKET_CREATE_FAILED', 'Ticket could not be created.');
-  }
+    if (!ticket) {
+      throw new ApiError(500, 'TICKET_CREATE_FAILED', 'Ticket could not be created.');
+    }
 
-  await db.insert(ticketEvents).values({
-    ticketId: ticket.id,
-    actorId: user.id,
-    eventType: 'TICKET_CREATED',
-    toValue: 'OPEN',
+    await tx.insert(ticketEvents).values({
+      ticketId: ticket.id,
+      actorId: user.id,
+      eventType: 'TICKET_CREATED',
+      toValue: 'OPEN',
+    });
+
+    await generateInitialTriageSuggestion(ticket, tx);
+    return ticket.id;
   });
-
-  const triageSuggestion = await generateInitialTriageSuggestion(ticket);
-  const createdTicket = await getTicketForUser(user, ticket.id);
-
-  return {
-    ...createdTicket,
-    triageSuggestion,
-  };
+  return getTicketForUser(user, createdId);
 }
 
 export async function updateTicketForUser(
@@ -186,19 +202,16 @@ export async function updateTicketForUser(
 
 export async function listTicketCommentsForUser(user: AuthenticatedUser, ticketId: string) {
   await getTicketForUser(user, ticketId);
-
-  if (user.role === 'CLIENT') {
-    return db
-      .select()
-      .from(ticketComments)
-      .where(and(eq(ticketComments.ticketId, ticketId), eq(ticketComments.isInternal, false)))
-      .orderBy(ticketComments.createdAt);
-  }
-
   return db
-    .select()
+    .select({ ...getTableColumns(ticketComments), author: { id: users.id, name: users.name } })
     .from(ticketComments)
-    .where(eq(ticketComments.ticketId, ticketId))
+    .innerJoin(users, eq(ticketComments.authorId, users.id))
+    .where(
+      and(
+        eq(ticketComments.ticketId, ticketId),
+        user.role === 'CLIENT' ? eq(ticketComments.isInternal, false) : undefined,
+      ),
+    )
     .orderBy(ticketComments.createdAt);
 }
 
@@ -234,14 +247,15 @@ export async function createTicketCommentForUser(
     toValue: comment.isInternal ? 'INTERNAL' : 'PUBLIC',
   });
 
-  return comment;
+  return { ...comment, author: { id: user.id, name: user.name } };
 }
 
 async function findTicketWithProject(ticketId: string) {
   const [row] = await db
-    .select({ ticket: tickets, project: projects })
+    .select(ticketSelection)
     .from(tickets)
     .innerJoin(projects, eq(tickets.projectId, projects.id))
+    .leftJoin(users, eq(tickets.assignedToId, users.id))
     .where(eq(tickets.id, ticketId))
     .limit(1);
 
@@ -256,10 +270,12 @@ async function findProject(projectId: string) {
 function toTicketWithProject(row: {
   ticket: TicketRecord;
   project: ProjectRecord;
+  assignee: { id: string; name: string } | null;
 }): TicketWithProject {
   return {
     ...row.ticket,
     project: row.project,
+    assignee: row.assignee,
   };
 }
 

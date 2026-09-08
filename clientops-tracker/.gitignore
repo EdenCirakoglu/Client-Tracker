@@ -7,12 +7,17 @@ dist/
 .next/
 out/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # Environment
 .env
 .env.*
 !.env.example
+!.env.production.example
+!.env.test.example
+!.env.verify.example
 
 # Logs
 *.log
@@ -26,4 +31,3 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
-

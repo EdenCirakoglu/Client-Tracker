@@ -12,7 +12,9 @@ export async function getDashboardMetrics(user: AuthenticatedUser) {
   const scopedTickets = await listTicketsForUser(user);
   const now = new Date();
   const firstDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const resolvedTickets = scopedTickets.filter((ticket) => ticket.resolvedAt);
+  const resolvedTickets = scopedTickets.filter(
+    (ticket) => ticket.resolvedAt && ticket.resolvedAt >= ticket.createdAt,
+  );
 
   const averageResolutionTimeHours =
     resolvedTickets.length === 0
@@ -32,30 +34,33 @@ export async function getDashboardMetrics(user: AuthenticatedUser) {
           ).toFixed(1),
         );
 
-  const developers = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-    })
-    .from(users)
-    .where(eq(users.role, 'DEVELOPER'));
+  const developers =
+    user.role === 'CLIENT'
+      ? []
+      : await db
+          .select({
+            id: users.id,
+            name: users.name,
+            email: users.email,
+          })
+          .from(users)
+          .where(eq(users.role, 'DEVELOPER'));
 
-  const developerWorkload = developers
-    .map((developer) => ({
-      developerId: developer.id,
-      name: developer.name,
-      email: developer.email,
-      openTickets: scopedTickets.filter(
-        (ticket) =>
-          ticket.assignedToId === developer.id && !['RESOLVED', 'CLOSED'].includes(ticket.status),
-      ).length,
-    }))
-    .filter((workload) => user.role !== 'CLIENT' || workload.openTickets > 0);
+  const developerWorkload = developers.map((developer) => ({
+    developerId: developer.id,
+    name: developer.name,
+    email: developer.email,
+    openTickets: scopedTickets.filter(
+      (ticket) =>
+        ticket.assignedToId === developer.id && !['RESOLVED', 'CLOSED'].includes(ticket.status),
+    ).length,
+  }));
 
   return {
     totalOpenTickets: scopedTickets.filter((ticket) => ticket.status === 'OPEN').length,
-    criticalTickets: scopedTickets.filter((ticket) => ticket.priority === 'CRITICAL').length,
+    criticalTickets: scopedTickets.filter(
+      (ticket) => ticket.priority === 'CRITICAL' && !['RESOLVED', 'CLOSED'].includes(ticket.status),
+    ).length,
     ticketsWaitingForClient: scopedTickets.filter(
       (ticket) => ticket.status === 'WAITING_FOR_CLIENT',
     ).length,
@@ -71,6 +76,6 @@ export async function getDashboardMetrics(user: AuthenticatedUser) {
       priority,
       count: scopedTickets.filter((ticket) => ticket.priority === priority).length,
     })),
-    developerWorkload,
+    ...(user.role !== 'CLIENT' ? { developerWorkload } : {}),
   };
 }

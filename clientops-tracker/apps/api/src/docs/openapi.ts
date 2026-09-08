@@ -7,8 +7,8 @@ export const openApiDocument = {
   },
   servers: [
     {
-      url: 'http://localhost:8080',
-      description: 'Local API',
+      url: '/',
+      description: 'Current origin, direct API or Nginx proxy',
     },
   ],
   components: {
@@ -75,6 +75,44 @@ export const openApiDocument = {
           priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] },
         },
       },
+      ClientUpdate: {
+        type: 'object',
+        minProperties: 1,
+        properties: {
+          name: { type: 'string', minLength: 1, maxLength: 160 },
+          contactEmail: { type: 'string', format: 'email' },
+          phone: { type: 'string', nullable: true },
+        },
+      },
+      ProjectUpdate: {
+        type: 'object',
+        minProperties: 1,
+        properties: {
+          name: { type: 'string', minLength: 1, maxLength: 160 },
+          description: { type: 'string', nullable: true },
+          status: { type: 'string', enum: ['ACTIVE', 'PAUSED', 'COMPLETED'] },
+        },
+      },
+      TicketUpdate: {
+        type: 'object',
+        minProperties: 1,
+        properties: {
+          title: { type: 'string', minLength: 1, maxLength: 220 },
+          description: { type: 'string', minLength: 1 },
+          assignedToId: { type: 'string', format: 'uuid', nullable: true },
+          category: {
+            type: 'string',
+            enum: ['BUG', 'FEATURE_REQUEST', 'SUPPORT', 'SECURITY', 'PERFORMANCE'],
+          },
+          priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] },
+          status: {
+            type: 'string',
+            enum: ['OPEN', 'IN_PROGRESS', 'WAITING_FOR_CLIENT', 'RESOLVED', 'CLOSED'],
+          },
+          resolvedAt: { type: 'string', format: 'date-time', nullable: true },
+        },
+        example: { status: 'IN_PROGRESS' },
+      },
       CommentInput: {
         type: 'object',
         required: ['body'],
@@ -118,7 +156,14 @@ export const openApiDocument = {
             example:
               'Escalate to internal technical team, review logs, and assess potential data exposure.',
           },
-          confidenceScore: { type: 'integer', minimum: 0, maximum: 100, example: 95 },
+          confidenceScore: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+            example: 95,
+            description:
+              'Fixed heuristic rule-match score, not a calibrated probability. No live LLM is used.',
+          },
           accepted: { type: 'boolean', example: false },
           createdAt: { type: 'string', format: 'date-time' },
         },
@@ -141,9 +186,19 @@ export const openApiDocument = {
         },
       },
     },
+    '/api/health': {
+      get: {
+        summary: 'API liveness through the Nginx origin',
+        responses: {
+          '200': {
+            description: 'API process is responding; this is not a database readiness probe.',
+          },
+        },
+      },
+    },
     '/api/auth/login': {
       post: {
-        summary: 'Log in with seeded portal credentials',
+        summary: 'Log in with portal credentials (examples are local demo only)',
         requestBody: {
           required: true,
           content: {
@@ -178,11 +233,13 @@ export const openApiDocument = {
       ),
     },
     '/api/tickets/{id}/comments': {
-      get: securedOperation('List ticket comments'),
-      post: securedOperation('Create ticket comment', '#/components/schemas/CommentInput'),
+      get: securedOperation('List ticket comments', undefined, true),
+      post: securedOperation('Create ticket comment', '#/components/schemas/CommentInput', true),
     },
     '/api/releases': collectionPath('Releases', '#/components/schemas/ReleaseInput', true),
-    '/api/dashboard/metrics': authPath('Get dashboard metrics'),
+    '/api/dashboard/metrics': authPath(
+      'Get scoped dashboard metrics; developerWorkload is omitted entirely for CLIENT users',
+    ),
   },
 };
 
@@ -199,7 +256,13 @@ function itemPath(label: string, canPatch = true) {
   return {
     get: securedOperation(`Get ${label.toLowerCase()} by id`, undefined, true),
     ...(canPatch
-      ? { patch: securedOperation(`Update ${label.toLowerCase()}`, undefined, true) }
+      ? {
+          patch: securedOperation(
+            `Update ${label.toLowerCase()}`,
+            `#/components/schemas/${label}Update`,
+            true,
+          ),
+        }
       : {}),
   };
 }
@@ -241,7 +304,8 @@ function securedOperation(summary: string, requestSchema?: string, hasIdParam = 
     responses: {
       '200': { description: 'Successful response' },
       '201': { description: 'Created' },
-      '400': { description: 'Validation error', content: jsonErrorContent() },
+      '400': { description: 'Invalid reference', content: jsonErrorContent() },
+      '422': { description: 'Validation error', content: jsonErrorContent() },
       '401': { description: 'Authentication required', content: jsonErrorContent() },
       '403': { description: 'Forbidden', content: jsonErrorContent() },
       '404': { description: 'Not found', content: jsonErrorContent() },
@@ -253,7 +317,7 @@ function triageOperation(summary: string, responseSchema: string) {
   return {
     summary,
     description:
-      'Uses deterministic transparent rules today. The service boundary is structured so an LLM-backed provider can be added later.',
+      'ADMIN and DEVELOPER only. Deterministic rules, not a live LLM. Ticket detail loads the saved suggestion for internal users only. Application is transactional and idempotent: repeating an accepted suggestion does not change the ticket or create another event.',
     security: [{ bearerAuth: [] }],
     parameters: [
       {
@@ -280,6 +344,18 @@ function triageOperation(summary: string, responseSchema: string) {
 }
 
 function successContent(responseSchema: string) {
+  const suggestion = {
+    id: '0e1fbc32-3267-4e59-ae61-ea3cf6d16325',
+    ticketId: '7f814be7-bd6e-4393-9990-f9e572dbfd53',
+    suggestedCategory: 'SECURITY',
+    suggestedPriority: 'CRITICAL',
+    summary: 'Security keywords matched. Potential incident requiring internal review.',
+    suggestedNextAction:
+      'Escalate to internal technical team, review logs, and assess potential data exposure.',
+    confidenceScore: 95,
+    accepted: false,
+    createdAt: '2026-06-12T12:00:00.000Z',
+  };
   return {
     'application/json': {
       schema: {
@@ -291,18 +367,12 @@ function successContent(responseSchema: string) {
       examples: {
         securitySuggestion: {
           value: {
-            data: {
-              id: '0e1fbc32-3267-4e59-ae61-ea3cf6d16325',
-              ticketId: '7f814be7-bd6e-4393-9990-f9e572dbfd53',
-              suggestedCategory: 'SECURITY',
-              suggestedPriority: 'CRITICAL',
-              summary: 'Potential security incident requiring internal review.',
-              suggestedNextAction:
-                'Escalate to internal technical team, review logs, and assess potential data exposure.',
-              confidenceScore: 95,
-              accepted: false,
-              createdAt: '2026-06-12T12:00:00.000Z',
-            },
+            data: responseSchema.endsWith('/ApplyTriageSuggestionResponse')
+              ? {
+                  ticket: { id: suggestion.ticketId, category: 'SECURITY', priority: 'CRITICAL' },
+                  triageSuggestion: { ...suggestion, accepted: true },
+                }
+              : suggestion,
           },
         },
       },
