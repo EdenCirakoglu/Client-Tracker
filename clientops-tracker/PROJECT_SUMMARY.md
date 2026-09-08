@@ -27,9 +27,9 @@ The web application calls the Express API with bearer tokens. The API authentica
 
 ## Testing and CI
 
-Local release checks: 33 API tests and four browser scenarios passed, including two-client privacy, persisted triage, keyboard navigation and session handling. The full PostgreSQL/API/web/Nginx stack ran locally; a content fingerprint and API readback verified persistence after restart. Eighteen fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). These are local results, not a claim of hosted CI or public deployment.
+Local release checks: 34 API tests and four browser scenarios passed, including two-client privacy, persisted triage, ticket update feedback, keyboard navigation and session handling. The full PostgreSQL/API/web/Nginx stack ran locally; content fingerprints verify isolation and persistence after restart. Twenty-one fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). These are local results, not a claim of public deployment.
 
-The repository provides root commands for linting, typechecking, testing, building, formatting checks, database migrations, and Compose validation. GitHub-discoverable root workflows are configured to run these checks on pull requests and pushes to `main`. Hosted CI is pending until an actual run succeeds; see [local verification evidence](docs/RELEASE_READINESS.md). Tests use a separately designated disposable database, with two-client privacy regression tests and transactional/idempotent triage coverage.
+The pnpm workspace provides commands for linting, typechecking, testing, building, formatting, migrations and Compose validation. GitHub-discoverable root workflows check out the exact PR head and run these checks plus real container/browser scenarios. See [revision-specific verification evidence](docs/RELEASE_READINESS.md) for hosted results and [browser reproduction](docs/BROWSER_TESTS.md) for HTML/JSON reports. Tests use a separately designated disposable database, with two-client privacy regression tests and transactional/idempotent triage coverage.
 
 ## Deployment Readiness
 

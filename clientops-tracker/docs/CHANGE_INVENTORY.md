@@ -1,8 +1,21 @@
-# Working-Tree Change Inventory
+# Review Change Inventory
 
 Compared with public main `611ca06184e33646ce521e511acf31afacf1cd98` on 2026-09-07.
 This includes the **pre-existing uncommitted Phase 5-7 work** as well as the release-readiness pass; it is not a claim that every file was newly authored in this pass.
-No changes have been staged, committed or pushed. `New` means untracked relative to main. Local secrets, build outputs, browser profiles and the sibling handoff copy are excluded.
+The complete baseline was preserved in checkpoint `d79da2c` and pushed on
+`review/release-readiness-2026-09-08` for draft PR #1. `New` means added relative
+to main, not currently untracked. Local secrets, build outputs, browser profiles
+and the sibling handoff copy are excluded.
+
+The subsequent focused pass changes the existing dashboard/ticket pages for
+metric labels, mobile badges and save feedback; extends the metric regression and
+four browser scenarios; adds revision-tagged HTML/JSON evidence and fresh-only CI
+artifacts. Additional paths are `docs/BROWSER_TESTS.md`,
+`docs/assets/screenshots/ticket-update-saved.png`, `ticket-update-error.png` and
+`mobile-tickets-scrolled.png` in that same screenshots directory. The existing
+ESLint config now excludes generated browser reports, just as it excludes builds.
+The shared Button uses colour-only transitions after hosted CI reproduced a
+temporary contrast failure while the disabled opacity animated on an enabled control.
 
 See [release evidence](RELEASE_READINESS.md) for confirmed defects and executed checks.
 
