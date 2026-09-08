@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-const screenshotDir = resolve('docs/assets/screenshots');
+const screenshotDir = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'docs/assets/screenshots');
 
 async function capture(page: Page, name: string) {
   await mkdir(screenshotDir, { recursive: true });
@@ -214,7 +214,9 @@ test('real administrator, developer and client workflows with persisted advisory
       });
     });
     await page.getByLabel('Priority', { exact: true }).selectOption('LOW');
-    await expect(page.getByRole('alert')).toContainText('Changes were not saved.');
+    await expect(page.getByRole('main').getByRole('alert')).toContainText(
+      'Changes were not saved.',
+    );
     await expect(page.getByLabel('Priority', { exact: true })).toHaveValue('HIGH');
     await capture(page, 'ticket-update-error');
     await accessible(page);

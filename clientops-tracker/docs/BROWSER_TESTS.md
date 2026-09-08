@@ -69,6 +69,8 @@ first scenario creates one fictional ticket and comments.
 - CI uploads reports and screenshots as `browser-evidence-<full-head-sha>` even
   when a scenario fails. Download from the linked Actions run; unzip and open the
   HTML report. Generated reports stay ignored in Git.
+  CI sets `E2E_SCREENSHOT_DIR=test-results/screenshots` so artifacts contain only
+  that run's captures, never old screenshots from the repository.
 
 See [RELEASE_READINESS.md](RELEASE_READINESS.md) for revisions actually tested and
 hosted run links. No report here implies publication or public deployment. Axe
