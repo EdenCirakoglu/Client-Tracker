@@ -92,6 +92,10 @@ test('real administrator, developer and client workflows with persisted advisory
   await page.getByRole('textbox', { name: 'Search tickets' }).fill('');
   await page.getByRole('link', { name: 'Create ticket', exact: true }).click();
   await expect(page.getByLabel('Project', { exact: true }).locator('option')).not.toHaveCount(1);
+  const createButton = page.getByRole('button', { name: 'Create ticket', exact: true });
+  await expect(createButton).toBeEnabled();
+  // Enabled controls must not retain the disabled opacity while a transition finishes.
+  expect(await createButton.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
   await accessible(page);
   await page.getByLabel('Project', { exact: true }).selectOption({ label: 'Operations Portal' });
   await page.getByLabel('Title', { exact: true }).fill('Dispatch dashboard loading delays');
