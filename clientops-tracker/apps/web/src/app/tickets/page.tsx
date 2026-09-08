@@ -135,6 +135,13 @@ export default function TicketsPage() {
                   >
                     {ticket.title}
                   </Link>
+                  <div
+                    className="mt-2 flex flex-wrap gap-2 lg:hidden"
+                    aria-label="Ticket status and priority"
+                  >
+                    <Badge value={ticket.status} />
+                    <Badge value={ticket.priority} />
+                  </div>
                   <p className="mt-1 line-clamp-2 text-xs text-muted">{ticket.description}</p>
                 </Td>
                 <Td>{ticket.project?.name ?? 'Not available'}</Td>

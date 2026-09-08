@@ -7,6 +7,9 @@ const screenshotDir = resolve('docs/assets/screenshots');
 
 async function capture(page: Page, name: string) {
   await mkdir(screenshotDir, { recursive: true });
+  // Full-page captures must start at the document origin so sticky chrome isn't stitched mid-page.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
   await page.screenshot({
     path: resolve(screenshotDir, `${name}.png`),
     fullPage: name !== 'mobile-navigation',
@@ -135,6 +138,25 @@ test('real administrator, developer and client workflows with persisted advisory
     }),
   ).toBeVisible();
   await capture(page, 'ticket-detail');
+  await test.step('ticket header stays at the viewport top while scrolling', async () => {
+    for (const y of [0, 300, 700]) {
+      await page.evaluate((offset) => window.scrollTo(0, offset), y);
+      await expect
+        .poll(() => page.locator('header').evaluate((el) => el.getBoundingClientRect().top))
+        .toBe(0);
+      await test.info().attach(`ticket-scroll-${y}`, {
+        body: await page.screenshot({ animations: 'disabled' }),
+        contentType: 'image/png',
+      });
+    }
+    await page.getByLabel('Status', { exact: true }).scrollIntoViewIfNeeded();
+    expect(
+      await page.getByLabel('Status', { exact: true }).evaluate((el) => {
+        const rect = el.getBoundingClientRect();
+        return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === el;
+      }),
+    ).toBe(true);
+  });
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
 
   await login(page, 'Developer');
@@ -146,10 +168,60 @@ test('real administrator, developer and client workflows with persisted advisory
   await accessible(page);
   await page.goto(ticketURL);
   await expect(page.getByLabel('Status', { exact: true })).toBeVisible();
-  await page.getByLabel('Status', { exact: true }).selectOption('IN_PROGRESS');
-  await expect(page.getByLabel('Status', { exact: true })).toBeEnabled();
-  await page.reload();
-  await expect(page.getByLabel('Status', { exact: true })).toHaveValue('IN_PROGRESS');
+  await test.step('dropdowns report saving, success and failure and survive refresh', async () => {
+    let releaseRequest!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      releaseRequest = resolve;
+    });
+    const endpoint = `**/api/tickets/${ticketId}`;
+    await page.route(endpoint, async (route) => {
+      if (route.request().method() === 'PATCH') await gate;
+      await route.continue();
+    });
+    try {
+      await page.getByLabel('Status', { exact: true }).selectOption('IN_PROGRESS');
+      await expect(page.getByRole('status')).toHaveText('Saving changes...');
+      await expect(page.getByLabel('Status', { exact: true })).toBeDisabled();
+    } finally {
+      releaseRequest();
+    }
+    await expect(page.getByRole('status')).toHaveText('Changes saved.');
+    await page.unroute(endpoint);
+    for (const [label, value] of [
+      ['Priority', 'HIGH'],
+      ['Category', 'BUG'],
+    ] as const) {
+      await page.getByLabel(label, { exact: true }).selectOption(value);
+      await expect(page.getByRole('status')).toHaveText('Changes saved.');
+      await expect(page.getByLabel(label, { exact: true })).toHaveValue(value);
+    }
+    await capture(page, 'ticket-update-saved');
+    await page.reload();
+    await expect(page.getByLabel('Status', { exact: true })).toHaveValue('IN_PROGRESS');
+    await expect(page.getByLabel('Priority', { exact: true })).toHaveValue('HIGH');
+    await expect(page.getByLabel('Category', { exact: true })).toHaveValue('BUG');
+    // Fault injection only: successful mutations above use the real API and database.
+    await page.route(endpoint, async (route) => {
+      if (route.request().method() !== 'PATCH') return route.continue();
+      await route.fulfill({
+        status: 503,
+        json: {
+          error: {
+            code: 'UNAVAILABLE',
+            message: 'Service temporarily unavailable. Please try again.',
+          },
+        },
+      });
+    });
+    await page.getByLabel('Priority', { exact: true }).selectOption('LOW');
+    await expect(page.getByRole('alert')).toContainText('Changes were not saved.');
+    await expect(page.getByLabel('Priority', { exact: true })).toHaveValue('HIGH');
+    await capture(page, 'ticket-update-error');
+    await accessible(page);
+    await page.unroute(endpoint);
+    await page.reload();
+    await expect(page.getByLabel('Priority', { exact: true })).toHaveValue('HIGH');
+  });
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
 
   await login(page, 'Client');
@@ -204,6 +276,24 @@ test('real administrator, developer and client workflows with persisted advisory
   await expect(page.getByRole('table')).toBeVisible();
   await accessible(page);
   await capture(page, 'mobile-tickets');
+  await test.step('mobile tickets expose status and priority and scroll with a keyboard', async () => {
+    const region = page.getByRole('region', { name: 'Records table' });
+    const summary = page.getByLabel('Ticket status and priority').first();
+    await expect(summary).toBeInViewport();
+    await expect(summary).toContainText('In Progress');
+    await expect(summary).toContainText('High');
+    await region.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => region.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    await region.evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+    });
+    await expect(page.getByRole('columnheader', { name: 'Created', exact: true })).toBeInViewport();
+    await capture(page, 'mobile-tickets-scrolled');
+    await region.evaluate((el) => {
+      el.scrollLeft = 0;
+    });
+  });
   await page.goto('/dashboard');
   await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
   await accessible(page);

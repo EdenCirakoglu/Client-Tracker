@@ -40,6 +40,8 @@ export default function TicketDetailPage() {
   const [isInternal, setIsInternal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [updateMessage, setUpdateMessage] = useState('');
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   const internalUser = user?.role === 'ADMIN' || user?.role === 'DEVELOPER';
 
@@ -51,6 +53,8 @@ export default function TicketDetailPage() {
   async function loadTicket() {
     setLoading(true);
     setError(null);
+    setUpdateMessage('');
+    setUpdateError(null);
 
     try {
       const [ticketResult, commentsResult, clientsResult] = await Promise.all([
@@ -77,13 +81,19 @@ export default function TicketDetailPage() {
   async function updateTicket(body: Partial<Pick<Ticket, 'status' | 'priority' | 'category'>>) {
     setSaving(true);
     setActionError(null);
+    setUpdateError(null);
+    setUpdateMessage('Saving changes...');
 
     try {
       const updated = await api.updateTicket(ticketId, body);
       setTicket(updated);
       setTriageSuggestion(updated.triageSuggestion ?? null);
+      setUpdateMessage('Changes saved.');
     } catch (caught) {
-      setActionError(caught instanceof Error ? caught.message : 'Ticket could not be updated.');
+      setUpdateMessage('');
+      setUpdateError(
+        `Changes were not saved. ${caught instanceof Error ? caught.message : 'Please try again.'}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -243,6 +253,16 @@ export default function TicketDetailPage() {
                       ))}
                     </Select>
                   </div>
+                </div>
+                <div className="min-h-10 px-5 pb-4 text-sm">
+                  <p role="status" aria-live="polite" className="text-brand-700">
+                    {updateMessage}
+                  </p>
+                  {updateError ? (
+                    <p role="alert" className="text-red-800">
+                      {updateError}
+                    </p>
+                  ) : null}
                 </div>
               </Card>
             ) : null}

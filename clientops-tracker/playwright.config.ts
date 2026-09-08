@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 
 const baseURL = process.env.VERIFY_URL ?? 'http://localhost:8180';
 if (
@@ -15,7 +16,18 @@ export default defineConfig({
   workers: 1,
   timeout: 180_000,
   expect: { timeout: 15_000 },
-  reporter: 'list',
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['json', { outputFile: 'test-results/browser-results.json' }],
+  ],
+  metadata: {
+    revision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+    workingTreeDirty:
+      execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0,
+    target: baseURL,
+    browser: process.env.BROWSER_CHANNEL ?? 'chromium',
+  },
   use: {
     actionTimeout: 15_000,
     baseURL,

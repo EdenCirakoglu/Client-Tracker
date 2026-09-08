@@ -18,6 +18,9 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const internalUser = user?.role !== 'CLIENT';
   const { data, error, loading, reload } = useApiData(() => api.dashboardMetrics(), []);
+  const unresolved = data?.ticketsByStatus
+    .filter((item) => !['RESOLVED', 'CLOSED'].includes(item.status))
+    .reduce((total, item) => total + item.count, 0);
 
   return (
     <ProtectedPage>
@@ -52,6 +55,9 @@ export default function DashboardPage() {
                     <Icon className="h-5 w-5 text-brand-700" />
                   </div>
                   <p className="mt-4 break-words text-2xl font-semibold text-ink">{metric.value}</p>
+                  {index === 0 ? (
+                    <p className="mt-2 text-xs text-muted">{unresolved} unresolved in total</p>
+                  ) : null}
                 </Card>
               );
             })}
@@ -88,12 +94,15 @@ export default function DashboardPage() {
 
             {internalUser && data.developerWorkload ? (
               <Card>
-                <CardHeader title="Developer workload" />
+                <CardHeader
+                  title="Developer workload"
+                  description="Assigned tickets awaiting resolution"
+                />
                 <div className="divide-y divide-border">
                   {data.developerWorkload.length > 0 ? (
                     data.developerWorkload.map((developer) => (
                       <div
-                        className="flex items-center justify-between px-5 py-4"
+                        className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
                         key={developer.developerId}
                       >
                         <div>
@@ -101,7 +110,7 @@ export default function DashboardPage() {
                           <p className="text-xs text-muted">{developer.email}</p>
                         </div>
                         <span className="rounded-md bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-700">
-                          {developer.openTickets} open
+                          {developer.openTickets} unresolved
                         </span>
                       </div>
                     ))

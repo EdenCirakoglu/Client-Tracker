@@ -116,6 +116,46 @@ describe('Release permission and persistence boundaries', () => {
     }
   });
 
+  it('distinguishes Open tickets from unresolved critical tickets and assigned workload', async () => {
+    for (const token of [admin, developer, northstar, bluewave]) {
+      const tickets = (await get('/api/tickets', token)).body.data as {
+        status: string;
+        priority: string;
+        assignedToId: string | null;
+      }[];
+      const metrics = (await get('/api/dashboard/metrics', token)).body.data;
+      const unresolved = tickets.filter(
+        (ticket) => !['RESOLVED', 'CLOSED'].includes(ticket.status),
+      );
+      expect(metrics.totalOpenTickets).toBe(
+        tickets.filter((ticket) => ticket.status === 'OPEN').length,
+      );
+      expect(metrics.criticalTickets).toBe(
+        unresolved.filter((ticket) => ticket.priority === 'CRITICAL').length,
+      );
+      expect(metrics.ticketsWaitingForClient).toBe(
+        tickets.filter((ticket) => ticket.status === 'WAITING_FOR_CLIENT').length,
+      );
+      expect(
+        metrics.ticketsByStatus.reduce(
+          (sum: number, item: { count: number }) => sum + item.count,
+          0,
+        ),
+      ).toBe(tickets.length);
+      expect(
+        metrics.ticketsByPriority.reduce(
+          (sum: number, item: { count: number }) => sum + item.count,
+          0,
+        ),
+      ).toBe(tickets.length);
+      for (const workload of metrics.developerWorkload ?? []) {
+        expect(workload.openTickets).toBe(
+          unresolved.filter((ticket) => ticket.assignedToId === workload.developerId).length,
+        );
+      }
+    }
+  });
+
   it('keeps saved triage, internal comments and history private', async () => {
     const ownTicket = (await get('/api/tickets', northstar)).body.data[0];
     await request(app)

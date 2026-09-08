@@ -40,6 +40,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Record tested revision
+        run: git rev-parse HEAD
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -98,14 +103,15 @@ jobs:
           E2E_ALLOW_DISPOSABLE_DEMO: "true"
         run: pnpm test:e2e
 
-      - name: Preserve browser screenshots
+      - name: Preserve browser reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-evidence
+          name: browser-evidence-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             clientops-tracker/docs/assets/screenshots/
             clientops-tracker/test-results/
+            clientops-tracker/playwright-report/
 
       - name: Stop verification services
         if: always()

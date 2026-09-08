@@ -126,6 +126,24 @@ curl -X PATCH http://localhost:8080/api/tickets/<ticket-id>/apply-triage-suggest
 
 - `GET /api/dashboard/metrics` - scoped totals, status/priority breakdowns and resolution time. `developerWorkload` is omitted entirely for CLIENT users, not merely hidden in the UI. `totalOpenTickets` counts OPEN; workload counts all unresolved tickets; critical count excludes resolved/closed tickets.
 
+Metric definitions (all use the caller's visible tickets):
+
+| Metric                       | Definition                                                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Open tickets                 | Only status `OPEN`, not every outstanding ticket.                                                                                          |
+| Unresolved total             | `OPEN` + `IN_PROGRESS` + `WAITING_FOR_CLIENT`; the dashboard derives this from status counts.                                              |
+| Critical tickets             | Priority `CRITICAL`, excluding `RESOLVED` and `CLOSED`.                                                                                    |
+| Waiting for client           | Only status `WAITING_FOR_CLIENT`.                                                                                                          |
+| Resolved this month          | A recorded `resolvedAt` on or after the current UTC month's start. This is timestamp-based, not a count of current `RESOLVED` status.      |
+| Average resolution           | Mean hours from creation to recorded resolution across all visible tickets with non-negative durations; null if none.                      |
+| Status / priority breakdowns | All visible tickets, including resolved and closed.                                                                                        |
+| Developer workload           | Assigned unresolved tickets per developer, including waiting-for-client tickets. Unassigned tickets are not workload. Internal users only. |
+
+For API compatibility the workload field is still named `openTickets`; the UI
+labels it **unresolved**. The current API retains a ticket's recorded resolution
+timestamp if it is reopened, so resolution-time metrics are not a measure of the
+latest resolution cycle. Lifecycle-aware resolution reporting is future work.
+
 ## Authorization Notes
 
 API authorization is enforced server-side. Clients cannot access another client's resources, view internal comments, assign tickets, create clients/projects/releases, or apply triage suggestions. Developers can update tickets and use internal operational workflows; administrators can manage all resources.

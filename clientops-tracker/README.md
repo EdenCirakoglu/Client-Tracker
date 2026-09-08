@@ -329,7 +329,9 @@ docker compose config --quiet
 docker compose -f docker-compose.prod.yml --env-file .env.production.example config --quiet
 ```
 
-Root GitHub workflows are configured for application checks, migration, isolated tests and Compose validation. Hosted results are pending until the reviewed changes are pushed and a real workflow run succeeds. Image publishing requires successful CI for the same full commit SHA. The optional manual DigitalOcean workflow requires an approved production environment.
+Root GitHub workflows run application checks, migration, isolated tests, Compose image builds and browser/accessibility scenarios. See [revision-specific results](docs/RELEASE_READINESS.md) for actual hosted evidence, separate from local checks. Image publishing requires successful main CI for the same full commit SHA. The optional manual DigitalOcean workflow requires an approved production environment.
+
+API tests and browser tests are separate commands. See [Browser Verification](docs/BROWSER_TESTS.md) for the exact environment, four scenarios, fresh database setup and HTML/JSON report locations.
 
 For browser checks against the isolated stack (these create fictional records):
 
