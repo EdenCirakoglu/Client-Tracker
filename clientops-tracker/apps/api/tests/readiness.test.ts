@@ -287,4 +287,83 @@ describe('Release permission and persistence boundaries', () => {
       .expect(200);
     expect((await get(`/api/tickets/${id}`, developer)).body.data.priority).toBe('MEDIUM');
   });
+
+  it.each(['update', 'comment'] as const)(
+    'rolls back the %s when its history cannot be written',
+    async (operation) => {
+      const project = (await get('/api/projects', admin)).body.data[0];
+      const created = await request(app)
+        .post('/api/tickets')
+        .auth(admin, { type: 'bearer' })
+        .send({
+          projectId: project.id,
+          title: 'History failure regression',
+          description: 'Changes and their audit records must commit together.',
+          category: 'SUPPORT',
+          priority: 'LOW',
+        })
+        .expect(201);
+      const id = created.body.data.id as string;
+      // The suite only connects to an explicitly designated disposable test database.
+      await pool.query(`CREATE FUNCTION reject_test_history() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN RAISE EXCEPTION 'Injected history write failure'; END $$`);
+      try {
+        await pool.query(`CREATE TRIGGER reject_test_history BEFORE INSERT ON ticket_events
+          FOR EACH ROW EXECUTE FUNCTION reject_test_history()`);
+        const response =
+          operation === 'update'
+            ? await request(app)
+                .patch(`/api/tickets/${id}`)
+                .auth(developer, { type: 'bearer' })
+                .send({ status: 'IN_PROGRESS', category: 'BUG' })
+            : await request(app)
+                .post(`/api/tickets/${id}/comments`)
+                .auth(admin, { type: 'bearer' })
+                .send({ body: 'This comment must roll back.' });
+        expect(response.status).toBe(500);
+      } finally {
+        await pool.query('DROP TRIGGER IF EXISTS reject_test_history ON ticket_events');
+        await pool.query('DROP FUNCTION reject_test_history()');
+      }
+      const detail = (await get(`/api/tickets/${id}`, admin)).body.data;
+      expect(detail).toMatchObject({ status: 'OPEN', category: 'SUPPORT' });
+      expect(detail.events).toHaveLength(1);
+      expect((await get(`/api/tickets/${id}/comments`, admin)).body.data).toHaveLength(0);
+    },
+  );
+
+  it('serializes repeated ticket updates and records category history', async () => {
+    const project = (await get('/api/projects', admin)).body.data[0];
+    const created = await request(app)
+      .post('/api/tickets')
+      .auth(admin, { type: 'bearer' })
+      .send({
+        projectId: project.id,
+        title: 'Concurrent update regression',
+        description: 'Record only actual field transitions.',
+        category: 'SUPPORT',
+        priority: 'LOW',
+      })
+      .expect(201);
+    const id = created.body.data.id as string;
+    const responses = await Promise.all(
+      [1, 2, 3].map(() =>
+        request(app)
+          .patch(`/api/tickets/${id}`)
+          .auth(developer, { type: 'bearer' })
+          .send({ status: 'IN_PROGRESS', category: 'BUG' }),
+      ),
+    );
+    expect(responses.every((response) => response.status === 200)).toBe(true);
+    const detail = (await get(`/api/tickets/${id}`, admin)).body.data;
+    expect(detail).toMatchObject({ status: 'IN_PROGRESS', category: 'BUG' });
+    expect(
+      detail.events.filter((event: { eventType: string }) => event.eventType === 'STATUS_CHANGED'),
+    ).toHaveLength(1);
+    expect(
+      detail.events.filter(
+        (event: { eventType: string }) => event.eventType === 'CATEGORY_CHANGED',
+      ),
+    ).toEqual([expect.objectContaining({ fromValue: 'SUPPORT', toValue: 'BUG' })]);
+  });
 });

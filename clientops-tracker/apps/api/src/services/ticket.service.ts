@@ -8,6 +8,7 @@ import { generateInitialTriageSuggestion, getLatestTriageSuggestion } from './tr
 import { findDeveloperById } from './user.service';
 
 type TicketRecord = typeof tickets.$inferSelect;
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type ProjectRecord = typeof projects.$inferSelect;
 type TicketWithProject = TicketRecord & {
   project: ProjectRecord;
@@ -139,65 +140,74 @@ export async function updateTicketForUser(
   ticketId: string,
   data: UpdateTicketInput,
 ) {
-  const existing = await getTicketForUser(user, ticketId);
+  await getTicketForUser(user, ticketId);
 
   if (data.assignedToId) {
     await assertDeveloperExists(data.assignedToId);
   }
 
-  const updateData: Partial<typeof tickets.$inferInsert> = {
-    updatedAt: new Date(),
-  };
+  await db.transaction(async (tx) => {
+    // Read the current state under the same lock used by triage application.
+    const [existing] = await tx
+      .select()
+      .from(tickets)
+      .where(eq(tickets.id, ticketId))
+      .for('update');
+    if (!existing) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    const updateData: Partial<typeof tickets.$inferInsert> = {
+      updatedAt: new Date(),
+    };
 
-  if (data.assignedToId !== undefined) {
-    updateData.assignedToId = data.assignedToId;
-  }
-
-  if (data.title !== undefined) {
-    updateData.title = data.title;
-  }
-
-  if (data.description !== undefined) {
-    updateData.description = data.description;
-  }
-
-  if (data.category !== undefined) {
-    updateData.category = data.category;
-  }
-
-  if (data.priority !== undefined) {
-    updateData.priority = data.priority;
-  }
-
-  if (data.status !== undefined) {
-    updateData.status = data.status;
-
-    if (
-      ['RESOLVED', 'CLOSED'].includes(data.status) &&
-      !existing.resolvedAt &&
-      data.resolvedAt === undefined
-    ) {
-      updateData.resolvedAt = new Date();
+    if (data.assignedToId !== undefined) {
+      updateData.assignedToId = data.assignedToId;
     }
-  }
 
-  if (data.resolvedAt !== undefined) {
-    updateData.resolvedAt = data.resolvedAt;
-  }
+    if (data.title !== undefined) {
+      updateData.title = data.title;
+    }
 
-  const [updatedTicket] = await db
-    .update(tickets)
-    .set(updateData)
-    .where(eq(tickets.id, ticketId))
-    .returning();
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
 
-  if (!updatedTicket) {
-    throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
-  }
+    if (data.category !== undefined) {
+      updateData.category = data.category;
+    }
 
-  await recordTicketUpdateEvents(user, existing, data);
+    if (data.priority !== undefined) {
+      updateData.priority = data.priority;
+    }
 
-  return getTicketForUser(user, updatedTicket.id);
+    if (data.status !== undefined) {
+      updateData.status = data.status;
+
+      if (
+        ['RESOLVED', 'CLOSED'].includes(data.status) &&
+        !existing.resolvedAt &&
+        data.resolvedAt === undefined
+      ) {
+        updateData.resolvedAt = new Date();
+      }
+    }
+
+    if (data.resolvedAt !== undefined) {
+      updateData.resolvedAt = data.resolvedAt;
+    }
+
+    const [updatedTicket] = await tx
+      .update(tickets)
+      .set(updateData)
+      .where(eq(tickets.id, ticketId))
+      .returning();
+
+    if (!updatedTicket) {
+      throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    }
+
+    await recordTicketUpdateEvents(user, existing, data, tx);
+  });
+
+  return getTicketForUser(user, ticketId);
 }
 
 export async function listTicketCommentsForUser(user: AuthenticatedUser, ticketId: string) {
@@ -226,28 +236,30 @@ export async function createTicketCommentForUser(
     throw new ApiError(403, 'FORBIDDEN', 'Clients cannot create internal comments.');
   }
 
-  const [comment] = await db
-    .insert(ticketComments)
-    .values({
+  return db.transaction(async (tx) => {
+    const [comment] = await tx
+      .insert(ticketComments)
+      .values({
+        ticketId,
+        authorId: user.id,
+        body: data.body,
+        isInternal: user.role === 'CLIENT' ? false : Boolean(data.isInternal),
+      })
+      .returning();
+
+    if (!comment) {
+      throw new ApiError(500, 'COMMENT_CREATE_FAILED', 'Comment could not be created.');
+    }
+
+    await tx.insert(ticketEvents).values({
       ticketId,
-      authorId: user.id,
-      body: data.body,
-      isInternal: user.role === 'CLIENT' ? false : Boolean(data.isInternal),
-    })
-    .returning();
+      actorId: user.id,
+      eventType: 'COMMENT_CREATED',
+      toValue: comment.isInternal ? 'INTERNAL' : 'PUBLIC',
+    });
 
-  if (!comment) {
-    throw new ApiError(500, 'COMMENT_CREATE_FAILED', 'Comment could not be created.');
-  }
-
-  await db.insert(ticketEvents).values({
-    ticketId,
-    actorId: user.id,
-    eventType: 'COMMENT_CREATED',
-    toValue: comment.isInternal ? 'INTERNAL' : 'PUBLIC',
+    return { ...comment, author: { id: user.id, name: user.name } };
   });
-
-  return { ...comment, author: { id: user.id, name: user.name } };
 }
 
 async function findTicketWithProject(ticketId: string) {
@@ -293,8 +305,9 @@ async function assertDeveloperExists(userId: string) {
 
 async function recordTicketUpdateEvents(
   user: AuthenticatedUser,
-  existing: TicketWithProject,
+  existing: TicketRecord,
   data: UpdateTicketInput,
+  tx: Transaction,
 ) {
   const events: (typeof ticketEvents.$inferInsert)[] = [];
 
@@ -318,6 +331,16 @@ async function recordTicketUpdateEvents(
     });
   }
 
+  if (data.category && data.category !== existing.category) {
+    events.push({
+      ticketId: existing.id,
+      actorId: user.id,
+      eventType: 'CATEGORY_CHANGED',
+      fromValue: existing.category,
+      toValue: data.category,
+    });
+  }
+
   if (data.assignedToId !== undefined && data.assignedToId !== existing.assignedToId) {
     events.push({
       ticketId: existing.id,
@@ -329,6 +352,6 @@ async function recordTicketUpdateEvents(
   }
 
   if (events.length > 0) {
-    await db.insert(ticketEvents).values(events);
+    await tx.insert(ticketEvents).values(events);
   }
 }

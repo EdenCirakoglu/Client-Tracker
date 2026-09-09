@@ -46,28 +46,35 @@ flowchart LR
 The monorepo keeps the browser application and API independently deployable while sharing tooling. The Git root is one directory above this workspace: GitHub workflows live in `../.github/workflows/`, and the repository landing page is `../README.md`.
 
 ```text
-clientops-tracker/
-  apps/
-    api/
-      drizzle/
-      src/
-      tests/
-      Dockerfile
-      package.json
-      .env.example
-    web/
-      src/
-      Dockerfile
-      package.json
-      .env.example
-  docs/
-  nginx/
+Client-Tracker/                 # Git repository root (local folder name may differ)
   .github/
     workflows/
-  docker-compose.yml
-  docker-compose.prod.yml
-  package.json
-  pnpm-workspace.yaml
+      ci.yml
+      docker.yml
+      deploy.yml
+  README.md                    # GitHub landing page
+  clientops-tracker/            # pnpm workspace
+    apps/
+      api/
+        drizzle/
+        src/
+        tests/
+        Dockerfile
+        package.json
+        .env.example
+      web/
+        src/
+        Dockerfile
+        package.json
+        .env.example
+    docs/
+    e2e/
+    nginx/
+    docker-compose.yml
+    docker-compose.prod.yml
+    package.json
+    pnpm-workspace.yaml
+    README.md                  # This detailed guide
 ```
 
 ### Database model

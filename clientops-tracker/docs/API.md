@@ -98,6 +98,11 @@ Applying an already accepted suggestion is idempotent and does not overwrite
 subsequent manual edits or duplicate history. Generation and application serialize
 on the ticket row inside PostgreSQL transactions.
 
+Manual ticket updates use the same row lock and commit status, priority, category
+and assignment history atomically with the update. Comment creation and its
+history event also commit together. A failed history insert rolls back the change;
+repeating an unchanged ticket field does not create another transition event.
+
 Example ticket creation:
 
 ```bash

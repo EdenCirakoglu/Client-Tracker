@@ -1,7 +1,31 @@
 # Release Readiness Evidence
 
-Recorded 2026-09-08. This milestone is a draft PR and verified CI, not a merge,
-image release or public deployment.
+## Final Merge Review: 2026-09-09
+
+Review started at PR #1 head `9625fe8bc15be80c0447d40bfb6935dd7938d2cb`.
+The user authorized a normal merge after passing current CI, followed by automatic
+image publication and isolated verification of the published images. DigitalOcean
+and public deployment remain outside this milestone.
+
+The README directory diagram now puts workflows at the actual Git root. Review
+covered role/tenant boundaries, token verification, secret exclusion, disposable
+database guards, triage transactions, Dockerfiles and exact-revision CI/publication
+gates. No additional blocking tenant/privacy defect was found.
+
+Three new database regressions failed before the fix: history-write errors left
+ticket edits and comments committed despite HTTP 500, and concurrent identical
+updates wrote three status events. Ticket updates now lock the current row and
+commit their history in the same transaction; comments also commit atomically
+with history. Category updates now record `CATEGORY_CHANGED`. No routes, schema,
+seed contract or existing checks were removed. All 37 API tests pass locally,
+including the three reproduced regressions. Hosted checks for this follow-up,
+the eventual main SHA and registry verification are separate evidence, not implied
+by the earlier PR results below.
+
+## Historical PR Milestone: 2026-09-08
+
+The remainder of this report records the earlier draft-PR milestone only. Its
+no-merge/no-publication statements describe that tested revision and date.
 
 ## Repository and Revisions
 
