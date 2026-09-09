@@ -1,0 +1,118 @@
+name: CI
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: clientops-tracker
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: clientops
+          POSTGRES_PASSWORD: clientops_dev_password
+          POSTGRES_DB: clientops_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U clientops -d clientops_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://clientops:clientops_dev_password@localhost:5432/clientops_test
+      TEST_DATABASE_URL: postgresql://clientops:clientops_dev_password@localhost:5432/clientops_test
+      DISPOSABLE_DATABASE_NAME: clientops_test
+      JWT_SECRET: clientops_tracker_ci_jwt_secret_change_me_12345
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Record tested revision
+        run: git rev-parse HEAD
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: clientops-tracker/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Formatting
+        run: pnpm format:check
+
+      - name: Migrate database
+        run: pnpm db:migrate
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Validate Docker Compose
+        run: docker compose -f docker-compose.yml config
+
+      - name: Validate production Docker Compose
+        run: docker compose -f docker-compose.prod.yml --env-file .env.production.example config
+
+      - name: Install test browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build and start isolated production-style stack
+        run: |
+          unset DATABASE_URL JWT_SECRET TEST_DATABASE_URL DISPOSABLE_DATABASE_NAME
+          dc() { docker compose -p clientops-readiness --env-file .env.verify.example -f docker-compose.prod.yml "$@"; }
+          dc build
+          dc up -d --wait postgres
+          dc run --rm --no-deps api node dist/migrate.js
+          dc run --rm --no-deps -e NODE_ENV=development -e DISPOSABLE_DATABASE_NAME=clientops_verify_demo -e SEED_RESET=true api node dist/seed.js
+          dc up -d --no-build --wait
+
+      - name: Browser journeys and accessibility
+        env:
+          E2E_ALLOW_DISPOSABLE_DEMO: "true"
+          E2E_SCREENSHOT_DIR: test-results/screenshots
+        run: pnpm test:e2e
+
+      - name: Preserve browser reports and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            clientops-tracker/test-results/
+            clientops-tracker/playwright-report/
+
+      - name: Stop verification services
+        if: always()
+        run: docker compose -p clientops-readiness --env-file .env.verify.example -f docker-compose.prod.yml down

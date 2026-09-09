@@ -40,6 +40,7 @@ export function createApp() {
   });
 
   app.use('/health', healthRouter);
+  app.use('/api/health', healthRouter);
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
   app.use('/api/auth', authRouter);
   app.use('/api/clients', authenticate, clientsRouter);

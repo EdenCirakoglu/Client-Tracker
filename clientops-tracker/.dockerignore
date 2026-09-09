@@ -10,6 +10,10 @@ coverage
 **/coverage
 .env
 .env.*
+**/.env
+**/.env.*
+docs/assets
+test-results
+playwright-report
 pnpm-debug.log*
 README.md
-

@@ -1,16 +1,24 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns } from 'drizzle-orm';
 
 import { db } from '../db/client';
-import { projects, ticketComments, ticketEvents, tickets } from '../db/schema';
+import { projects, ticketComments, ticketEvents, tickets, users } from '../db/schema';
 import type { AuthenticatedUser } from '../types/auth';
 import { ApiError } from '../utils/http';
-import { generateInitialTriageSuggestion } from './triage.service';
+import { generateInitialTriageSuggestion, getLatestTriageSuggestion } from './triage.service';
 import { findDeveloperById } from './user.service';
 
 type TicketRecord = typeof tickets.$inferSelect;
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type ProjectRecord = typeof projects.$inferSelect;
 type TicketWithProject = TicketRecord & {
   project: ProjectRecord;
+  assignee: { id: string; name: string } | null;
+};
+
+const ticketSelection = {
+  ticket: tickets,
+  project: projects,
+  assignee: { id: users.id, name: users.name },
 };
 
 type CreateTicketInput = {
@@ -41,9 +49,10 @@ export async function listTicketsForUser(user: AuthenticatedUser) {
     }
 
     const rows = await db
-      .select({ ticket: tickets, project: projects })
+      .select(ticketSelection)
       .from(tickets)
       .innerJoin(projects, eq(tickets.projectId, projects.id))
+      .leftJoin(users, eq(tickets.assignedToId, users.id))
       .where(eq(projects.clientId, user.clientId))
       .orderBy(desc(tickets.createdAt));
 
@@ -51,9 +60,10 @@ export async function listTicketsForUser(user: AuthenticatedUser) {
   }
 
   const rows = await db
-    .select({ ticket: tickets, project: projects })
+    .select(ticketSelection)
     .from(tickets)
     .innerJoin(projects, eq(tickets.projectId, projects.id))
+    .leftJoin(users, eq(tickets.assignedToId, users.id))
     .orderBy(desc(tickets.createdAt));
 
   return rows.map(toTicketWithProject);
@@ -66,7 +76,16 @@ export async function getTicketForUser(user: AuthenticatedUser, ticketId: string
     throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
   }
 
-  return row;
+  if (user.role === 'CLIENT') return row;
+  const [triageSuggestion, events] = await Promise.all([
+    getLatestTriageSuggestion(ticketId),
+    db
+      .select()
+      .from(ticketEvents)
+      .where(eq(ticketEvents.ticketId, ticketId))
+      .orderBy(ticketEvents.createdAt, ticketEvents.id),
+  ]);
+  return { ...row, triageSuggestion, events };
 }
 
 export async function createTicketForUser(user: AuthenticatedUser, data: CreateTicketInput) {
@@ -84,38 +103,36 @@ export async function createTicketForUser(user: AuthenticatedUser, data: CreateT
     await assertDeveloperExists(data.assignedToId);
   }
 
-  const [ticket] = await db
-    .insert(tickets)
-    .values({
-      projectId: data.projectId,
-      createdById: user.id,
-      assignedToId: data.assignedToId ?? null,
-      title: data.title,
-      description: data.description,
-      category: data.category,
-      priority: data.priority ?? 'MEDIUM',
-      status: 'OPEN',
-    })
-    .returning();
+  const createdId = await db.transaction(async (tx) => {
+    const [ticket] = await tx
+      .insert(tickets)
+      .values({
+        projectId: data.projectId,
+        createdById: user.id,
+        assignedToId: data.assignedToId ?? null,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        priority: data.priority ?? 'MEDIUM',
+        status: 'OPEN',
+      })
+      .returning();
 
-  if (!ticket) {
-    throw new ApiError(500, 'TICKET_CREATE_FAILED', 'Ticket could not be created.');
-  }
+    if (!ticket) {
+      throw new ApiError(500, 'TICKET_CREATE_FAILED', 'Ticket could not be created.');
+    }
 
-  await db.insert(ticketEvents).values({
-    ticketId: ticket.id,
-    actorId: user.id,
-    eventType: 'TICKET_CREATED',
-    toValue: 'OPEN',
+    await tx.insert(ticketEvents).values({
+      ticketId: ticket.id,
+      actorId: user.id,
+      eventType: 'TICKET_CREATED',
+      toValue: 'OPEN',
+    });
+
+    await generateInitialTriageSuggestion(ticket, tx);
+    return ticket.id;
   });
-
-  const triageSuggestion = await generateInitialTriageSuggestion(ticket);
-  const createdTicket = await getTicketForUser(user, ticket.id);
-
-  return {
-    ...createdTicket,
-    triageSuggestion,
-  };
+  return getTicketForUser(user, createdId);
 }
 
 export async function updateTicketForUser(
@@ -123,82 +140,88 @@ export async function updateTicketForUser(
   ticketId: string,
   data: UpdateTicketInput,
 ) {
-  const existing = await getTicketForUser(user, ticketId);
+  await getTicketForUser(user, ticketId);
 
   if (data.assignedToId) {
     await assertDeveloperExists(data.assignedToId);
   }
 
-  const updateData: Partial<typeof tickets.$inferInsert> = {
-    updatedAt: new Date(),
-  };
+  await db.transaction(async (tx) => {
+    // Read the current state under the same lock used by triage application.
+    const [existing] = await tx
+      .select()
+      .from(tickets)
+      .where(eq(tickets.id, ticketId))
+      .for('update');
+    if (!existing) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    const updateData: Partial<typeof tickets.$inferInsert> = {
+      updatedAt: new Date(),
+    };
 
-  if (data.assignedToId !== undefined) {
-    updateData.assignedToId = data.assignedToId;
-  }
-
-  if (data.title !== undefined) {
-    updateData.title = data.title;
-  }
-
-  if (data.description !== undefined) {
-    updateData.description = data.description;
-  }
-
-  if (data.category !== undefined) {
-    updateData.category = data.category;
-  }
-
-  if (data.priority !== undefined) {
-    updateData.priority = data.priority;
-  }
-
-  if (data.status !== undefined) {
-    updateData.status = data.status;
-
-    if (
-      ['RESOLVED', 'CLOSED'].includes(data.status) &&
-      !existing.resolvedAt &&
-      data.resolvedAt === undefined
-    ) {
-      updateData.resolvedAt = new Date();
+    if (data.assignedToId !== undefined) {
+      updateData.assignedToId = data.assignedToId;
     }
-  }
 
-  if (data.resolvedAt !== undefined) {
-    updateData.resolvedAt = data.resolvedAt;
-  }
+    if (data.title !== undefined) {
+      updateData.title = data.title;
+    }
 
-  const [updatedTicket] = await db
-    .update(tickets)
-    .set(updateData)
-    .where(eq(tickets.id, ticketId))
-    .returning();
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
 
-  if (!updatedTicket) {
-    throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
-  }
+    if (data.category !== undefined) {
+      updateData.category = data.category;
+    }
 
-  await recordTicketUpdateEvents(user, existing, data);
+    if (data.priority !== undefined) {
+      updateData.priority = data.priority;
+    }
 
-  return getTicketForUser(user, updatedTicket.id);
+    if (data.status !== undefined) {
+      updateData.status = data.status;
+
+      if (
+        ['RESOLVED', 'CLOSED'].includes(data.status) &&
+        !existing.resolvedAt &&
+        data.resolvedAt === undefined
+      ) {
+        updateData.resolvedAt = new Date();
+      }
+    }
+
+    if (data.resolvedAt !== undefined) {
+      updateData.resolvedAt = data.resolvedAt;
+    }
+
+    const [updatedTicket] = await tx
+      .update(tickets)
+      .set(updateData)
+      .where(eq(tickets.id, ticketId))
+      .returning();
+
+    if (!updatedTicket) {
+      throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    }
+
+    await recordTicketUpdateEvents(user, existing, data, tx);
+  });
+
+  return getTicketForUser(user, ticketId);
 }
 
 export async function listTicketCommentsForUser(user: AuthenticatedUser, ticketId: string) {
   await getTicketForUser(user, ticketId);
-
-  if (user.role === 'CLIENT') {
-    return db
-      .select()
-      .from(ticketComments)
-      .where(and(eq(ticketComments.ticketId, ticketId), eq(ticketComments.isInternal, false)))
-      .orderBy(ticketComments.createdAt);
-  }
-
   return db
-    .select()
+    .select({ ...getTableColumns(ticketComments), author: { id: users.id, name: users.name } })
     .from(ticketComments)
-    .where(eq(ticketComments.ticketId, ticketId))
+    .innerJoin(users, eq(ticketComments.authorId, users.id))
+    .where(
+      and(
+        eq(ticketComments.ticketId, ticketId),
+        user.role === 'CLIENT' ? eq(ticketComments.isInternal, false) : undefined,
+      ),
+    )
     .orderBy(ticketComments.createdAt);
 }
 
@@ -213,35 +236,38 @@ export async function createTicketCommentForUser(
     throw new ApiError(403, 'FORBIDDEN', 'Clients cannot create internal comments.');
   }
 
-  const [comment] = await db
-    .insert(ticketComments)
-    .values({
+  return db.transaction(async (tx) => {
+    const [comment] = await tx
+      .insert(ticketComments)
+      .values({
+        ticketId,
+        authorId: user.id,
+        body: data.body,
+        isInternal: user.role === 'CLIENT' ? false : Boolean(data.isInternal),
+      })
+      .returning();
+
+    if (!comment) {
+      throw new ApiError(500, 'COMMENT_CREATE_FAILED', 'Comment could not be created.');
+    }
+
+    await tx.insert(ticketEvents).values({
       ticketId,
-      authorId: user.id,
-      body: data.body,
-      isInternal: user.role === 'CLIENT' ? false : Boolean(data.isInternal),
-    })
-    .returning();
+      actorId: user.id,
+      eventType: 'COMMENT_CREATED',
+      toValue: comment.isInternal ? 'INTERNAL' : 'PUBLIC',
+    });
 
-  if (!comment) {
-    throw new ApiError(500, 'COMMENT_CREATE_FAILED', 'Comment could not be created.');
-  }
-
-  await db.insert(ticketEvents).values({
-    ticketId,
-    actorId: user.id,
-    eventType: 'COMMENT_CREATED',
-    toValue: comment.isInternal ? 'INTERNAL' : 'PUBLIC',
+    return { ...comment, author: { id: user.id, name: user.name } };
   });
-
-  return comment;
 }
 
 async function findTicketWithProject(ticketId: string) {
   const [row] = await db
-    .select({ ticket: tickets, project: projects })
+    .select(ticketSelection)
     .from(tickets)
     .innerJoin(projects, eq(tickets.projectId, projects.id))
+    .leftJoin(users, eq(tickets.assignedToId, users.id))
     .where(eq(tickets.id, ticketId))
     .limit(1);
 
@@ -256,10 +282,12 @@ async function findProject(projectId: string) {
 function toTicketWithProject(row: {
   ticket: TicketRecord;
   project: ProjectRecord;
+  assignee: { id: string; name: string } | null;
 }): TicketWithProject {
   return {
     ...row.ticket,
     project: row.project,
+    assignee: row.assignee,
   };
 }
 
@@ -277,8 +305,9 @@ async function assertDeveloperExists(userId: string) {
 
 async function recordTicketUpdateEvents(
   user: AuthenticatedUser,
-  existing: TicketWithProject,
+  existing: TicketRecord,
   data: UpdateTicketInput,
+  tx: Transaction,
 ) {
   const events: (typeof ticketEvents.$inferInsert)[] = [];
 
@@ -302,6 +331,16 @@ async function recordTicketUpdateEvents(
     });
   }
 
+  if (data.category && data.category !== existing.category) {
+    events.push({
+      ticketId: existing.id,
+      actorId: user.id,
+      eventType: 'CATEGORY_CHANGED',
+      fromValue: existing.category,
+      toValue: data.category,
+    });
+  }
+
   if (data.assignedToId !== undefined && data.assignedToId !== existing.assignedToId) {
     events.push({
       ticketId: existing.id,
@@ -313,6 +352,6 @@ async function recordTicketUpdateEvents(
   }
 
   if (events.length > 0) {
-    await db.insert(ticketEvents).values(events);
+    await tx.insert(ticketEvents).values(events);
   }
 }
