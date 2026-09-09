@@ -1,5 +1,26 @@
 # Release Readiness Evidence
 
+## Merged and Published: 2026-09-09
+
+[PR #1](https://github.com/EdenCirakoglu/Client-Tracker/pull/1) was merged using a
+normal two-parent merge commit, preserving the checkpoint history:
+`3fa8d7f51a3dc9bfc9225697085131d75d9ec197`.
+
+| Gate                 | Tested revision                                      | Result                                                                                                                                                                         |
+| -------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Final PR CI          | `e1bedcdcd13107f1d6dfe6ee79f1fa5af4d2a51b`           | [34366664478](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34366664478): passed; 37 API tests, four browser scenarios (19.5s), all source/build/Compose checks |
+| Main CI              | `3fa8d7f51a3dc9bfc9225697085131d75d9ec197`           | [34367236859](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34367236859): passed; 37 API tests, four browser scenarios (19.1s), all source/build/Compose checks |
+| GHCR publication     | Same main SHA                                        | [34367701514](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34367701514): API and web jobs both passed                                                          |
+| Pulled-image runtime | Same main SHA and matching published digests         | Four Chrome/axe scenarios passed (23.3s); migrations, login, ticket/comments, triage and persistence passed without local image builds                                         |
+| Existing databases   | Original development and earlier readiness databases | Before/after counts and fingerprints unchanged                                                                                                                                 |
+| Public deployment    | None                                                 | Not performed; DigitalOcean workflow not triggered                                                                                                                             |
+
+See [registry verification](REGISTRY_VERIFICATION.md) for exact image references,
+digests, commands, browser report locations, CI artifacts and persistence hashes.
+The evidence documentation is recorded after the tested merge; it is not presented
+as part of the already-published images. Earlier PR evidence below remains tied to
+its own tested revision.
+
 ## Final Merge Review: 2026-09-09
 
 Review started at PR #1 head `9625fe8bc15be80c0447d40bfb6935dd7938d2cb`.
@@ -19,7 +40,7 @@ commit their history in the same transaction; comments also commit atomically
 with history. Category updates now record `CATEGORY_CHANGED`. No routes, schema,
 seed contract or existing checks were removed. All 37 API tests pass locally,
 including the three reproduced regressions. Hosted checks for this follow-up,
-the eventual main SHA and registry verification are separate evidence, not implied
+the main SHA and registry verification are recorded separately above, not implied
 by the earlier PR results below.
 
 ## Historical PR Milestone: 2026-09-08
