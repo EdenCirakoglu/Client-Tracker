@@ -22,6 +22,7 @@ async function login(page: Page, email: string, password: string) {
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
 }
 async function emailLink(page: Page, email: string, reset = false) {
   let link = '';
@@ -53,6 +54,7 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   context,
 }) => {
   const address = `invited-${Date.now()}@accounts.example`;
+  const organisation = `Fictional Delivery ${Date.now()}`;
   const password = 'Local-invited-passphrase-42';
   await page.goto('/login');
   await expect(page.getByRole('button', { name: /Continue as/ })).toHaveCount(0);
@@ -65,15 +67,22 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await page.reload();
   await expect(page.getByRole('link', { name: 'Accounts', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Clients', exact: true }).click();
-  await page.getByLabel('Name', { exact: true }).fill(`Fictional Delivery ${Date.now()}`);
+  await expect(page).toHaveURL(/\/clients$/);
+  await page.getByLabel('Name', { exact: true }).fill(organisation);
   await page.getByLabel('Contact email', { exact: true }).fill('team@delivery.example');
   await page.getByRole('button', { name: 'Create client', exact: true }).click();
+  await expect(page.getByRole('cell', { name: organisation, exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Accounts', exact: true }).click();
-  await expect(page.getByRole('table')).toBeVisible();
+  await expect(page).toHaveURL(/\/users$/);
+  await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Workspace accounts' }).getByRole('table'),
+  ).toBeVisible();
   await page.getByLabel('Name', { exact: true }).fill('Fictional Client Contact');
   await page.getByLabel('Email', { exact: true }).fill(address);
   await page.getByLabel('Role', { exact: true }).selectOption('CLIENT');
-  await page.getByLabel('Organisation', { exact: true }).selectOption({ index: 1 });
+  await page.getByLabel('Organisation', { exact: true }).selectOption({ label: organisation });
+  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Fictional Client Contact');
   await page.getByRole('button', { name: 'Send invitation', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('Invitation sent.');
   await accessible(page, 'admin-invitations');
@@ -134,12 +143,14 @@ test('password change requires confirmation and ends existing sessions', async (
   const password = 'Local-change-passphrase-42';
   await login(page, 'owner@accounts.example', 'Local-owner-passphrase-42');
   await page.goto('/users');
+  await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
   await page.getByLabel('Name', { exact: true }).fill('Fictional Developer');
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByRole('button', { name: 'Send invitation', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('Invitation sent.');
   const invitation = await emailLink(page, email);
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
   await page.goto(invitation);
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Confirm password', { exact: true }).fill(password);
