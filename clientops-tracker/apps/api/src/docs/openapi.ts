@@ -291,6 +291,105 @@ export const openApiDocument = {
     '/api/projects': collectionPath('Projects', '#/components/schemas/ProjectInput', true),
     '/api/projects/{id}': itemPath('Project'),
     '/api/tickets': collectionPath('Tickets', '#/components/schemas/TicketInput', true),
+    '/api/tickets/queue': {
+      get: {
+        ...securedOperation('Paginated, scoped ticket queue'),
+        description:
+          'data: {items: Ticket[], total, page, limit}. Full-scope count and page use one repeatable-read snapshot. CLIENT scope is enforced server-side. Legacy GET /api/tickets retains its array response. attention sorts priority CRITICAL first, then oldest createdAt, then UUID; newest sorts createdAt and UUID descending.',
+        parameters: [
+          {
+            name: 'status',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: [
+                'OPEN',
+                'IN_PROGRESS',
+                'WAITING_FOR_CLIENT',
+                'RESOLVED',
+                'CLOSED',
+                'UNRESOLVED',
+              ],
+            },
+          },
+          {
+            name: 'priority',
+            in: 'query',
+            schema: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] },
+          },
+          {
+            name: 'category',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['BUG', 'FEATURE_REQUEST', 'SUPPORT', 'SECURITY', 'PERFORMANCE'],
+            },
+          },
+          {
+            name: 'assignment',
+            in: 'query',
+            description: 'Internal only',
+            schema: { type: 'string', enum: ['mine', 'unassigned'] },
+          },
+          {
+            name: 'assignedToId',
+            in: 'query',
+            description: 'Internal only',
+            schema: { type: 'string', format: 'uuid' },
+          },
+          { name: 'projectId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'search',
+            in: 'query',
+            description: 'Literal title/description substring, max 200 characters',
+            schema: { type: 'string', maxLength: 200 },
+          },
+          {
+            name: 'resolvedMonth',
+            in: 'query',
+            description:
+              'YYYY-MM, UTC recorded resolvedAt within month. Includes reopened tickets with retained resolution timestamp.',
+            schema: { type: 'string', example: '2026-09' },
+          },
+          {
+            name: 'order',
+            in: 'query',
+            schema: { type: 'string', enum: ['newest', 'attention'], default: 'newest' },
+          },
+          {
+            name: 'page',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 10000, default: 1 },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
+          },
+        ],
+      },
+    },
+    '/api/dashboard/activity': {
+      get: {
+        ...securedOperation('Paginated permitted ticket activity and releases'),
+        description:
+          'data: {items: [{id,recordId,title,project,actor,action,createdAt,kind}],hasMore,page,limit,before}. Descending createdAt then id. Carry before to later pages. CLIENT sees only own ticket creation/status changes, public comments and releases. Comment entries use comment visibility and creation time, never hidden events or ticket updatedAt. Actor null for releases: schema has no release author. No comment body previews.',
+        parameters: [
+          {
+            name: 'page',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 10000, default: 1 },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 30, default: 6 },
+          },
+          { name: 'before', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'kind', in: 'query', schema: { type: 'string', enum: ['ticket', 'release'] } },
+        ],
+      },
+    },
     '/api/tickets/{id}': itemPath('Ticket', true),
     '/api/tickets/{id}/triage-suggestion': {
       post: triageOperation(
