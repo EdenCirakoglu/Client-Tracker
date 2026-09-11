@@ -1,5 +1,46 @@
 # Release Readiness Evidence
 
+## Evidence Follow-Up: 2026-09-11
+
+PR #2's three documentation changes were reviewed at
+`97299924206f2f2c5f6b1c9de8da7d04ef78f889`; they distinguish hosted CI builds from
+separate local verification of pulled registry images. [PR #2](https://github.com/EdenCirakoglu/Client-Tracker/pull/2)
+was marked ready after its passing check and merged normally with explicit approval.
+
+| Gate                            | Revision                                        | Actual result                                                                                   |
+| ------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| PR #2 CI                        | `97299924206f2f2c5f6b1c9de8da7d04ef78f889`      | [34368834452](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34368834452), passed |
+| Main CI after evidence merge    | `419308ab41e9c2a03d506c4395586feee4e45b31`      | [34593145295](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34593145295), passed |
+| Automatic image publication     | `419308ab41e9c2a03d506c4395586feee4e45b31`      | [34593476555](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34593476555), passed |
+| Local pulled-image verification | `3fa8d7f51a3dc9bfc9225697085131d75d9ec197` only | Prior evidence below remains unchanged; no claim that it verifies `419308a`                     |
+
+## Secure Sessions and Accounts: In Review
+
+Implementation branch: `feat/secure-sessions-accounts`, based on `419308a`.
+The application now uses PostgreSQL-backed revocable HttpOnly cookie sessions,
+synchronizer CSRF tokens, server idle/absolute expiry, one-time administrator
+bootstrap, administrator invitations, password setup/recovery/change and access
+revocation. An additive migration preserves the original business records.
+Design, configuration, exact commands and report locations:
+[SESSION_HARDENING.md](SESSION_HARDENING.md).
+
+Initial local verification on the implementation working tree:
+
+- All 52 API tests passed (37 retained + 15 new security/account tests).
+- Lint and typecheck passed. API and container API/web builds succeeded.
+- Two separate HTTPS stacks reached healthy state; the populated fixture's
+  original business columns matched before/after migration without reseeding.
+- Four retained browser scenarios passed. New account scenarios initially exposed
+  a same-document setup-link state defect and an ambiguous Next.js alert selector;
+  both were corrected, without dropping assertions.
+- Final browser, host build and clean-revision hosted results are recorded in the
+  follow-up below when completed, not inferred from earlier passes.
+
+The hardening implementation PR must remain draft and unmerged. No hardening images
+are published and no DigitalOcean/public deployment is triggered. Real SMTP,
+trusted production TLS/domain/renewal, secrets, backups/restore, monitoring,
+durable email delivery and account-security audit retention remain launch work.
+
 ## Merged and Published: 2026-09-09
 
 [PR #1](https://github.com/EdenCirakoglu/Client-Tracker/pull/1) was merged using a

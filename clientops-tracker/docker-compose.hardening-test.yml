@@ -1,0 +1,18 @@
+# Dedicated, disposable API security test cluster. Never mounts existing databases.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: clientops_test
+      POSTGRES_PASSWORD: disposable_test_password
+      POSTGRES_DB: clientops_hardening_test
+    ports: ['127.0.0.1:55434:5432']
+    tmpfs: ['/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U clientops_test -d clientops_hardening_test']
+      interval: 2s
+      timeout: 5s
+      retries: 20
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    ports: ['127.0.0.1:11025:1025', '127.0.0.1:18025:8025']

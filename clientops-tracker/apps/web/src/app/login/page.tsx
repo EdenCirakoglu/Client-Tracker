@@ -7,6 +7,8 @@ import { LogIn, ShieldCheck, UserCog, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { FieldLabel, Input } from '../../components/ui/input';
 import { useAuth } from '../../lib/auth';
+import { api } from '../../lib/api';
+import Link from 'next/link';
 
 const demoUsers = [
   { label: 'Admin', email: 'admin@example.com', icon: ShieldCheck },
@@ -16,11 +18,18 @@ const demoUsers = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, status } = useAuth();
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password123');
+  const { login, status, sessionEnded } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [demoEnabled, setDemoEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  useEffect(() => {
+    void api
+      .config()
+      .then((config) => setDemoEnabled(config.demoEnabled))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -68,6 +77,11 @@ export default function LoginPage() {
               <p className="mt-2 text-sm text-muted">Sign in to your workspace.</p>
             </div>
 
+            {sessionEnded ? (
+              <p role="status" className="mt-4 text-sm text-muted">
+                Your session has ended. Sign in again to continue.
+              </p>
+            ) : null}
             <form
               className="mt-8 space-y-4"
               onSubmit={(event) => {
@@ -110,29 +124,36 @@ export default function LoginPage() {
                 {submitting ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
+            <Link
+              href="/forgot-password"
+              className="mt-4 inline-block text-sm font-medium text-brand-700 underline"
+            >
+              Forgot password?
+            </Link>
+            {demoEnabled ? (
+              <div className="mt-6 grid gap-2">
+                {demoUsers.map((demo) => {
+                  const Icon = demo.icon;
 
-            <div className="mt-6 grid gap-2">
-              {demoUsers.map((demo) => {
-                const Icon = demo.icon;
-
-                return (
-                  <Button
-                    disabled={submitting}
-                    key={demo.email}
-                    onClick={() => {
-                      setEmail(demo.email);
-                      setPassword('password123');
-                      void handleLogin(demo.email, 'password123');
-                    }}
-                    type="button"
-                    variant="secondary"
-                  >
-                    <Icon className="h-4 w-4" />
-                    Continue as {demo.label}
-                  </Button>
-                );
-              })}
-            </div>
+                  return (
+                    <Button
+                      disabled={submitting}
+                      key={demo.email}
+                      onClick={() => {
+                        setEmail(demo.email);
+                        setPassword('password123');
+                        void handleLogin(demo.email, 'password123');
+                      }}
+                      type="button"
+                      variant="secondary"
+                    >
+                      <Icon className="h-4 w-4" />
+                      Continue as {demo.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            ) : null}
           </section>
         </div>
       </div>

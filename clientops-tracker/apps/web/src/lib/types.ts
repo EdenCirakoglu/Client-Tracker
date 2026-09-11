@@ -110,6 +110,6 @@ export type DashboardMetrics = {
 };
 
 export type LoginResponse = {
-  token: string;
+  csrfToken: string;
   user: User;
 };

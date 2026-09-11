@@ -12,8 +12,9 @@ The roadmap keeps future work focused on operational value, production safety, a
 
 ## Production Hardening
 
-- Replace localStorage JWTs with secure HTTP-only cookie sessions.
-- Add rate limiting, audit log retention, structured logging, and request correlation IDs.
+- Review and merge the implemented secure-session/account-provisioning branch after its current CI passes.
+- Configure real TLS/domain/renewal, SMTP sender verification and secret lifecycle; local HTTPS and captured mail are not production services.
+- Add durable email delivery, account-security audit retention, structured logging, and request correlation IDs.
 - Add automated dependency scanning, backups, restore drills, and health monitoring.
 - Add production migration packaging and a defined rollback strategy.
 - Add pagination and database query performance monitoring.
@@ -21,7 +22,7 @@ The roadmap keeps future work focused on operational value, production safety, a
 ## SaaS Features
 
 - Tenant-aware organisation administration.
-- Invitations, password reset, profile management, and notification preferences.
+- Extend the implemented invitations/recovery with profile management and notification preferences.
 - Custom ticket fields, SLAs, labels, watchers, and saved filters.
 - Email and webhook integrations.
 - Client-specific branding and configurable workflows.

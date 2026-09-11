@@ -11,6 +11,8 @@ import {
   Rocket,
   Ticket,
   X,
+  Settings,
+  Users,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -27,6 +29,13 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
+  { label: 'Accounts', href: '/users', icon: Users, roles: ['ADMIN'] },
+  {
+    label: 'My account',
+    href: '/account',
+    icon: Settings,
+    roles: ['ADMIN', 'DEVELOPER', 'CLIENT'],
+  },
   {
     label: 'Dashboard',
     href: '/dashboard',
@@ -49,6 +58,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, status, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const navigationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -210,7 +221,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             aria-label="Logout"
             className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            onClick={logout}
+            disabled={loggingOut}
+            onClick={() => {
+              setLoggingOut(true);
+              setLogoutError(null);
+              void logout()
+                .catch(() =>
+                  setLogoutError('Sign out failed. Check your connection and try again.'),
+                )
+                .finally(() => setLoggingOut(false));
+            }}
             type="button"
           >
             <LogOut className="h-4 w-4" />
@@ -219,6 +239,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main id="main-content" tabIndex={-1} className="px-4 py-6 sm:px-6 lg:px-8">
+          {logoutError ? (
+            <p role="alert" className="mb-4 text-sm text-red-700">
+              {logoutError}
+            </p>
+          ) : null}
           {children}
         </main>
       </div>

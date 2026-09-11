@@ -1,8 +1,8 @@
 # API Reference
 
-The API runs locally at `http://localhost:8080`. With the production Nginx proxy, use `http://SERVER_IP/api` or the configured HTTPS origin. Interactive OpenAPI documentation is available at [`/api/docs`](http://localhost:8080/api/docs) locally or `http://SERVER_IP/api/docs` through Nginx.
+The API runs locally at `http://localhost:8080`. Production uses the configured HTTPS origin. Interactive docs are at [`/api/docs`](http://localhost:8080/api/docs), or `https://localhost:8443/api/docs/` in the isolated HTTPS fixture.
 
-Swagger UI is intentionally public in the current build so a reviewer can inspect the contract without a token. It exposes endpoint schemas and examples, not database credentials or application data. Restrict `/api/docs` at Nginx or behind an access layer before treating the deployment as a sensitive production system.
+Swagger UI publishes the contract without authentication, not application data. Its request interceptor obtains CSRF tokens and sends cookies for mutations; sign in through the login operation first. Restrict `/api/docs` at the edge for a sensitive production system.
 
 ## Response Format
 
@@ -33,22 +33,34 @@ Common statuses are `401` for missing or invalid authentication, `403` for insuf
 ## Authentication
 
 ```http
-Authorization: Bearer <jwt>
+Cookie: __Host-clientops.sid=<opaque signed session id>
+X-CSRF-Token: <synchronizer token from /api/auth/csrf>
 ```
 
-Login returns a JWT and a safe user profile. There is no public registration route; local demo users are created by the seed script.
+Production cookies are HttpOnly, Secure, SameSite=Lax and host-only. The development
+cookie is `clientops.sid`. JavaScript must not try to read the cookie. Login returns
+`data: {user, csrfToken}` and rotates both SID and CSRF token. No bearer JWT is
+accepted. There is no public registration; an operator bootstraps the first admin
+and administrators invite accounts. All unsafe requests require CSRF, including
+login, recovery, token consumption and logout. Use `credentials: 'include'` in fetch.
+
+Local disposable curl example (Bash with jq; PowerShell use `curl.exe` and parse
+JSON with `ConvertFrom-Json`). The cookie file is a credential: keep it private and
+delete it after testing. Only use the example password in an enabled disposable demo.
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
+umask 077
+CSRF=$(curl -fsS -c cookies.txt http://localhost:8080/api/auth/csrf | jq -r .data.csrfToken)
+CSRF=$(curl -fsS -b cookies.txt -c cookies.txt -X POST http://localhost:8080/api/auth/login \
+  -H "X-CSRF-Token: $CSRF" \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"password123"}'
+  -d '{"email":"admin@example.com","password":"password123"}' | jq -r .data.csrfToken)
 ```
 
-Then use the returned token:
+Then use the retained cookie (and the fresh CSRF token on writes):
 
 ```bash
-curl http://localhost:8080/api/auth/me \
-  -H "Authorization: Bearer <token>"
+curl -fsS -b cookies.txt http://localhost:8080/api/auth/me
 ```
 
 ## Endpoint Groups
@@ -61,8 +73,27 @@ curl http://localhost:8080/api/auth/me \
 
 ### Auth
 
-- `POST /api/auth/login` - verify credentials and issue a JWT.
+- `GET /api/auth/config` - whether local demo shortcuts are enabled.
+- `GET /api/auth/csrf` - establish anonymous session and obtain CSRF token.
+- `POST /api/auth/login` - verify credentials and rotate the session.
 - `GET /api/auth/me` - return the authenticated safe user profile.
+- `POST /api/auth/logout` - revoke current session.
+- `POST /api/auth/forgot-password` - `{email}`; identical 202 for known/unknown users, mail sent asynchronously.
+- `POST /api/auth/accept-invitation` - `{token,password}`; no role/organisation input allowed.
+- `POST /api/auth/reset-password` - `{token,password}`; consume link once and revoke all prior sessions.
+- `POST /api/auth/change-password` - `{currentPassword,password}`; authenticated, revokes every prior session.
+
+### Account administration
+
+- `GET /api/users` - ADMIN only, safe profiles and account statuses.
+- `POST /api/users/invitations` - ADMIN only, `{name,email,role,clientId}`; CLIENT must reference an existing client; internal staff require null. Resending a pending invitation invalidates its old links. Existing active accounts are not overwritten.
+- `PATCH /api/users/:id` - ADMIN only, `{role,clientId,disabled}`; applies assignment and revokes sessions. Self-disable/demotion is rejected. Pending accounts must be managed by resending their invitation.
+
+New passwords require at least 12 characters and at most 72 UTF-8 bytes. Invitation
+links expire in 24h and reset links in 30min. `LINK_INVALID` covers expired and used
+links. `SESSION_EXPIRED` requires sign-in again; `CSRF_INVALID` requires reloading
+the form; `429` includes `Retry-After`. Recovery never reveals account existence.
+Full defaults and revocation semantics: [security model](SECURITY.md).
 
 ### Clients
 
@@ -107,7 +138,7 @@ Example ticket creation:
 
 ```bash
 curl -X POST http://localhost:8080/api/tickets \
-  -H "Authorization: Bearer <token>" \
+  -b cookies.txt -H "X-CSRF-Token: $CSRF" \
   -H "Content-Type: application/json" \
   -d '{"projectId":"<project-id>","title":"Production site down","description":"The client cannot access the portal.","category":"SUPPORT","priority":"HIGH"}'
 ```
@@ -116,10 +147,10 @@ Example triage flow:
 
 ```bash
 curl -X POST http://localhost:8080/api/tickets/<ticket-id>/triage-suggestion \
-  -H "Authorization: Bearer <internal-token>"
+  -b cookies.txt -H "X-CSRF-Token: $CSRF"
 
 curl -X PATCH http://localhost:8080/api/tickets/<ticket-id>/apply-triage-suggestion \
-  -H "Authorization: Bearer <internal-token>"
+  -b cookies.txt -H "X-CSRF-Token: $CSRF"
 ```
 
 ### Releases

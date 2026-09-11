@@ -41,7 +41,6 @@ async function login(page: Page, role: 'Admin' | 'Developer' | 'Client') {
 
 test('real administrator, developer and client workflows with persisted advisory triage', async ({
   page,
-  request,
 }) => {
   const scriptErrors: string[] = [];
   page.on('pageerror', (error) => scriptErrors.push(error.message));
@@ -51,6 +50,7 @@ test('real administrator, developer and client workflows with persisted advisory
   await expect(page.getByLabel('Password', { exact: true })).toBeFocused();
   await capture(page, 'login');
   await accessible(page);
+  await page.getByLabel('Email', { exact: true }).fill('admin@example.com');
   await page.getByLabel('Password', { exact: true }).fill('wrong-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('alert')).toBeVisible();
@@ -121,10 +121,10 @@ test('real administrator, developer and client workflows with persisted advisory
   await page.reload();
   await expect(page.getByLabel('Category', { exact: true })).toHaveValue('PERFORMANCE');
   await expect(page.getByText('Triage Suggestion Applied', { exact: true })).toHaveCount(1);
-  const token = await page.evaluate(() => localStorage.getItem('clientops_token'));
-  const headers = { Authorization: `Bearer ${token}` };
-  await request.patch(`/api/tickets/${ticketId}/apply-triage-suggestion`, { headers });
-  const persisted = await request.get(`/api/tickets/${ticketId}`, { headers });
+  const csrf = await page.request.get('/api/auth/csrf');
+  const headers = { 'X-CSRF-Token': (await csrf.json()).data.csrfToken };
+  await page.request.patch(`/api/tickets/${ticketId}/apply-triage-suggestion`, { headers });
+  const persisted = await page.request.get(`/api/tickets/${ticketId}`, { headers });
   expect(
     (await persisted.json()).data.events.filter(
       (event: { eventType: string }) => event.eventType === 'TRIAGE_SUGGESTION_APPLIED',
@@ -337,6 +337,7 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
 }) => {
   await login(page, 'Admin');
   await page.evaluate(() => localStorage.setItem('clientops_token', 'invalid-token'));
+  await context.clearCookies();
   await page.reload();
   await expect(page).toHaveURL(/\/login$/);
   expect(await page.evaluate(() => localStorage.getItem('clientops_token'))).toBeNull();

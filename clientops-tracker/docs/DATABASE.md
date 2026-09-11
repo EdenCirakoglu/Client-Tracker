@@ -1,5 +1,22 @@
 # Database
 
+## Session and Account Migration
+
+The additive `0001_tense_scarlet_witch.sql` migration retains all original business
+tables and IDs. Users gain `account_status` (ACTIVE/INVITED/DISABLED), `auth_version`
+and `is_demo`. Known legacy demo identities are marked, not deleted or overwritten.
+`web_sessions` matches connect-pg-simple's JSON/expiry contract. `auth_sessions`
+stores SHA-256 SID grants with idle/absolute expiry and revocation. `account_tokens`
+stores only hashes of expiring single-use invitation/reset links. `bootstrap_state`
+is a durable singleton protected by an advisory transaction lock. `auth_rate_limits`
+stores shared rate-limiter-flexible buckets. Session grants and account tokens
+reference users with cascade deletion; normal account disablement does not delete
+users, so ticket/comment history remains intact.
+
+The [hardening runbook](SESSION_HARDENING.md) verifies upgrading a populated
+disposable database without reseeding. Its before/after hashes cover every original
+business column; new user auth fields are intentionally excluded from that comparison.
+
 ClientOps Tracker uses PostgreSQL with Drizzle ORM. The database is the source of truth for operational state and history.
 
 ## Entity Relationship Diagram

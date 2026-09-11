@@ -10,6 +10,8 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.ts'],
     fileParallelism: false,
+    testTimeout: 30000,
+    hookTimeout: 30000,
     globalSetup: ['./tests/global-setup.ts'],
     env: {
       NODE_ENV: 'test',
@@ -17,7 +19,8 @@ export default defineConfig({
       TEST_DATABASE_URL: testUrl,
       DISPOSABLE_DATABASE_NAME: process.env.DISPOSABLE_DATABASE_NAME!,
       SEED_RESET: 'true',
-      JWT_SECRET: 'disposable_test_jwt_secret_never_use_in_production',
+      SESSION_SECRET: 'disposable_test_session_secret_never_use_in_production',
+      DEMO_MODE: 'true',
     },
   },
 });

@@ -6,6 +6,7 @@ export default defineConfig({
     migrate: 'src/db/migrate.ts',
     seed: 'src/db/seed.ts',
     fingerprint: 'src/db/fingerprint.ts',
+    bootstrap: 'src/db/bootstrap.ts',
   },
   format: ['esm'],
   target: 'node24',

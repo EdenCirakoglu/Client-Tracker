@@ -1,9 +1,11 @@
+import { env } from '../config/env';
 export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'ClientOps Tracker API',
-    version: '0.4.0',
-    description: 'REST API for a software company support and project operations portal.',
+    version: '0.5.0',
+    description:
+      'Cookie-session REST API. First GET /api/auth/csrf, retain cookies, then send X-CSRF-Token on every POST/PATCH including login. Login rotates the session and returns a fresh CSRF token. Swagger obtains this token automatically. Bearer JWTs are no longer accepted. Recovery links arrive by email; no public registration. ADMIN controls invitations and account membership.',
   },
   servers: [
     {
@@ -13,10 +15,10 @@ export const openApiDocument = {
   ],
   components: {
     securitySchemes: {
-      bearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
+      cookieAuth: {
+        type: 'apiKey',
+        in: 'cookie',
+        name: env.NODE_ENV === 'production' ? '__Host-clientops.sid' : 'clientops.sid',
       },
     },
     schemas: {
@@ -208,12 +210,82 @@ export const openApiDocument = {
           },
         },
         responses: {
-          '200': { description: 'JWT and user profile' },
+          '200': { description: 'Set-Cookie (HttpOnly SID) and data: {user, csrfToken}; no JWT.' },
           '401': { description: 'Invalid credentials' },
+          '403': { description: 'Missing or invalid CSRF token/origin' },
+          '429': { description: 'Rate limited; Retry-After header in seconds' },
         },
       },
     },
     '/api/auth/me': authPath('Get current authenticated user'),
+    '/api/auth/config': {
+      get: {
+        summary: 'Whether local disposable demo shortcuts are enabled',
+        responses: { '200': { description: 'data: {demoEnabled: boolean}' } },
+      },
+    },
+    '/api/auth/csrf': {
+      get: {
+        summary: 'Establish anonymous session and get CSRF token',
+        responses: {
+          '200': { description: 'data: {csrfToken: string}; retain the cookie' },
+          '429': { description: 'Rate limited' },
+        },
+      },
+    },
+    '/api/auth/logout': { post: accountOperation('Revoke this session', {}) },
+    '/api/auth/forgot-password': {
+      post: accountOperation('Request recovery; identical 202 whether account exists or not', {
+        email: { type: 'string', format: 'email' },
+      }),
+    },
+    '/api/auth/accept-invitation': {
+      post: accountOperation(
+        'Consume a single-use invitation (role and organisation are server assigned)',
+        {
+          token: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+          password: { type: 'string', minLength: 12, description: 'Maximum 72 UTF-8 bytes' },
+        },
+      ),
+    },
+    '/api/auth/reset-password': {
+      post: accountOperation('Consume reset link and revoke all account sessions', {
+        token: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+        password: { type: 'string', minLength: 12 },
+      }),
+    },
+    '/api/auth/change-password': {
+      post: accountOperation('Change current password and revoke all account sessions', {
+        currentPassword: { type: 'string' },
+        password: { type: 'string', minLength: 12 },
+      }),
+    },
+    '/api/users': authPath('ADMIN only: list accounts without credentials'),
+    '/api/users/invitations': {
+      post: accountOperation('ADMIN only: create or resend a pending invitation', {
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        role: { type: 'string', enum: ['ADMIN', 'DEVELOPER', 'CLIENT'] },
+        clientId: {
+          type: 'string',
+          format: 'uuid',
+          nullable: true,
+          description: 'Required for CLIENT; null for staff',
+        },
+      }),
+    },
+    '/api/users/{id}': {
+      patch: {
+        ...accountOperation('ADMIN only: change role/organisation or disable; revoke sessions', {
+          role: { type: 'string', enum: ['ADMIN', 'DEVELOPER', 'CLIENT'] },
+          clientId: { type: 'string', format: 'uuid', nullable: true },
+          disabled: { type: 'boolean' },
+        }),
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+      },
+    },
     '/api/clients': collectionPath('Clients', '#/components/schemas/ClientInput', true),
     '/api/clients/{id}': itemPath('Client'),
     '/api/projects': collectionPath('Projects', '#/components/schemas/ProjectInput', true),
@@ -276,7 +348,7 @@ function authPath(summary: string) {
 function securedOperation(summary: string, requestSchema?: string, hasIdParam = false) {
   return {
     summary,
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }],
     ...(hasIdParam
       ? {
           parameters: [
@@ -318,7 +390,7 @@ function triageOperation(summary: string, responseSchema: string) {
     summary,
     description:
       'ADMIN and DEVELOPER only. Deterministic rules, not a live LLM. Ticket detail loads the saved suggestion for internal users only. Application is transactional and idempotent: repeating an accepted suggestion does not change the ticket or create another event.',
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }],
     parameters: [
       {
         name: 'id',
@@ -384,6 +456,38 @@ function jsonErrorContent() {
   return {
     'application/json': {
       schema: { $ref: '#/components/schemas/ErrorResponse' },
+    },
+  };
+}
+
+function accountOperation(summary: string, properties: Record<string, unknown>) {
+  return {
+    summary,
+    description:
+      'Requires the synchronizer X-CSRF-Token header and its session cookie. Invalid/expired/used tokens return LINK_INVALID. Authentication and recovery are rate limited.',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            required: Object.keys(properties),
+            properties,
+          },
+        },
+      },
+    },
+    responses: {
+      '200': { description: 'Successful operation, data envelope' },
+      '201': { description: 'Invitation delivered' },
+      '202': { description: 'Generic recovery acknowledgement' },
+      '400': { description: 'Invalid input or expired/used link' },
+      '401': { description: 'Session ended' },
+      '403': { description: 'Forbidden or CSRF invalid' },
+      '409': { description: 'Account conflict' },
+      '429': { description: 'Rate limited' },
+      '503': { description: 'Mail or authentication service unavailable' },
     },
   };
 }

@@ -13,6 +13,7 @@ Manage client projects, support tickets, comments, releases, and advisory rule-b
 - [Engineering summary](clientops-tracker/PROJECT_SUMMARY.md)
 - [Architecture](clientops-tracker/docs/ARCHITECTURE.md)
 - [API reference](clientops-tracker/docs/API.md)
+- [Secure sessions and account setup](clientops-tracker/docs/SESSION_HARDENING.md)
 - [Deployment guide](clientops-tracker/docs/DEPLOYMENT.md)
 - [Release verification evidence](clientops-tracker/docs/RELEASE_READINESS.md)
 - [Screenshots](clientops-tracker/docs/SCREENSHOTS.md)

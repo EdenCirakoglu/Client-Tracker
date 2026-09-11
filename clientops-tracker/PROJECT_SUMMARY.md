@@ -13,7 +13,7 @@ The project was built to demonstrate production-minded full-stack engineering th
 - Next.js TypeScript dashboard using the App Router and Tailwind CSS.
 - Express TypeScript REST API with route, controller, service, middleware, and validation layers.
 - PostgreSQL relational schema implemented with Drizzle ORM and versioned migrations.
-- JWT authentication with bcryptjs password verification.
+- PostgreSQL-backed revocable sessions, HttpOnly/Secure cookies, CSRF protection and bcryptjs password verification.
 - Role-based and ownership-based authorization for administrators, developers, and clients.
 - Zod validation and centralized JSON error handling.
 - Swagger/OpenAPI documentation for the API contract.
@@ -23,7 +23,7 @@ The project was built to demonstrate production-minded full-stack engineering th
 
 ## Architecture
 
-The web application calls the Express API with bearer tokens. The API authenticates and authorizes each protected request, validates input, delegates domain operations to services, and persists data through Drizzle ORM in PostgreSQL. The triage service is isolated so a future LLM provider can be introduced without changing route contracts.
+The web application calls Express with cookie sessions and synchronizer CSRF tokens. The API enforces idle/absolute expiry, revocation, current roles and organisation ownership, validates input, delegates domain operations to services, and persists through Drizzle/PostgreSQL. Controlled bootstrap, administrator invitations and single-use password recovery provide non-demo account setup. The triage provider boundary remains deterministic and unchanged.
 
 ## Testing and CI
 
@@ -41,7 +41,7 @@ The older main commit (`611ca061`) contained the placeholder frontend. PR #1 pre
 
 ## Future Improvements
 
-Planned improvements include secure HTTP-only cookie sessions, rate limiting, audit logging, pagination, richer tenant administration, integrations, hosted SaaS capabilities, and an optional provider-backed triage adapter.
+Cookie sessions, recovery, invitations and PostgreSQL-backed authentication rate limits are implemented in the hardening branch. The next milestone covers backup/restore drills, monitoring, real TLS/secrets/SMTP configuration, security-event audit retention and durable email delivery. MFA, pagination, integrations and an optional provider-backed triage adapter remain future improvements. See [session hardening](docs/SESSION_HARDENING.md) for design and local verification, distinct from public deployment.
 
 ## Links
 
