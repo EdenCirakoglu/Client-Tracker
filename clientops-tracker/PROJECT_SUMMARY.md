@@ -27,7 +27,7 @@ The web application calls the Express API with bearer tokens. The API authentica
 
 ## Testing and CI
 
-Local release checks: 34 API tests and four browser scenarios passed, including two-client privacy, persisted triage, ticket update feedback, keyboard navigation and session handling. The full PostgreSQL/API/web/Nginx stack ran locally; content fingerprints verify isolation and persistence after restart. Twenty-one fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). These are local results, not a claim of public deployment.
+The merged release revision `3fa8d7f` passed hosted CI with 37 API tests and four browser/accessibility scenarios. Both GHCR images were published for that exact SHA, pulled locally without rebuilding, and passed all four browser scenarios again. Database fingerprints verified persistence after full container recreation and preservation of existing databases. See [published-image evidence](docs/REGISTRY_VERIFICATION.md) for exact revisions, digests and reports. Twenty-one fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). Public deployment has not been performed.
 
 The pnpm workspace provides commands for linting, typechecking, testing, building, formatting, migrations and Compose validation. GitHub-discoverable root workflows check out the exact PR head and run these checks plus real container/browser scenarios. See [revision-specific verification evidence](docs/RELEASE_READINESS.md) for hosted results and [browser reproduction](docs/BROWSER_TESTS.md) for HTML/JSON reports. Tests use a separately designated disposable database, with two-client privacy regression tests and transactional/idempotent triage coverage.
 
@@ -37,7 +37,7 @@ The repository includes production container definitions, an Nginx public entry 
 
 ## Release-Readiness Evidence
 
-The previous public main commit (`611ca061`) contains the placeholder frontend. The newer dashboard and operations documentation were located in the local working tree; this pass preserves that work and history. API regression checks reproduced and fixed client workload disclosure, internal triage disclosure on creation and missing saved triage on detail. Local test execution left the original demo database content fingerprint unchanged.
+The older main commit (`611ca061`) contained the placeholder frontend. PR #1 preserved the newer local implementation in checkpoint history and was merged with a normal merge commit after verified CI. API regressions cover client workload/privacy, saved triage, rollback of ticket/comment changes when history writes fail, and concurrent update history. Existing demonstration databases remained unchanged during verification.
 
 ## Future Improvements
 
