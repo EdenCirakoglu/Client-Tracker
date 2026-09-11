@@ -90,11 +90,11 @@ function Accounts() {
         </p>
       ) : null}
       <div className="mt-6 grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <section aria-label="Workspace accounts">
+        <section aria-label="Workspace accounts" className="min-w-0">
           {loading ? (
             <p role="status">Loading accounts...</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Accounts table">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-border">

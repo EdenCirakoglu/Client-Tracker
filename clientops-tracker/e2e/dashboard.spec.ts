@@ -141,6 +141,16 @@ test('theme and navigation preferences work across responsive portal and account
     await expect(page.getByText(/^(Loading(?: \w+)?|Checking session)\.\.\.$/)).toHaveCount(0);
     await accessible(page);
     await capture(page, `dark-${route.slice(1)}`);
+    if (route === '/users') {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await accessible(page);
+      const accountsTable = page.getByRole('region', { name: 'Accounts table', exact: true });
+      await accountsTable.focus();
+      await page.keyboard.press('End');
+      await expect(accountsTable).toBeFocused();
+      await capture(page, 'mobile-accounts');
+      await page.setViewportSize({ width: 1440, height: 1000 });
+    }
   }
   await page.goto('/tickets');
   await page.getByRole('table').waitFor();
