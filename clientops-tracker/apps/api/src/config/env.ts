@@ -39,7 +39,7 @@ export const env = envSchema.parse(process.env);
 if (
   env.NODE_ENV === 'production' &&
   (!process.env.SESSION_SECRET ||
-    /change.?me|development|example|placeholder/i.test(env.SESSION_SECRET) ||
+    /change.?me|replace.?with|development|example|placeholder/i.test(env.SESSION_SECRET) ||
     !env.APP_ORIGIN.startsWith('https://') ||
     (env.API_ORIGIN && !env.API_ORIGIN.startsWith('https://')))
 ) {
