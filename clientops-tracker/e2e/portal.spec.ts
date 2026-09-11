@@ -100,6 +100,33 @@ test('real administrator, developer and client workflows with persisted advisory
   ).toBe(true);
   await capture(page, 'tickets-list');
   await accessible(page);
+  await test.step('rapid filter changes preserve each selection and browser history', async () => {
+    await page.evaluate(() => {
+      for (const [key, value] of [
+        ['status', 'UNRESOLVED'],
+        ['priority', 'CRITICAL'],
+        ['category', 'SECURITY'],
+      ]) {
+        const select = document.querySelector<HTMLSelectElement>(
+          `select[aria-label="Filter by ${key}"]`,
+        )!;
+        select.value = value!;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    await expect(page).toHaveURL(/status=UNRESOLVED&priority=CRITICAL&category=SECURITY$/);
+    await expect(page.getByLabel('Filter by status')).toHaveValue('UNRESOLVED');
+    await expect(page.getByLabel('Filter by priority')).toHaveValue('CRITICAL');
+    await expect(page.getByLabel('Filter by category')).toHaveValue('SECURITY');
+    await page.reload();
+    await expect(page.getByLabel('Filter by priority')).toHaveValue('CRITICAL');
+    await page.goBack();
+    await expect(page).toHaveURL(/status=UNRESOLVED&priority=CRITICAL$/);
+    await expect(page.getByLabel('Filter by category')).toHaveValue('ALL');
+    await page.getByRole('link', { name: 'Reset filters', exact: true }).click();
+    await expect(page).toHaveURL(/\/tickets$/);
+    await expect(page.getByRole('table')).toBeVisible();
+  });
   for (const [label, value] of [
     ['Filter by status', 'OPEN'],
     ['Filter by priority', 'CRITICAL'],

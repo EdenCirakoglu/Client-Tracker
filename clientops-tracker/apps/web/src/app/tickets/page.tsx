@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 
 import { ProtectedPage } from '../../components/app-shell';
@@ -28,7 +28,6 @@ export default function TicketsPage() {
 
 function TicketList() {
   const params = useSearchParams();
-  const router = useRouter();
   const { user } = useAuth();
   const query = params.toString();
   const statusFilter = params.get('status') ?? 'ALL';
@@ -40,20 +39,21 @@ function TicketList() {
   useEffect(() => {
     if (search === searchParam) return;
     const timer = setTimeout(() => {
-      const next = new URLSearchParams(query);
+      const next = new URLSearchParams(window.location.search);
       if (search) next.set('search', search);
       else next.delete('search');
       next.delete('page');
-      router.replace(`/tickets?${next}`, { scroll: false });
+      window.history.replaceState(null, '', `/tickets?${next}`);
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, searchParam, query, router]);
+  }, [search, searchParam, query]);
   const setFilter = (key: string, value: string) => {
-    const next = new URLSearchParams(query);
+    // Read the latest URL so rapid changes cannot overwrite pending filter edits.
+    const next = new URLSearchParams(window.location.search);
     if (value && value !== 'ALL') next.set(key, value);
     else next.delete(key);
     if (key !== 'page') next.delete('page');
-    router.push(`/tickets?${next}`, { scroll: false });
+    window.history.pushState(null, '', `/tickets?${next}`);
   };
   const ticketsState = useApiData(() => api.ticketQueue(query), [query]);
   const filteredTickets = ticketsState.data?.items ?? [];
