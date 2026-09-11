@@ -63,11 +63,18 @@ context, not a complete lifecycle/SLA performance measure. See
 - URL filters survive direct links, reloads and navigation. Reset filters clears
   the scope filters. Failed requests show retry, not fabricated zero counts or an
   empty-state message. Refresh time means the completed metric snapshot.
+  Same-page filter updates use Next.js's supported
+  [native history integration](https://nextjs.org/docs/app/getting-started/linking-and-navigating#native-history-api).
+  Each update reads the current browser URL, preventing rapid selections from
+  overwriting one another while a router transition is pending. Back navigation
+  and reload retain the selected filters.
 - `CT-` plus the first eight UUID characters is a readable display reference, not
   a globally unique replacement key; all routes and writes use the complete UUID.
   No artificial urgency, due dates, SLA scores or percentage trends are generated.
 - Login, invitation/password setup, recovery and account security reuse the same
   theme, form controls and feedback. Demo shortcuts remain disposable-only.
+  Tables wrap at normal word boundaries; narrow account tables scroll within a
+  keyboard-focusable region instead of widening the mobile page.
 
 ## API and Data Changes
 

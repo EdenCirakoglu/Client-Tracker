@@ -28,9 +28,11 @@ The web application calls Express with cookie sessions and synchronizer CSRF tok
 ## Testing and CI
 
 The unmerged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
-has verified CI for code revision `2341e61`: 55 API/configuration tests and six
-real browser/accessibility scenarios, including local HTTPS cookies, Mailpit
-invitation/recovery flows and a populated database upgrade without reseeding.
+has [verified CI at `4614642`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34612080774):
+60 API/configuration tests and nine real browser/accessibility scenarios, including
+HTTPS cookies, Mailpit invitation/recovery, role queues, URL filters, both themes
+and a populated database upgrade without reseeding. Earlier results at `2341e61`
+remain revision-specific in the release evidence.
 These are runner/local verification results, not a production email service or
 public deployment. Exact revisions and reports are in the release evidence below.
 

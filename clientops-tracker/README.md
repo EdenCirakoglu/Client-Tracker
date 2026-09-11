@@ -7,7 +7,7 @@ ClientOps Tracker is an open-source support and delivery operations platform for
 
 > See [screenshots](docs/SCREENSHOTS.md) and [release verification evidence](docs/RELEASE_READINESS.md). Local verification, hosted CI and public deployment are reported separately.
 
-![Administrator dashboard from the verified local container stack](docs/assets/screenshots/admin-dashboard.png)
+![Administrator dashboard from an isolated CI container stack using fictional data](docs/assets/screenshots/ui/after/ui-admin-dashboard.png)
 
 ## Why ClientOps Tracker
 
