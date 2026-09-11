@@ -90,6 +90,17 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Fictional Client Contact');
   await page.getByRole('button', { name: 'Send invitation', exact: true }).click();
   await expect(page.getByRole('status')).toHaveText('Invitation sent.');
+  const resend = page.getByRole('button', { name: 'Resend', exact: true }).first();
+  await expect(resend).toBeVisible();
+  expect(
+    await resend.evaluate((element) => {
+      const text = document.createRange();
+      text.selectNodeContents(element);
+      return (
+        text.getBoundingClientRect().height <= parseFloat(getComputedStyle(element).lineHeight) + 1
+      );
+    }),
+  ).toBe(true);
   await accessible(page, 'admin-invitations');
   const invitation = await emailLink(page, address);
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
