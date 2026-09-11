@@ -475,8 +475,7 @@ function securedOperation(summary: string, requestSchema?: string, hasIdParam = 
     responses: {
       '200': { description: 'Successful response' },
       '201': { description: 'Created' },
-      '400': { description: 'Invalid reference', content: jsonErrorContent() },
-      '422': { description: 'Validation error', content: jsonErrorContent() },
+      '400': { description: 'Invalid reference or validation error', content: jsonErrorContent() },
       '401': { description: 'Authentication required', content: jsonErrorContent() },
       '403': { description: 'Forbidden', content: jsonErrorContent() },
       '404': { description: 'Not found', content: jsonErrorContent() },

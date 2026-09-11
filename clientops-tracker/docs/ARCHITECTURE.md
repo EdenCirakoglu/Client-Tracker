@@ -20,9 +20,19 @@ flowchart TB
 
 `apps/web` provides dashboard, login, account setup/recovery, role-aware navigation and operational workflows. Its API client reads `NEXT_PUBLIC_API_URL`, uses credentialed fetch and in-memory synchronizer CSRF tokens, and converts API errors into typed frontend errors. No JWT is stored or attached.
 
+Role-specific dashboard feature components use bounded queue/activity APIs, not
+mock records or filtered subsets for summary counts. Light/Dark/System and sidebar
+preferences use separate presentation-only storage keys. [UI refinement](UI_REFINEMENT.md)
+documents the navigation, visual tokens and browser evidence.
+
 ### API application
 
 `apps/api` owns authentication, authorization, validation, request handling, domain services, OpenAPI documentation, and database access. Routes are thin and delegate business behavior to controllers and services.
+
+Queue predicates are shared with dashboard aggregates so metric links and list
+totals agree. Activity uses a tenant-scoped source allowlist before pagination;
+client timestamps never derive from hidden internal activity. See the
+[dashboard query contract](DASHBOARD_QUERIES.md).
 
 ### Database
 

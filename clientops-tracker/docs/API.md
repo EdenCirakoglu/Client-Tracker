@@ -28,7 +28,7 @@ Errors use an `error` envelope:
 }
 ```
 
-Common statuses are `401` for missing or invalid authentication, `403` for insufficient permissions, `404` for missing or inaccessible resources, and `422` for validation failures.
+Common statuses are `401` for missing or invalid authentication, `403` for insufficient permissions, `404` for missing or inaccessible resources, and `400` for validation failures.
 
 ## Authentication
 
@@ -112,6 +112,7 @@ Full defaults and revocation semantics: [security model](SECURITY.md).
 ### Tickets
 
 - `GET /api/tickets` - list tickets visible to the current user.
+- `GET /api/tickets/queue` - bounded filtered page with joined display names and a full-scope total; see the [dashboard query contract](DASHBOARD_QUERIES.md).
 - `POST /api/tickets` - create a ticket for an allowed project.
 - `GET /api/tickets/:id` - get a visible ticket.
 - `PATCH /api/tickets/:id` - update ticket fields allowed by the caller's role.
@@ -161,16 +162,17 @@ curl -X PATCH http://localhost:8080/api/tickets/<ticket-id>/apply-triage-suggest
 ### Dashboard
 
 - `GET /api/dashboard/metrics` - scoped totals, status/priority breakdowns and resolution time. `developerWorkload` is omitted entirely for CLIENT users, not merely hidden in the UI. `totalOpenTickets` counts OPEN; workload counts all unresolved tickets; critical count excludes resolved/closed tickets.
+- `GET /api/dashboard/activity` - bounded permitted ticket events, comment metadata and releases. Client feeds omit hidden/internal sources before paging. `kind=release` powers recent releases. See [query parameters and privacy](DASHBOARD_QUERIES.md#activity).
 
 Metric definitions (all use the caller's visible tickets):
 
 | Metric                       | Definition                                                                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Open tickets                 | Only status `OPEN`, not every outstanding ticket.                                                                                          |
-| Unresolved total             | `OPEN` + `IN_PROGRESS` + `WAITING_FOR_CLIENT`; the dashboard derives this from status counts.                                              |
+| Unresolved total             | `OPEN` + `IN_PROGRESS` + `WAITING_FOR_CLIENT`; returned as `unresolvedTickets`.                                                            |
 | Critical tickets             | Priority `CRITICAL`, excluding `RESOLVED` and `CLOSED`.                                                                                    |
 | Waiting for client           | Only status `WAITING_FOR_CLIENT`.                                                                                                          |
-| Resolved this month          | A recorded `resolvedAt` on or after the current UTC month's start. This is timestamp-based, not a count of current `RESOLVED` status.      |
+| Resolved this month          | A recorded `resolvedAt` within the returned UTC calendar month, excluding later months; not a count of current `RESOLVED` status.          |
 | Average resolution           | Mean hours from creation to recorded resolution across all visible tickets with non-negative durations; null if none.                      |
 | Status / priority breakdowns | All visible tickets, including resolved and closed.                                                                                        |
 | Developer workload           | Assigned unresolved tickets per developer, including waiting-for-client tickets. Unassigned tickets are not workload. Internal users only. |
