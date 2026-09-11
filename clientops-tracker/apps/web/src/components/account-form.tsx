@@ -7,6 +7,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { Button } from './ui/button';
 import { FieldLabel, Input } from './ui/input';
+import { ThemePicker } from './ui/preferences';
 
 export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' | 'change' }) {
   const { refreshUser } = useAuth();
@@ -184,10 +185,15 @@ export function PublicAccountPage({ mode }: { mode: 'forgot' | 'invitation' | 'r
   return (
     <main className="min-h-screen bg-surface px-4 py-12">
       <div className="mx-auto max-w-md">
-        <Link href="/login" className="text-sm font-semibold text-brand-700">
-          ClientOps Tracker
-        </Link>
-        <AccountForm mode={mode} />
+        <div className="mb-4 flex justify-end">
+          <ThemePicker />
+        </div>
+        <div className="rounded-lg border border-border bg-panel p-6 sm:p-8">
+          <Link href="/login" className="text-sm font-semibold text-brand-700">
+            ClientOps Tracker
+          </Link>
+          <AccountForm mode={mode} />
+        </div>
       </div>
     </main>
   );

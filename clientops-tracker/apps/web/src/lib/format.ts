@@ -28,3 +28,6 @@ export function titleCase(value: string) {
     .map((part) => part.charAt(0) + part.slice(1).toLowerCase())
     .join(' ');
 }
+export function ticketReference(id: string) {
+  return `CT-${id.slice(0, 8).toUpperCase()}`;
+}

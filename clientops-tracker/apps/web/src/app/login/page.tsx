@@ -9,6 +9,7 @@ import { FieldLabel, Input } from '../../components/ui/input';
 import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import Link from 'next/link';
+import { ThemePicker } from '../../components/ui/preferences';
 
 const demoUsers = [
   { label: 'Admin', email: 'admin@example.com', icon: ShieldCheck },
@@ -53,17 +54,18 @@ export default function LoginPage() {
 
   return (
     <main className="grid min-h-screen place-items-center bg-surface px-4 py-10">
-      <div className="w-full max-w-5xl">
-        <div className="grid overflow-hidden rounded-lg border border-border bg-white shadow-soft lg:grid-cols-[1fr_420px]">
-          <section className="flex flex-col justify-between bg-ink p-8 text-white">
+      <div className="w-full max-w-md">
+        <div className="mb-4 flex justify-end">
+          <ThemePicker />
+        </div>
+        <div className="overflow-hidden rounded-lg border border-border bg-panel">
+          <section className="border-b border-border p-6 sm:p-8">
             <div>
-              <div className="grid h-11 w-11 place-items-center rounded-md bg-white text-sm font-bold text-ink">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-action text-sm font-bold text-white">
                 CT
               </div>
-              <h1 className="mt-8 max-w-xl text-3xl font-semibold leading-tight">
-                ClientOps Tracker
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300">
+              <h1 className="mt-4 text-[28px] font-semibold leading-tight">ClientOps Tracker</h1>
+              <p className="mt-3 text-sm leading-6 text-muted">
                 ClientOps Tracker helps software teams manage clients, projects, support tickets,
                 releases, and delivery workflow.
               </p>

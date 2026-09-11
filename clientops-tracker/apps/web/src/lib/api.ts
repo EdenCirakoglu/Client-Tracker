@@ -1,4 +1,6 @@
 import type {
+  TicketQueue,
+  ActivityPage,
   Client,
   DashboardMetrics,
   LoginResponse,
@@ -148,6 +150,8 @@ export const api = {
     body: Partial<{ name: string; description: string | null; status: ProjectStatus }>,
   ) => apiRequest<Project>(`/api/projects/${id}`, { method: 'PATCH', body }),
   tickets: () => apiRequest<Ticket[]>('/api/tickets'),
+  ticketQueue: (query: string = '') => apiRequest<TicketQueue>(`/api/tickets/queue?${query}`),
+  activity: (query: string = '') => apiRequest<ActivityPage>(`/api/dashboard/activity?${query}`),
   ticket: (id: string) => apiRequest<Ticket>(`/api/tickets/${id}`),
   createTicket: (body: {
     projectId: string;

@@ -5,10 +5,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variants = {
-  primary: 'border-brand-700 bg-brand-700 text-white hover:bg-brand-600',
-  secondary: 'border-border bg-white text-ink hover:bg-slate-50',
+  primary: 'border-action bg-action text-white hover:brightness-110',
+  secondary: 'border-border bg-panel text-ink hover:bg-slate-50',
   ghost: 'border-transparent bg-transparent text-slate-700 hover:bg-slate-100',
-  danger: 'border-red-700 bg-red-700 text-white hover:bg-red-600',
+  danger: 'border-red-700 bg-red-50 text-red-700 hover:bg-slate-100',
 };
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonProps) {

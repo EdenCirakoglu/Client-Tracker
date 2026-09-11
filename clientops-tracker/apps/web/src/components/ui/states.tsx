@@ -4,10 +4,7 @@ import { Button } from './button';
 
 export function LoadingState({ label = 'Loading data...' }: { label?: string }) {
   return (
-    <div
-      role="status"
-      className="flex min-h-48 items-center justify-center bg-white p-8 text-sm text-muted"
-    >
+    <div role="status" className="flex min-h-24 items-center justify-center p-6 text-sm text-muted">
       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       {label}
     </div>
@@ -46,7 +43,7 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-white p-8 text-center">
+    <div className="rounded-lg border border-dashed border-border bg-panel p-8 text-center">
       <Inbox className="mx-auto h-8 w-8 text-slate-400" />
       <h3 className="mt-3 text-sm font-semibold text-ink">{title}</h3>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted">{description}</p>
