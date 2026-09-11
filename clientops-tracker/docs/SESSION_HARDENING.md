@@ -64,8 +64,9 @@ example. Production-cost bcrypt remains enabled in tests; multi-password scenari
 have a 30-second timeout. All 37 earlier regressions are retained, using real
 cookie/CSRF requests. Additional coverage checks session expiry, logout replay,
 rate limits, CSRF, token races, revocation, bootstrap and account assignment.
-There are 55 tests in six files: 37 retained regressions, 15 session/account tests
-and three production configuration checks. The copied production example secret
+There are 60 tests in seven files: 37 retained regressions, 15 session/account tests,
+three production configuration checks and five dashboard/queue/privacy tests.
+The copied production example secret
 and HTTP production origins are rejected at startup.
 
 ## Isolated HTTPS Browser Verification
@@ -110,7 +111,9 @@ The setup script builds current API/web images, then:
 4. Starts that separate app at https://localhost:8444 and local captured mail at
    http://localhost:8026 (the demo stack's mail is localhost:8025). No mail forwarding.
 
-The browser suite contains six scenarios:
+The browser suite retains these six scenarios and adds three dashboard/theme/error
+scenarios. See [UI_REFINEMENT.md](UI_REFINEMENT.md) for all nine scenarios and the
+optional separate UI verification stack.
 
 | Scenario                                       | Evidence                                                                                                                    |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |

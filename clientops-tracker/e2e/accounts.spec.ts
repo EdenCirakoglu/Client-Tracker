@@ -40,9 +40,14 @@ async function emailLink(page: Page, email: string, reset = false) {
       if (!message) return false;
       const detail = await (await page.request.get(`${mail}/api/v1/message/${message.ID}`)).json();
       link =
-        detail.Text.match(
-          /https:\/\/localhost:8444\/(?:set|reset)-password#token=[a-f0-9]{64}/,
-        )?.[0] ?? '';
+        ((detail.Text as string).match(/https:\/\/[^\s]+/g) ?? []).find((value) => {
+          const url = new URL(value);
+          return (
+            url.origin === origin &&
+            /^\/(set|reset)-password$/.test(url.pathname) &&
+            /^#token=[a-f0-9]{64}$/.test(url.hash)
+          );
+        }) ?? '';
       return !!link;
     })
     .toBe(true);

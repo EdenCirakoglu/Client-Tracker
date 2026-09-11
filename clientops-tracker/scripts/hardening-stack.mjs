@@ -4,21 +4,26 @@ import { resolve } from 'node:path';
 
 // This runbook only manages these two named loopback fixtures, never development volumes.
 const root = process.cwd();
+const uiFixture = process.argv.includes('--ui');
+const demoProject = uiFixture ? 'clientops-ui' : 'clientops-hardening';
+const accountsProject = uiFixture ? 'clientops-ui-accounts' : 'clientops-accounts';
 const legacy =
   'ghcr.io/edencirakoglu/client-tracker-api@sha256:0e500d2bde8d2dc055d106befede3b1edb78becfd211cf6d46bbbc088487be6d';
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: 'clientops_hardening_demo',
-  HTTPS_PORT: '8443',
-  MAIL_PORT: '8025',
+  HARDENING_DATABASE: uiFixture ? 'clientops_ui_demo' : 'clientops_hardening_demo',
+  HTTPS_PORT: uiFixture ? '8445' : '8443',
+  MAIL_PORT: uiFixture ? '8027' : '8025',
+  HARDENING_API_IMAGE: `${demoProject}-api:local`,
+  HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
   SESSION_SECRET: 'local_7a63af495caf28e6a280bcd13949726b5507afacefe37491',
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: 'clientops_accounts_demo',
-  HTTPS_PORT: '8444',
-  MAIL_PORT: '8026',
+  HARDENING_DATABASE: uiFixture ? 'clientops_ui_accounts_demo' : 'clientops_accounts_demo',
+  HTTPS_PORT: uiFixture ? '8446' : '8444',
+  MAIL_PORT: uiFixture ? '8028' : '8026',
   DEMO_MODE: 'false',
   SESSION_SECRET: 'local_29a7f021c06e9272ad63182be3a7fa9fbe11b049e07953ef',
 };
@@ -36,7 +41,7 @@ function compose(accounts, args, capture = false) {
     [
       'compose',
       '-p',
-      accounts ? 'clientops-accounts' : 'clientops-hardening',
+      accounts ? accountsProject : demoProject,
       '--env-file',
       '.env.hardening.example',
       '-f',
@@ -119,7 +124,7 @@ if (!existsSync('test-results/tls/cert.pem')) {
   ]);
 }
 for (const app of ['api', 'web']) {
-  const args = ['build', '-f', `apps/${app}/Dockerfile`, '-t', `clientops-hardening-${app}:local`];
+  const args = ['build', '-f', `apps/${app}/Dockerfile`, '-t', `${demoProject}-${app}:local`];
   if (process.env.BUILD_CA_FILE)
     args.push('--secret', `id=build_ca,src=${resolve(process.env.BUILD_CA_FILE)}`);
   args.push('.');
@@ -148,13 +153,13 @@ if (hasTables === '0') {
       'run',
       '--rm',
       '--network',
-      'clientops-hardening_default',
+      `${demoProject}_default`,
       '-e',
       'NODE_ENV=development',
       '-e',
       `DATABASE_URL=postgresql://hardening:local_disposable_database_password@postgres:5432/${baseEnv.HARDENING_DATABASE}`,
       '-e',
-      'DISPOSABLE_DATABASE_NAME=clientops_hardening_demo',
+      `DISPOSABLE_DATABASE_NAME=${baseEnv.HARDENING_DATABASE}`,
       '-e',
       'SEED_RESET=true',
       legacy,
@@ -168,7 +173,7 @@ const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  'test-results/hardening-upgrade.json',
+  `test-results/${uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),
@@ -221,5 +226,5 @@ if (hasAdmin === '0')
 compose(true, ['up', '-d', '--no-build', '--wait']);
 compose(true, ['up', '-d', '--no-deps', '--force-recreate', '--wait', 'nginx']);
 console.log(
-  'HTTPS demo: https://localhost:8443; provisioned accounts: https://localhost:8444; capture mail: http://localhost:8025 and :8026.',
+  `HTTPS demo: https://localhost:${baseEnv.HTTPS_PORT}; provisioned accounts: https://localhost:${accountsEnv.HTTPS_PORT}; capture mail: http://localhost:${baseEnv.MAIL_PORT} and :${accountsEnv.MAIL_PORT}.`,
 );

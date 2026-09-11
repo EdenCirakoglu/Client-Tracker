@@ -349,6 +349,8 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
 }) => {
   await login(page, 'Admin');
   await page.evaluate(() => localStorage.setItem('clientops_token', 'invalid-token'));
+  // Rolling session responses must settle before simulating a manually removed cookie.
+  await page.waitForLoadState('networkidle');
   await context.clearCookies();
   await page.reload();
   await expect(page).toHaveURL(/\/login$/);

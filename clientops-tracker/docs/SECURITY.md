@@ -25,6 +25,10 @@ production it is Secure and named `__Host-clientops.sid`, without a Domain attri
 Development uses `clientops.sid` so loopback HTTP can work. Production requires HTTPS.
 The frontend uses credentialed fetch; no credentials are stored in localStorage.
 One-time cleanup removes the obsolete `clientops_token` key without reading it.
+LocalStorage keys `clientops:theme` and `clientops:sidebar` contain presentation
+preferences only, not credentials or account information. Client activity feeds
+filter internal events before pagination and use public records' own timestamps;
+hidden comments and triage do not produce client-facing previews or activity dates.
 
 `auth_sessions` is an authoritative grant keyed by SHA-256(SID), not a second browser
 credential. Every protected request reloads the user and atomically checks the grant:

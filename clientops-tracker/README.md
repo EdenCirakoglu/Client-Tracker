@@ -23,7 +23,8 @@ Small software teams often split client requests between email, chat, spreadshee
 - Swagger/OpenAPI documentation for the REST API.
 - Rule-based ticket triage that suggests category, priority, summary, next action, and a heuristic rule-match score.
 - Advisory triage application with ticket event history.
-- Responsive Next.js dashboard using the real Express API.
+- Role-specific work queues, linked metrics and private activity from the real Express API.
+- Responsive, collapsible navigation and Light/Dark/System themes across portal and account screens.
 - Vitest/Supertest API tests plus real-container Playwright journeys and axe accessibility checks.
 - Docker Compose development setup and production container definitions.
 - GitHub Actions CI and GitHub Container Registry image publishing.
@@ -264,7 +265,8 @@ Main route groups:
 - Projects: `/api/projects`
 - Tickets and comments: `/api/tickets`
 - Releases: `/api/releases`
-- Dashboard metrics: `/api/dashboard/metrics`
+- Dashboard metrics and activity: `/api/dashboard/metrics`, `/api/dashboard/activity`
+- Bounded ticket filtering and pagination: `/api/tickets/queue`
 - Health: `/health`
 
 ## Roles
@@ -335,7 +337,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production.example con
 
 Root GitHub workflows run application checks, migration, isolated tests, Compose image builds and browser/accessibility scenarios. See [revision-specific results](docs/RELEASE_READINESS.md) for actual hosted evidence, separate from local checks. Image publishing requires successful main CI for the same full commit SHA. The optional manual DigitalOcean workflow requires an approved production environment.
 
-API tests and browser tests are separate commands. Tests now require the dedicated security-test cluster and local Mailpit; update existing `.env.test` values from the example without overwriting unrelated settings. See [hardening verification](docs/SESSION_HARDENING.md) for all six browser scenarios and report locations. [Earlier browser evidence](docs/BROWSER_TESTS.md) remains revision-specific.
+API tests and browser tests are separate commands. Tests require the dedicated security-test cluster and local Mailpit; update existing `.env.test` values from the example without overwriting unrelated settings. See [hardening verification](docs/SESSION_HARDENING.md) and [UI refinement](docs/UI_REFINEMENT.md) for all nine browser scenarios, exact commands and report locations. [Earlier browser evidence](docs/BROWSER_TESTS.md) remains revision-specific.
 
 For browser checks against the isolated stack (these create fictional records):
 
