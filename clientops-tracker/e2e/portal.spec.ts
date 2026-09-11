@@ -87,6 +87,17 @@ test('real administrator, developer and client workflows with persisted advisory
   }
   await page.getByRole('link', { name: 'Tickets', exact: true }).click();
   await expect(page.getByRole('table')).toBeVisible();
+  const unassigned = page.getByRole('cell', { name: 'Unassigned', exact: true }).first();
+  await expect(unassigned).toBeVisible();
+  expect(
+    await unassigned.evaluate((element) => {
+      const text = document.createRange();
+      text.selectNodeContents(element);
+      return (
+        text.getBoundingClientRect().height <= parseFloat(getComputedStyle(element).lineHeight) + 1
+      );
+    }),
+  ).toBe(true);
   await capture(page, 'tickets-list');
   await accessible(page);
   for (const [label, value] of [

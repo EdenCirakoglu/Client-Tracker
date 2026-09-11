@@ -10,7 +10,9 @@ export function DataTable({
       className={`min-w-0 overflow-hidden rounded-lg border border-border bg-panel ${className}`}
     >
       <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Records table">
-        <table className="min-w-full divide-y divide-border text-sm">{children}</table>
+        <table className="min-w-full divide-y divide-border text-sm [overflow-wrap:normal]">
+          {children}
+        </table>
       </div>
     </div>
   );
