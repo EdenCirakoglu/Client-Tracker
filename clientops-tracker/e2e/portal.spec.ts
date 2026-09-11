@@ -39,6 +39,18 @@ async function login(page: Page, role: 'Admin' | 'Developer' | 'Client') {
   await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
 }
 
+async function logout(page: Page) {
+  const completed = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === '/api/auth/logout' &&
+      response.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  expect((await completed).ok()).toBe(true);
+  await expect(page).toHaveURL(/\/login$/);
+  expect((await page.request.get('/api/auth/me')).status()).toBe(401);
+}
+
 test('real administrator, developer and client workflows with persisted advisory triage', async ({
   page,
 }) => {
@@ -161,7 +173,7 @@ test('real administrator, developer and client workflows with persisted advisory
       }),
     ).toBe(true);
   });
-  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  await logout(page);
 
   await login(page, 'Developer');
   await capture(page, 'developer-dashboard');
@@ -228,7 +240,7 @@ test('real administrator, developer and client workflows with persisted advisory
     await page.reload();
     await expect(page.getByLabel('Priority', { exact: true })).toHaveValue('HIGH');
   });
-  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  await logout(page);
 
   await login(page, 'Client');
   await expect(page.getByText('Developer workload', { exact: true })).toHaveCount(0);
@@ -345,7 +357,28 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
   const secondTab = await context.newPage();
   await secondTab.goto('/dashboard');
   await expect(secondTab.getByText('Tickets by status', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  let releaseLogout!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseLogout = resolve;
+  });
+  await page.route('**/api/auth/logout', async (route) => {
+    await gate;
+    await route.continue();
+  });
+  const completed = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/auth/logout',
+  );
+  try {
+    await page.getByRole('button', { name: 'Logout', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Logout', exact: true })).toBeDisabled();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(secondTab).toHaveURL(/\/dashboard$/);
+  } finally {
+    releaseLogout();
+  }
+  expect((await completed).ok()).toBe(true);
+  await expect(page).toHaveURL(/\/login$/);
+  expect((await page.request.get('/api/auth/me')).status()).toBe(401);
   await expect(secondTab).toHaveURL(/\/login$/);
   await secondTab.close();
 });
