@@ -111,6 +111,11 @@ test('theme and navigation preferences work across responsive portal and account
   await page.mouse.move(700, 90);
   await page.getByRole('link', { name: 'Tickets', exact: true }).focus();
   await expect(page.locator('.nav-tooltip').filter({ hasText: /^Tickets$/ })).toBeVisible();
+  const tooltip = await page
+    .locator('.nav-tooltip')
+    .filter({ hasText: /^Tickets$/ })
+    .boundingBox();
+  expect(tooltip!.width).toBeGreaterThan(tooltip!.height);
   await capture(page, 'collapsed-navigation');
   await page.reload();
   await expect(page.getByRole('button', { name: 'Expand navigation' })).toBeVisible();

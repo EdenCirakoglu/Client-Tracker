@@ -161,6 +161,8 @@ svg {
     display: block;
     position: fixed;
     left: 80px;
+    width: max-content;
+    white-space: nowrap;
     z-index: 60;
     padding: 6px 10px;
     background: rgb(var(--panel));
