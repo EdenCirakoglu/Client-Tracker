@@ -24,17 +24,84 @@ revocation. An additive migration preserves the original business records.
 Design, configuration, exact commands and report locations:
 [SESSION_HARDENING.md](SESSION_HARDENING.md).
 
-Initial local verification on the implementation working tree:
+### Tested Implementation Revision
 
-- All 52 API tests passed (37 retained + 15 new security/account tests).
-- Lint and typecheck passed. API and container API/web builds succeeded.
-- Two separate HTTPS stacks reached healthy state; the populated fixture's
-  original business columns matched before/after migration without reseeding.
-- Four retained browser scenarios passed. New account scenarios initially exposed
-  a same-document setup-link state defect and an ambiguous Next.js alert selector;
-  both were corrected, without dropping assertions.
-- Final browser, host build and clean-revision hosted results are recorded in the
-  follow-up below when completed, not inferred from earlier passes.
+[Draft PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3), code revision
+`2341e61432e7087ae7f92c2083b8363d72b97dd5`. The evidence-only commit recording
+these results follows that revision; it does not change the tested application.
+Later PR-head checks are linked from the PR, not retroactively assigned to this run.
+
+| Gate                                          | Actual result at the code revision above                                                                                                                                                      |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local lint/typecheck/format                   | `pnpm lint`, `pnpm typecheck`, `pnpm format:check`: passed                                                                                                                                    |
+| Local API/configuration tests                 | `pnpm test`: 55 passed, six files, 38.56s; 37 earlier regressions retained                                                                                                                    |
+| Host builds                                   | `pnpm build`: API and Next.js production builds passed                                                                                                                                        |
+| Compose syntax                                | Development and production `config --quiet`: passed separately from runtime                                                                                                                   |
+| Local runtime                                 | `node scripts/hardening-stack.mjs start`: API/web built; both isolated HTTPS stacks healthy                                                                                                   |
+| Local browser/axe                             | `pnpm test:e2e`: six passed, zero failed/skipped/flaky, 36.2s, isolated Chrome                                                                                                                |
+| Hosted CI                                     | [34599463537](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34599463537): success; exact clean head checkout, 55 tests, builds, Compose and six Chromium/axe scenarios (34.2s) |
+| Populated upgrade                             | Fresh legacy fixture migrated without reseeding; original columns in all eight business tables unchanged                                                                                      |
+| Persistence                                   | Sessions and business data survived PostgreSQL/API/web/Nginx restart in both new fixtures                                                                                                     |
+| Existing databases                            | Original development and both earlier verification databases still match their previously recorded hashes                                                                                     |
+| Hardening image publication/public deployment | Neither performed; this implementation remains in an unmerged draft PR                                                                                                                        |
+
+The [hosted browser artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34599463537/artifacts/10263912740)
+was downloaded and inspected. SHA-256:
+`5999e3ed7decd1783b78effd1f0efc7211fb8936c53fe69ae223fd2093ca6364`.
+It contains HTML/JSON reports, screenshots and `hardening-upgrade.json` with
+`workingTreeDirty=false`, `populatedFromLegacyThisRun=true` and matching before/after
+hashes. It contains no `.pem` or `.key` files. Current artifact expiry: 2026-12-10.
+The explicit `config.metadata.revision` and recorded `git rev-parse HEAD` identify
+the tested head; Playwright's automatic CI metadata may also display GitHub's
+synthetic PR merge reference, which was not the checkout used here.
+
+Local reports (workspace-relative, ignored and replaced by later runs):
+
+- `playwright-report/index.html` and `test-results/browser-results.json`.
+- JSON: revision `2341e61`, clean tree, Chrome, start `2026-09-11T12:34:43.146Z`;
+  SHA-256 `9cc333a1ea8b09f251ef0d813a6b910fc0fd9a98c566b0d88b32d41f862cfb14`.
+- `test-results/session-persistence.json`: revision `2341e61`, restart checks and
+  old database comparisons. Demo SHA-256 before/after:
+  `51e0e4b81b9636ab6128c38f6c0b1bde3c0cd2622b18244515107a6dd66de25b`;
+  provisioned-account fixture:
+  `0560745c4ab09c3aae99b0cf0061a7f4bdc563c29f32190f79900eda6e9e46f2`.
+  The demo fingerprint also remained unchanged across the final 55-test API run.
+- `test-results/upgrade-proof-3b5ba32.json`: earlier independent fresh local upgrade
+  proof at `3b5ba32`; preserved as evidence for that revision only. Latest fresh
+  upgrade evidence is in the hosted artifact above.
+- Three inspected account screenshots are retained in [SCREENSHOTS.md](SCREENSHOTS.md).
+  Operational captures and additional account attachments remain in browser reports.
+
+### Findings Corrected
+
+- Initial local account runs reproduced a same-document setup-link state defect;
+  new link fragments now reset the form. Error assertions were scoped away from
+  Next.js's route announcer.
+- [CI at `3b5ba32`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34597404376)
+  exposed a test navigating away before server logout completed. The test now waits
+  for revocation, the login redirect and a 401 probe, with delayed-logout coverage.
+- [CI at `52f279d`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34598478938)
+  exposed a test filling the previous page's Name field during navigation. The
+  downloaded screenshot confirmed native required-field validation, not an email
+  failure. Tests now await the specific destination heading/table and newly created
+  organisation. Two consecutive local runs passed all 12 scenario executions.
+- A configuration regression reproduced acceptance of the copied production example
+  secret. Startup now rejects `replace_with` placeholders; three configuration tests
+  cover this guard and HTTPS requirements. No security/browser checks were removed,
+  skipped or replaced with retries to obtain a passing run.
+
+### Review Map
+
+- API middleware/services/routes: PostgreSQL sessions, CSRF, current privileges,
+  invitations/recovery/bootstrap and shared rate limits; JWT verification removed.
+- Drizzle schema/migration and CLI: additive account/session tables and demo flags;
+  one-time bootstrap, no automatic production seeding.
+- Frontend auth/client/account pages: credentialed requests, old credential cleanup,
+  role-controlled account management, setup/recovery/change forms and logout feedback.
+- Test helpers, 18 new tests, six browser scenarios, isolated Compose/Nginx and root
+  CI: security boundaries, upgrade safety, HTTPS cookies and local captured mail.
+- README, project summary and security/API/database/deployment/runbook documents:
+  current contracts, exact commands, evidence and public-launch limitations.
 
 The hardening implementation PR must remain draft and unmerged. No hardening images
 are published and no DigitalOcean/public deployment is triggered. Real SMTP,

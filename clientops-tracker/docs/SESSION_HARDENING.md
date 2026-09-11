@@ -64,6 +64,9 @@ example. Production-cost bcrypt remains enabled in tests; multi-password scenari
 have a 30-second timeout. All 37 earlier regressions are retained, using real
 cookie/CSRF requests. Additional coverage checks session expiry, logout replay,
 rate limits, CSRF, token races, revocation, bootstrap and account assignment.
+There are 55 tests in six files: 37 retained regressions, 15 session/account tests
+and three production configuration checks. The copied production example secret
+and HTTP production origins are rejected at startup.
 
 ## Isolated HTTPS Browser Verification
 
@@ -131,6 +134,10 @@ The first exploratory run exposed a same-document setup-link refresh defect;
 fragment changes now reset the form. It also exposed the need to scope error
 assertions to main content instead of Next.js's route announcer. Existing four
 scenarios passed in that run; final results belong in [release evidence](RELEASE_READINESS.md).
+Hosted runs also exposed premature navigation in the browser tests. Role switching
+now waits for server logout and an unauthenticated probe; invitation setup waits
+for the actual Accounts page and the saved organisation. The assertions and six
+scenarios are retained, with no automatic retries.
 
 Self-signed certificates are accepted only by the loopback Playwright fixture.
 Tests assert actual HTTPS plus Secure/HttpOnly/SameSite/path flags and unreadability

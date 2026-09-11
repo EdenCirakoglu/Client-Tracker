@@ -1,5 +1,28 @@
 # Screenshot Evidence
 
+## Session Hardening: 2026-09-11
+
+These additional captures come from clean code revision
+`2341e61432e7087ae7f92c2083b8363d72b97dd5`, using fresh-profile Chrome against
+the isolated non-demo account fixture at https://localhost:8444. Fictional
+identities and Mailpit only; no real email or public deployment. All three were
+visually inspected; labels, validation/confirmation and focus indicators are
+readable without overlap. Their axe checks passed in the six-scenario suite.
+
+| Capture                                                                               | State                                         |
+| ------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [session-account-setup.png](assets/screenshots/session-account-setup.png)             | Initial password setup from an invitation     |
+| [session-password-validation.png](assets/screenshots/session-password-validation.png) | Password confirmation error and visible focus |
+| [session-recovery-request.png](assets/screenshots/session-recovery-request.png)       | Non-enumerating recovery confirmation         |
+
+Use the [current HTTPS runbook](SESSION_HARDENING.md#isolated-https-browser-verification)
+for all six scenarios, exact environment requirements and report paths. Additional
+account and operational screenshots are attached to the local/hosted browser reports
+linked in [release evidence](RELEASE_READINESS.md). The older captures below retain
+their original date and revision context; they are not relabelled as current.
+
+## Earlier Portal Captures
+
 Refreshed on 2026-09-08 from the real isolated PostgreSQL/API/Next.js/Nginx stack at
 http://localhost:8180, using Playwright with a fresh Chrome profile. These are
 application captures, not design mockups or a public deployment.
@@ -49,22 +72,11 @@ first column, while the remaining columns retain keyboard horizontal scrolling.
 
 ## Reproduce
 
-Follow [isolated stack setup](DEPLOYMENT.md#isolated-local-production-style-run).
-Reset only the designated disposable demo before a fresh complete capture run.
-
-```powershell
-# From clientops-tracker/, with the isolated stack healthy and freshly seeded:
-$env:E2E_ALLOW_DISPOSABLE_DEMO='true'
-$env:BROWSER_CHANNEL='chrome'
-pnpm test:e2e
-Remove-Item Env:E2E_ALLOW_DISPOSABLE_DEMO
-Remove-Item Env:BROWSER_CHANNEL
-```
-
-With no installed Chrome, run `pnpm exec playwright install chromium` and leave
-BROWSER_CHANNEL unset. CI uses Playwright Chromium. Exact setup, the four scenario
-names and HTML/JSON report paths are in [BROWSER_TESTS.md](BROWSER_TESTS.md).
-Revision-specific local and hosted results are in [RELEASE_READINESS.md](RELEASE_READINESS.md).
+Use [SESSION_HARDENING.md](SESSION_HARDENING.md) for the current checkout. It builds
+two new isolated HTTPS fixtures, migrates existing records without reseeding and
+runs six scenarios. Do not reset prior verification volumes for screenshots.
+[BROWSER_TESTS.md](BROWSER_TESTS.md) preserves the older four-scenario HTTP runbook
+for historical revisions only. CI uses Chromium; local verification used Chrome.
 
 ## Not Yet Captured
 
