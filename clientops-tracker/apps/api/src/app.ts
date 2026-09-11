@@ -15,12 +15,15 @@ import { healthRouter } from './routes/health';
 import { projectsRouter } from './routes/projects';
 import { releasesRouter } from './routes/releases';
 import { ticketsRouter } from './routes/tickets';
+import { usersRouter } from './routes/users';
+import { csrfProtection, sessionMiddleware } from './middleware/session';
 
 export function createApp() {
   const app = express();
-  const corsOrigin = env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN;
+  const corsOrigin = [env.APP_ORIGIN, ...(env.API_ORIGIN ? [env.API_ORIGIN] : [])];
 
   app.disable('x-powered-by');
+  app.set('trust proxy', Number(env.TRUST_PROXY));
   app.use(helmet());
   app.use(cors({ origin: corsOrigin, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
@@ -41,13 +44,44 @@ export function createApp() {
 
   app.use('/health', healthRouter);
   app.use('/api/health', healthRouter);
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
+  app.use(
+    '/api/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(openApiDocument, {
+      swaggerOptions: {
+        withCredentials: true,
+        requestInterceptor: async (request: {
+          method: string;
+          headers: Record<string, string>;
+          credentials?: string;
+        }) => {
+          request.credentials = 'include';
+          if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())) {
+            const response = await fetch('/api/auth/csrf', { credentials: 'include' });
+            const data = (await response.json()) as { data: { csrfToken: string } };
+            request.headers['X-CSRF-Token'] = data.data.csrfToken;
+          }
+          return request;
+        },
+      },
+    }),
+  );
+  app.use(
+    '/api',
+    sessionMiddleware,
+    (_req, res, next) => {
+      res.set('Cache-Control', 'no-store');
+      next();
+    },
+    csrfProtection,
+  );
   app.use('/api/auth', authRouter);
   app.use('/api/clients', authenticate, clientsRouter);
   app.use('/api/projects', authenticate, projectsRouter);
   app.use('/api/tickets', authenticate, ticketsRouter);
   app.use('/api/releases', authenticate, releasesRouter);
   app.use('/api/dashboard', authenticate, dashboardRouter);
+  app.use('/api/users', authenticate, usersRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

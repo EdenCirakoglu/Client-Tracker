@@ -1,4 +1,6 @@
 import type {
+  TicketQueue,
+  ActivityPage,
   Client,
   DashboardMetrics,
   LoginResponse,
@@ -15,7 +17,8 @@ import type {
 } from './types';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080').replace(/\/$/, '');
-const TOKEN_KEY = 'clientops_token';
+let csrf: string | null = null;
+let csrfRequest: Promise<string> | null = null;
 
 type ApiResponse<T> = {
   data: T;
@@ -24,7 +27,6 @@ type ApiResponse<T> = {
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH';
   body?: unknown;
-  token?: string | null;
 };
 
 export class ApiError extends Error {
@@ -37,31 +39,31 @@ export class ApiError extends Error {
   }
 }
 
-export function getStoredToken() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  return window.localStorage.getItem(TOKEN_KEY);
+export function clearCsrf() {
+  csrf = null;
+  csrfRequest = null;
 }
-
-export function setStoredToken(token: string) {
-  window.localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function clearStoredToken() {
-  if (typeof window !== 'undefined') {
-    window.localStorage.removeItem(TOKEN_KEY);
-  }
+async function getCsrf() {
+  if (csrf) return csrf;
+  csrfRequest ??= apiRequest<{ csrfToken: string }>('/api/auth/csrf')
+    .then((data) => {
+      csrf = data.csrfToken;
+      return csrf;
+    })
+    .finally(() => {
+      csrfRequest = null;
+    });
+  return csrfRequest;
 }
 
 async function apiRequest<T>(path: string, options: RequestOptions = {}) {
-  const token = options.token !== undefined ? options.token : getStoredToken();
+  const token = options.method && options.method !== 'GET' ? await getCsrf() : null;
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method ?? 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token ? { 'X-CSRF-Token': token } : {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
@@ -72,8 +74,8 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}) {
     | null;
 
   if (!response.ok) {
-    if (response.status === 401 && token && token === getStoredToken()) {
-      clearStoredToken();
+    if (response.status === 401 && path !== '/api/auth/login') {
+      clearCsrf();
       window.dispatchEvent(new Event('clientops:session-expired'));
     }
 
@@ -93,12 +95,41 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}) {
 }
 
 export const api = {
-  login: (email: string, password: string) =>
-    apiRequest<LoginResponse>('/api/auth/login', {
+  login: async (email: string, password: string) => {
+    const result = await apiRequest<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: { email, password },
-      token: null,
+    });
+    csrf = result.csrfToken;
+    return result;
+  },
+  config: () => apiRequest<{ demoEnabled: boolean }>('/api/auth/config'),
+  logout: async () => {
+    await apiRequest('/api/auth/logout', { method: 'POST' });
+    clearCsrf();
+  },
+  forgotPassword: (email: string) =>
+    apiRequest<{ message: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: { email },
     }),
+  setPassword: (token: string, password: string, invitation: boolean) =>
+    apiRequest<{ message: string }>(
+      `/api/auth/${invitation ? 'accept-invitation' : 'reset-password'}`,
+      { method: 'POST', body: { token, password } },
+    ),
+  changePassword: (currentPassword: string, password: string) =>
+    apiRequest<{ message: string }>('/api/auth/change-password', {
+      method: 'POST',
+      body: { currentPassword, password },
+    }),
+  users: () => apiRequest<Account[]>('/api/users'),
+  invite: (body: { name: string; email: string; role: User['role']; clientId: string | null }) =>
+    apiRequest<User>('/api/users/invitations', { method: 'POST', body }),
+  updateAccount: (
+    id: string,
+    body: { role: User['role']; clientId: string | null; disabled: boolean },
+  ) => apiRequest<Account>(`/api/users/${id}`, { method: 'PATCH', body }),
   me: () => apiRequest<User>('/api/auth/me'),
   clients: () => apiRequest<Client[]>('/api/clients'),
   createClient: (body: { name: string; contactEmail: string; phone?: string | null }) =>
@@ -119,6 +150,8 @@ export const api = {
     body: Partial<{ name: string; description: string | null; status: ProjectStatus }>,
   ) => apiRequest<Project>(`/api/projects/${id}`, { method: 'PATCH', body }),
   tickets: () => apiRequest<Ticket[]>('/api/tickets'),
+  ticketQueue: (query: string = '') => apiRequest<TicketQueue>(`/api/tickets/queue?${query}`),
+  activity: (query: string = '') => apiRequest<ActivityPage>(`/api/dashboard/activity?${query}`),
   ticket: (id: string) => apiRequest<Ticket>(`/api/tickets/${id}`),
   createTicket: (body: {
     projectId: string;
@@ -162,3 +195,4 @@ export const api = {
       { method: 'PATCH' },
     ),
 };
+export type Account = User & { accountStatus: 'ACTIVE' | 'INVITED' | 'DISABLED' };

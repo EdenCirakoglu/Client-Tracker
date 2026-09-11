@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hardening
+      POSTGRES_PASSWORD: local_disposable_database_password
+      POSTGRES_DB: ${HARDENING_DATABASE:?Set a disposable hardening database}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hardening -d "$${POSTGRES_DB}"']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    ports: ['127.0.0.1:${MAIL_PORT:-8025}:8025']
+  api:
+    image: ${HARDENING_API_IMAGE:-clientops-hardening-api:local}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://hardening:local_disposable_database_password@postgres:5432/${HARDENING_DATABASE}
+      SESSION_SECRET: ${SESSION_SECRET:?Set session secret}
+      APP_ORIGIN: https://localhost:${HTTPS_PORT:-8443}
+      TRUST_PROXY: '1'
+      DEMO_MODE: ${DEMO_MODE:-false}
+      DISPOSABLE_DATABASE_NAME: ${HARDENING_DATABASE}
+      SMTP_MODE: capture
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+    depends_on:
+      postgres: { condition: service_healthy }
+      mailpit: { condition: service_started }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+  web:
+    image: ${HARDENING_WEB_IMAGE:-clientops-hardening-web:local}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args: { NEXT_PUBLIC_API_URL: / }
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+  nginx:
+    image: nginx:stable-alpine
+    ports: ['127.0.0.1:${HTTPS_PORT:-8443}:443']
+    volumes:
+      - ./nginx/hardening.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./test-results/tls:/etc/nginx/tls:ro
+    depends_on:
+      api: { condition: service_healthy }
+      web: { condition: service_healthy }
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'wget --no-check-certificate -qO- https://127.0.0.1/api/health >/dev/null']
+      interval: 3s
+      timeout: 5s
+      retries: 30
+volumes:
+  postgres_data:

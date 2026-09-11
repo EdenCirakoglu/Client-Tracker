@@ -13,6 +13,8 @@ import {
   tickets,
   triageSuggestions,
   users,
+  webSessions,
+  authRateLimits,
 } from './schema';
 
 export async function seedDatabase() {
@@ -28,6 +30,8 @@ export async function seedDatabase() {
   const daysAgo = (days: number) => new Date(reference.getTime() - days * 86_400_000);
 
   await db.transaction(async (tx) => {
+    await tx.delete(webSessions);
+    await tx.delete(authRateLimits);
     await tx.delete(triageSuggestions);
     await tx.delete(ticketEvents);
     await tx.delete(ticketComments);
@@ -356,7 +360,7 @@ export async function seedDatabase() {
       },
     ]);
     await tx.update(clients).set({ createdAt: daysAgo(30), updatedAt: daysAgo(7) });
-    await tx.update(users).set({ createdAt: daysAgo(28), updatedAt: daysAgo(7) });
+    await tx.update(users).set({ isDemo: true, createdAt: daysAgo(28), updatedAt: daysAgo(7) });
     await tx.update(projects).set({ createdAt: daysAgo(14), updatedAt: daysAgo(7) });
   });
 }

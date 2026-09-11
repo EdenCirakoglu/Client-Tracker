@@ -1,5 +1,213 @@
 # Release Readiness Evidence
 
+## Operations UI and Account Hardening: Current Review
+
+[Draft PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3) remains open,
+draft and unmerged. Tested application revision:
+`4614642887c69bf112efb32dd59c6dff3d583b9e`. The evidence-only commit that records
+these results follows it; later head checks are linked from the PR, not assigned
+retroactively to these captures. Earlier session and registry results below keep
+their original revisions.
+
+### Review Boundaries
+
+- API commit `835748e`: bounded ticket queues, full-scope SQL metrics and private
+  activity; tenant filters run before pagination. No new UI schema migration.
+- Visual commit `b672d64`: role dashboards, teal semantic themes, collapsible
+  navigation, breadcrumbs, account menu and consistent account forms.
+- Test/runbook commit `db77509`: retains all session/account/history/triage tests,
+  adds five API tests and three browser scenarios. Later focused fixes cover rail
+  tooltip geometry, table word wrapping, mobile account overflow and filter races.
+- `4614642`: fixes rapid URL filter updates; browser coverage asserts combined
+  selections, reload and Back navigation. No assertions were removed or skipped.
+
+Design, role walkthrough, exact environment/commands and report locations:
+[UI_REFINEMENT.md](UI_REFINEMENT.md). Queue, metric and activity contracts:
+[DASHBOARD_QUERIES.md](DASHBOARD_QUERIES.md). Session design and provisioning:
+[SESSION_HARDENING.md](SESSION_HARDENING.md).
+
+### Actual Verification
+
+| Gate                          | Result at `4614642`                                                                                                                                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local source checks           | `pnpm lint`, `pnpm typecheck`, `pnpm format:check`: passed                                                                                                                                                 |
+| Local API/configuration tests | `pnpm test`: 60 passed in seven files, 41.13s; dedicated `clientops_hardening_test` database and local Mailpit                                                                                             |
+| Host production builds        | `pnpm build`: both API and Next.js passed                                                                                                                                                                  |
+| Compose syntax                | Development and production example `config --quiet`: passed, separately from runtime                                                                                                                       |
+| Local container runtime       | `node scripts/hardening-stack.mjs start --ui`: both images built; two isolated HTTPS stacks migrated and healthy                                                                                           |
+| Local browser/accessibility   | `pnpm test:e2e`: nine passed in 75.47s, zero failed/skipped/flaky; isolated Chrome                                                                                                                         |
+| Local restart                 | Both UI sessions and all eight business tables survived PostgreSQL/API/web/Nginx restart                                                                                                                   |
+| Hosted CI                     | [34612080774](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34612080774): passed; exact clean head, 60 API tests, both builds, both Compose checks and nine Chromium/axe scenarios (74.55s) |
+| Registry/public deployment    | No hardening/UI images published; no DigitalOcean or public deployment triggered                                                                                                                           |
+
+The [hosted browser/upgrade artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34612080774/artifacts/10268678796)
+was downloaded and inspected. SHA-256:
+`872d20cda34061a825eb909727544e8b2bd2911a92c0901cb5e846957516a710`.
+It records clean `4614642`, nine expected passes with zero failures/skips/flaky
+results, and `populatedFromLegacyThisRun=true`. All eight original business-table
+hashes match before/after migration without reseeding. No `.pem` or `.key` files
+are in the artifact. Retention currently ends 2026-12-10. This verifies images
+built on the CI runner, not new GHCR publication or public hosting.
+
+Local report `test-results/browser-results.json` records clean `4614642`, start
+`2026-09-11T14:48:10.306Z`; SHA-256
+`cc0eac207761926f435cc9f8e65effa666002fbc4a867f079455d901ea3bdcf0`.
+HTML report: `playwright-report/index.html`. Local-only supplemental menu capture
+checked both open themes with zero axe violations (`test-results/ui-menu-checks.json`).
+These reports are ignored and later runs may replace them.
+
+`test-results/ui-persistence.json` records the separate local restart check at
+`4614642`, with matching before/after business hashes:
+
+- UI demo: `ec7e8e613a76107669faae0116ff3e021a20531460bdc0bf7e19d9281691fc13`.
+- Provisioned accounts: `605d91046890203681b7d4f6db9c5c0e9525eb3711fa96ec89d7e9abfefb9206`.
+- Development, readiness, registry, earlier hardening and earlier account fixtures
+  still match their previously recorded fingerprints. None was reset or migrated.
+- Separate API-test/demo fingerprint comparison at `7db2562` also remained identical:
+  `7590747cf88b0a58a4603d11ec72d80cb11238607374df27856135e43e3d9dc9`.
+  It remains evidence for that run, not a fingerprint of the later browser-written data.
+
+### Reproduced Findings
+
+Screenshot inspection found a collapsed tooltip wrapping vertically and ordinary
+table words splitting unnecessarily. Intrinsic-width tooltips and normal table
+word wrapping now have geometry assertions. A 390px account check then exposed
+page-wide grid overflow; the account table now scrolls within its own focusable
+region. Both themes, form feedback, short viewports and long names were inspected.
+
+[CI at `0efc1d7`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34608714833)
+exposed a test reading computed opacity before the ticket form mounted. The capture
+showed a healthy form; explicit destination readiness and a locator-based CSS
+assertion corrected the test without weakening it.
+[CI at `bfbe35f`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34611122945)
+exposed an actual rapid-filter race: a stale status survived later selections.
+An isolated browser reproduction lost two of three simultaneous selections before
+the fix and preserved all three afterwards. Existing and new regression checks pass.
+
+### Evidence and Remaining Work
+
+[SCREENSHOTS.md](SCREENSHOTS.md) indexes inspected before/after captures and their
+provenance. Baseline and final fixtures are both fictional but are not identical
+database snapshots; differences in counts are not performance comparisons.
+
+Native browser 200% zoom and screen-reader review remain manual acceptance work;
+automated reflow checks use effective CSS widths, not native zoom. Axe checks are
+not a claim of full accessibility compliance. Other legacy collections still need
+pagination. No SLA engine, notifications, workspace switcher or live LLM is implied.
+Review/merge, backup/restore drills, monitoring, trusted production HTTPS/domain,
+secrets, SMTP sender/TLS/delivery operations, security-event audit retention and
+release/rollback procedures remain the next milestone. Local self-signed HTTPS and
+Mailpit are not verification of production services. Historic pulled-image proof
+still belongs only to `3fa8d7f51a3dc9bfc9225697085131d75d9ec197`.
+
+## Evidence Follow-Up: 2026-09-11
+
+PR #2's three documentation changes were reviewed at
+`97299924206f2f2c5f6b1c9de8da7d04ef78f889`; they distinguish hosted CI builds from
+separate local verification of pulled registry images. [PR #2](https://github.com/EdenCirakoglu/Client-Tracker/pull/2)
+was marked ready after its passing check and merged normally with explicit approval.
+
+| Gate                            | Revision                                        | Actual result                                                                                   |
+| ------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| PR #2 CI                        | `97299924206f2f2c5f6b1c9de8da7d04ef78f889`      | [34368834452](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34368834452), passed |
+| Main CI after evidence merge    | `419308ab41e9c2a03d506c4395586feee4e45b31`      | [34593145295](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34593145295), passed |
+| Automatic image publication     | `419308ab41e9c2a03d506c4395586feee4e45b31`      | [34593476555](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34593476555), passed |
+| Local pulled-image verification | `3fa8d7f51a3dc9bfc9225697085131d75d9ec197` only | Prior evidence below remains unchanged; no claim that it verifies `419308a`                     |
+
+## Secure Sessions and Accounts: In Review
+
+Implementation branch: `feat/secure-sessions-accounts`, based on `419308a`.
+The application now uses PostgreSQL-backed revocable HttpOnly cookie sessions,
+synchronizer CSRF tokens, server idle/absolute expiry, one-time administrator
+bootstrap, administrator invitations, password setup/recovery/change and access
+revocation. An additive migration preserves the original business records.
+Design, configuration, exact commands and report locations:
+[SESSION_HARDENING.md](SESSION_HARDENING.md).
+
+### Tested Implementation Revision
+
+[Draft PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3), code revision
+`2341e61432e7087ae7f92c2083b8363d72b97dd5`. The evidence-only commit recording
+these results follows that revision; it does not change the tested application.
+Later PR-head checks are linked from the PR, not retroactively assigned to this run.
+
+| Gate                                          | Actual result at the code revision above                                                                                                                                                      |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local lint/typecheck/format                   | `pnpm lint`, `pnpm typecheck`, `pnpm format:check`: passed                                                                                                                                    |
+| Local API/configuration tests                 | `pnpm test`: 55 passed, six files, 38.56s; 37 earlier regressions retained                                                                                                                    |
+| Host builds                                   | `pnpm build`: API and Next.js production builds passed                                                                                                                                        |
+| Compose syntax                                | Development and production `config --quiet`: passed separately from runtime                                                                                                                   |
+| Local runtime                                 | `node scripts/hardening-stack.mjs start`: API/web built; both isolated HTTPS stacks healthy                                                                                                   |
+| Local browser/axe                             | `pnpm test:e2e`: six passed, zero failed/skipped/flaky, 36.2s, isolated Chrome                                                                                                                |
+| Hosted CI                                     | [34599463537](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34599463537): success; exact clean head checkout, 55 tests, builds, Compose and six Chromium/axe scenarios (34.2s) |
+| Populated upgrade                             | Fresh legacy fixture migrated without reseeding; original columns in all eight business tables unchanged                                                                                      |
+| Persistence                                   | Sessions and business data survived PostgreSQL/API/web/Nginx restart in both new fixtures                                                                                                     |
+| Existing databases                            | Original development and both earlier verification databases still match their previously recorded hashes                                                                                     |
+| Hardening image publication/public deployment | Neither performed; this implementation remains in an unmerged draft PR                                                                                                                        |
+
+The [hosted browser artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34599463537/artifacts/10263912740)
+was downloaded and inspected. SHA-256:
+`5999e3ed7decd1783b78effd1f0efc7211fb8936c53fe69ae223fd2093ca6364`.
+It contains HTML/JSON reports, screenshots and `hardening-upgrade.json` with
+`workingTreeDirty=false`, `populatedFromLegacyThisRun=true` and matching before/after
+hashes. It contains no `.pem` or `.key` files. Current artifact expiry: 2026-12-10.
+The explicit `config.metadata.revision` and recorded `git rev-parse HEAD` identify
+the tested head; Playwright's automatic CI metadata may also display GitHub's
+synthetic PR merge reference, which was not the checkout used here.
+
+Local reports (workspace-relative, ignored and replaced by later runs):
+
+- `playwright-report/index.html` and `test-results/browser-results.json`.
+- JSON: revision `2341e61`, clean tree, Chrome, start `2026-09-11T12:34:43.146Z`;
+  SHA-256 `9cc333a1ea8b09f251ef0d813a6b910fc0fd9a98c566b0d88b32d41f862cfb14`.
+- `test-results/session-persistence.json`: revision `2341e61`, restart checks and
+  old database comparisons. Demo SHA-256 before/after:
+  `51e0e4b81b9636ab6128c38f6c0b1bde3c0cd2622b18244515107a6dd66de25b`;
+  provisioned-account fixture:
+  `0560745c4ab09c3aae99b0cf0061a7f4bdc563c29f32190f79900eda6e9e46f2`.
+  The demo fingerprint also remained unchanged across the final 55-test API run.
+- `test-results/upgrade-proof-3b5ba32.json`: earlier independent fresh local upgrade
+  proof at `3b5ba32`; preserved as evidence for that revision only. Latest fresh
+  upgrade evidence is in the hosted artifact above.
+- Three inspected account screenshots are retained in [SCREENSHOTS.md](SCREENSHOTS.md).
+  Operational captures and additional account attachments remain in browser reports.
+
+### Findings Corrected
+
+- Initial local account runs reproduced a same-document setup-link state defect;
+  new link fragments now reset the form. Error assertions were scoped away from
+  Next.js's route announcer.
+- [CI at `3b5ba32`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34597404376)
+  exposed a test navigating away before server logout completed. The test now waits
+  for revocation, the login redirect and a 401 probe, with delayed-logout coverage.
+- [CI at `52f279d`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34598478938)
+  exposed a test filling the previous page's Name field during navigation. The
+  downloaded screenshot confirmed native required-field validation, not an email
+  failure. Tests now await the specific destination heading/table and newly created
+  organisation. Two consecutive local runs passed all 12 scenario executions.
+- A configuration regression reproduced acceptance of the copied production example
+  secret. Startup now rejects `replace_with` placeholders; three configuration tests
+  cover this guard and HTTPS requirements. No security/browser checks were removed,
+  skipped or replaced with retries to obtain a passing run.
+
+### Review Map
+
+- API middleware/services/routes: PostgreSQL sessions, CSRF, current privileges,
+  invitations/recovery/bootstrap and shared rate limits; JWT verification removed.
+- Drizzle schema/migration and CLI: additive account/session tables and demo flags;
+  one-time bootstrap, no automatic production seeding.
+- Frontend auth/client/account pages: credentialed requests, old credential cleanup,
+  role-controlled account management, setup/recovery/change forms and logout feedback.
+- Test helpers, 18 new tests, six browser scenarios, isolated Compose/Nginx and root
+  CI: security boundaries, upgrade safety, HTTPS cookies and local captured mail.
+- README, project summary and security/API/database/deployment/runbook documents:
+  current contracts, exact commands, evidence and public-launch limitations.
+
+The hardening implementation PR must remain draft and unmerged. No hardening images
+are published and no DigitalOcean/public deployment is triggered. Real SMTP,
+trusted production TLS/domain/renewal, secrets, backups/restore, monitoring,
+durable email delivery and account-security audit retention remain launch work.
+
 ## Merged and Published: 2026-09-09
 
 [PR #1](https://github.com/EdenCirakoglu/Client-Tracker/pull/1) was merged using a

@@ -1,9 +1,11 @@
 import { relations, sql } from 'drizzle-orm';
 import {
+  bigint,
   boolean,
   check,
   index,
   integer,
+  json,
   pgEnum,
   pgTable,
   text,
@@ -62,16 +64,88 @@ export const users = pgTable(
     name: varchar('name', { length: 120 }).notNull(),
     email: varchar('email', { length: 255 }).notNull(),
     passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    accountStatus: varchar('account_status', { length: 16 }).notNull().default('ACTIVE'),
+    authVersion: integer('auth_version').notNull().default(1),
+    isDemo: boolean('is_demo').notNull().default(false),
     role: userRoleEnum('role').notNull(),
     clientId: uuid('client_id').references(() => clients.id, { onDelete: 'set null' }),
     ...timestamps,
   },
   (table) => ({
     emailUnique: uniqueIndex('users_email_unique').on(table.email),
+    accountStatusCheck: check(
+      'users_account_status_check',
+      sql`${table.accountStatus} IN ('ACTIVE', 'INVITED', 'DISABLED')`,
+    ),
     roleIdx: index('users_role_idx').on(table.role),
     clientIdIdx: index('users_client_id_idx').on(table.clientId),
   }),
 );
+
+// Session JSON is library-owned; auth_sessions is the authoritative revocation record.
+export const webSessions = pgTable(
+  'web_sessions',
+  {
+    sid: varchar('sid').primaryKey(),
+    sess: json('sess').notNull(),
+    expire: timestamp('expire', { precision: 6 }).notNull(),
+  },
+  (table) => ({ expireIdx: index('web_sessions_expire_idx').on(table.expire) }),
+);
+
+export const authSessions = pgTable(
+  'auth_sessions',
+  {
+    sidHash: varchar('sid_hash', { length: 64 }).primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    authVersion: integer('auth_version').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    idleExpiresAt: timestamp('idle_expires_at', { withTimezone: true }).notNull(),
+    absoluteExpiresAt: timestamp('absolute_expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (table) => ({ userIdx: index('auth_sessions_user_idx').on(table.userId) }),
+);
+
+export const accountTokens = pgTable(
+  'account_tokens',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
+    kind: varchar('kind', { length: 16 }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    kindCheck: check(
+      'account_tokens_kind_check',
+      sql`${table.kind} IN ('INVITATION', 'PASSWORD_RESET')`,
+    ),
+  }),
+);
+
+export const bootstrapState = pgTable(
+  'bootstrap_state',
+  {
+    id: integer('id').primaryKey(),
+    completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ singletonCheck: check('bootstrap_state_singleton', sql`${table.id} = 1`) }),
+);
+
+// Column order matches rate-limiter-flexible's PostgreSQL contract.
+export const authRateLimits = pgTable('auth_rate_limits', {
+  key: varchar('key', { length: 255 }).primaryKey(),
+  points: integer('points').notNull().default(0),
+  expire: bigint('expire', { mode: 'number' }),
+});
 
 export const projects = pgTable(
   'projects',

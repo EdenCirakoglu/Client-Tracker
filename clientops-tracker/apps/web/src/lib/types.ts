@@ -94,6 +94,10 @@ export type Release = {
 };
 
 export type DashboardMetrics = {
+  unresolvedTickets: number;
+  scope: string;
+  generatedAt: string;
+  resolvedMonth: string;
   totalOpenTickets: number;
   criticalTickets: number;
   ticketsWaitingForClient: number;
@@ -109,7 +113,31 @@ export type DashboardMetrics = {
   }[];
 };
 
+export interface TicketQueue {
+  items: (Ticket & { client: { id: string; name: string } })[];
+  total: number;
+  page: number;
+  limit: number;
+}
+export interface ActivityItem {
+  id: string;
+  recordId: string;
+  title: string;
+  project: string;
+  actor: string | null;
+  action: string;
+  createdAt: string;
+  kind: 'ticket' | 'release';
+}
+export interface ActivityPage {
+  items: ActivityItem[];
+  hasMore: boolean;
+  page: number;
+  limit: number;
+  before: string;
+}
+
 export type LoginResponse = {
-  token: string;
+  csrfToken: string;
   user: User;
 };

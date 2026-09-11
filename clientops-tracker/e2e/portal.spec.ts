@@ -39,9 +39,20 @@ async function login(page: Page, role: 'Admin' | 'Developer' | 'Client') {
   await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
 }
 
+async function logout(page: Page) {
+  const completed = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === '/api/auth/logout' &&
+      response.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  expect((await completed).ok()).toBe(true);
+  await expect(page).toHaveURL(/\/login$/);
+  expect((await page.request.get('/api/auth/me')).status()).toBe(401);
+}
+
 test('real administrator, developer and client workflows with persisted advisory triage', async ({
   page,
-  request,
 }) => {
   const scriptErrors: string[] = [];
   page.on('pageerror', (error) => scriptErrors.push(error.message));
@@ -51,6 +62,7 @@ test('real administrator, developer and client workflows with persisted advisory
   await expect(page.getByLabel('Password', { exact: true })).toBeFocused();
   await capture(page, 'login');
   await accessible(page);
+  await page.getByLabel('Email', { exact: true }).fill('admin@example.com');
   await page.getByLabel('Password', { exact: true }).fill('wrong-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('alert')).toBeVisible();
@@ -75,8 +87,46 @@ test('real administrator, developer and client workflows with persisted advisory
   }
   await page.getByRole('link', { name: 'Tickets', exact: true }).click();
   await expect(page.getByRole('table')).toBeVisible();
+  const unassigned = page.getByRole('cell', { name: 'Unassigned', exact: true }).first();
+  await expect(unassigned).toBeVisible();
+  expect(
+    await unassigned.evaluate((element) => {
+      const text = document.createRange();
+      text.selectNodeContents(element);
+      return (
+        text.getBoundingClientRect().height <= parseFloat(getComputedStyle(element).lineHeight) + 1
+      );
+    }),
+  ).toBe(true);
   await capture(page, 'tickets-list');
   await accessible(page);
+  await test.step('rapid filter changes preserve each selection and browser history', async () => {
+    await page.evaluate(() => {
+      for (const [key, value] of [
+        ['status', 'UNRESOLVED'],
+        ['priority', 'CRITICAL'],
+        ['category', 'SECURITY'],
+      ]) {
+        const select = document.querySelector<HTMLSelectElement>(
+          `select[aria-label="Filter by ${key}"]`,
+        )!;
+        select.value = value!;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    await expect(page).toHaveURL(/status=UNRESOLVED&priority=CRITICAL&category=SECURITY$/);
+    await expect(page.getByLabel('Filter by status')).toHaveValue('UNRESOLVED');
+    await expect(page.getByLabel('Filter by priority')).toHaveValue('CRITICAL');
+    await expect(page.getByLabel('Filter by category')).toHaveValue('SECURITY');
+    await page.reload();
+    await expect(page.getByLabel('Filter by priority')).toHaveValue('CRITICAL');
+    await page.goBack();
+    await expect(page).toHaveURL(/status=UNRESOLVED&priority=CRITICAL$/);
+    await expect(page.getByLabel('Filter by category')).toHaveValue('ALL');
+    await page.getByRole('link', { name: 'Reset filters', exact: true }).click();
+    await expect(page).toHaveURL(/\/tickets$/);
+    await expect(page.getByRole('table')).toBeVisible();
+  });
   for (const [label, value] of [
     ['Filter by status', 'OPEN'],
     ['Filter by priority', 'CRITICAL'],
@@ -91,11 +141,18 @@ test('real administrator, developer and client workflows with persisted advisory
   await expect(page.getByRole('heading', { name: 'No tickets found' })).toBeVisible();
   await page.getByRole('textbox', { name: 'Search tickets' }).fill('');
   await page.getByRole('link', { name: 'Create ticket', exact: true }).click();
-  await expect(page.getByLabel('Project', { exact: true }).locator('option')).not.toHaveCount(1);
+  await expect(page).toHaveURL(/\/tickets\/new$/);
+  await expect(page.getByRole('heading', { name: 'Create ticket', exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByLabel('Project', { exact: true })
+      .locator('option')
+      .filter({ hasText: 'Operations Portal' }),
+  ).toHaveCount(1);
   const createButton = page.getByRole('button', { name: 'Create ticket', exact: true });
   await expect(createButton).toBeEnabled();
   // Enabled controls must not retain the disabled opacity while a transition finishes.
-  expect(await createButton.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+  await expect(createButton).toHaveCSS('opacity', '1');
   await accessible(page);
   await page.getByLabel('Project', { exact: true }).selectOption({ label: 'Operations Portal' });
   await page.getByLabel('Title', { exact: true }).fill('Dispatch dashboard loading delays');
@@ -121,10 +178,10 @@ test('real administrator, developer and client workflows with persisted advisory
   await page.reload();
   await expect(page.getByLabel('Category', { exact: true })).toHaveValue('PERFORMANCE');
   await expect(page.getByText('Triage Suggestion Applied', { exact: true })).toHaveCount(1);
-  const token = await page.evaluate(() => localStorage.getItem('clientops_token'));
-  const headers = { Authorization: `Bearer ${token}` };
-  await request.patch(`/api/tickets/${ticketId}/apply-triage-suggestion`, { headers });
-  const persisted = await request.get(`/api/tickets/${ticketId}`, { headers });
+  const csrf = await page.request.get('/api/auth/csrf');
+  const headers = { 'X-CSRF-Token': (await csrf.json()).data.csrfToken };
+  await page.request.patch(`/api/tickets/${ticketId}/apply-triage-suggestion`, { headers });
+  const persisted = await page.request.get(`/api/tickets/${ticketId}`, { headers });
   expect(
     (await persisted.json()).data.events.filter(
       (event: { eventType: string }) => event.eventType === 'TRIAGE_SUGGESTION_APPLIED',
@@ -161,7 +218,7 @@ test('real administrator, developer and client workflows with persisted advisory
       }),
     ).toBe(true);
   });
-  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  await logout(page);
 
   await login(page, 'Developer');
   await capture(page, 'developer-dashboard');
@@ -228,7 +285,7 @@ test('real administrator, developer and client workflows with persisted advisory
     await page.reload();
     await expect(page.getByLabel('Priority', { exact: true })).toHaveValue('HIGH');
   });
-  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  await logout(page);
 
   await login(page, 'Client');
   await expect(page.getByText('Developer workload', { exact: true })).toHaveCount(0);
@@ -337,6 +394,9 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
 }) => {
   await login(page, 'Admin');
   await page.evaluate(() => localStorage.setItem('clientops_token', 'invalid-token'));
+  // Rolling session responses must settle before simulating a manually removed cookie.
+  await page.waitForLoadState('networkidle');
+  await context.clearCookies();
   await page.reload();
   await expect(page).toHaveURL(/\/login$/);
   expect(await page.evaluate(() => localStorage.getItem('clientops_token'))).toBeNull();
@@ -344,7 +404,28 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
   const secondTab = await context.newPage();
   await secondTab.goto('/dashboard');
   await expect(secondTab.getByText('Tickets by status', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Logout', exact: true }).click();
+  let releaseLogout!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    releaseLogout = resolve;
+  });
+  await page.route('**/api/auth/logout', async (route) => {
+    await gate;
+    await route.continue();
+  });
+  const completed = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/auth/logout',
+  );
+  try {
+    await page.getByRole('button', { name: 'Logout', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Logout', exact: true })).toBeDisabled();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(secondTab).toHaveURL(/\/dashboard$/);
+  } finally {
+    releaseLogout();
+  }
+  expect((await completed).ok()).toBe(true);
+  await expect(page).toHaveURL(/\/login$/);
+  expect((await page.request.get('/api/auth/me')).status()).toBe(401);
   await expect(secondTab).toHaveURL(/\/login$/);
   await secondTab.close();
 });

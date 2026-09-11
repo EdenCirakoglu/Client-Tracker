@@ -1,9 +1,11 @@
+import { env } from '../config/env';
 export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'ClientOps Tracker API',
-    version: '0.4.0',
-    description: 'REST API for a software company support and project operations portal.',
+    version: '0.5.0',
+    description:
+      'Cookie-session REST API. First GET /api/auth/csrf, retain cookies, then send X-CSRF-Token on every POST/PATCH including login. Login rotates the session and returns a fresh CSRF token. Swagger obtains this token automatically. Bearer JWTs are no longer accepted. Recovery links arrive by email; no public registration. ADMIN controls invitations and account membership.',
   },
   servers: [
     {
@@ -13,10 +15,10 @@ export const openApiDocument = {
   ],
   components: {
     securitySchemes: {
-      bearerAuth: {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
+      cookieAuth: {
+        type: 'apiKey',
+        in: 'cookie',
+        name: env.NODE_ENV === 'production' ? '__Host-clientops.sid' : 'clientops.sid',
       },
     },
     schemas: {
@@ -208,17 +210,186 @@ export const openApiDocument = {
           },
         },
         responses: {
-          '200': { description: 'JWT and user profile' },
+          '200': { description: 'Set-Cookie (HttpOnly SID) and data: {user, csrfToken}; no JWT.' },
           '401': { description: 'Invalid credentials' },
+          '403': { description: 'Missing or invalid CSRF token/origin' },
+          '429': { description: 'Rate limited; Retry-After header in seconds' },
         },
       },
     },
     '/api/auth/me': authPath('Get current authenticated user'),
+    '/api/auth/config': {
+      get: {
+        summary: 'Whether local disposable demo shortcuts are enabled',
+        responses: { '200': { description: 'data: {demoEnabled: boolean}' } },
+      },
+    },
+    '/api/auth/csrf': {
+      get: {
+        summary: 'Establish anonymous session and get CSRF token',
+        responses: {
+          '200': { description: 'data: {csrfToken: string}; retain the cookie' },
+          '429': { description: 'Rate limited' },
+        },
+      },
+    },
+    '/api/auth/logout': { post: accountOperation('Revoke this session', {}) },
+    '/api/auth/forgot-password': {
+      post: accountOperation('Request recovery; identical 202 whether account exists or not', {
+        email: { type: 'string', format: 'email' },
+      }),
+    },
+    '/api/auth/accept-invitation': {
+      post: accountOperation(
+        'Consume a single-use invitation (role and organisation are server assigned)',
+        {
+          token: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+          password: { type: 'string', minLength: 12, description: 'Maximum 72 UTF-8 bytes' },
+        },
+      ),
+    },
+    '/api/auth/reset-password': {
+      post: accountOperation('Consume reset link and revoke all account sessions', {
+        token: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+        password: { type: 'string', minLength: 12 },
+      }),
+    },
+    '/api/auth/change-password': {
+      post: accountOperation('Change current password and revoke all account sessions', {
+        currentPassword: { type: 'string' },
+        password: { type: 'string', minLength: 12 },
+      }),
+    },
+    '/api/users': authPath('ADMIN only: list accounts without credentials'),
+    '/api/users/invitations': {
+      post: accountOperation('ADMIN only: create or resend a pending invitation', {
+        name: { type: 'string' },
+        email: { type: 'string', format: 'email' },
+        role: { type: 'string', enum: ['ADMIN', 'DEVELOPER', 'CLIENT'] },
+        clientId: {
+          type: 'string',
+          format: 'uuid',
+          nullable: true,
+          description: 'Required for CLIENT; null for staff',
+        },
+      }),
+    },
+    '/api/users/{id}': {
+      patch: {
+        ...accountOperation('ADMIN only: change role/organisation or disable; revoke sessions', {
+          role: { type: 'string', enum: ['ADMIN', 'DEVELOPER', 'CLIENT'] },
+          clientId: { type: 'string', format: 'uuid', nullable: true },
+          disabled: { type: 'boolean' },
+        }),
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+      },
+    },
     '/api/clients': collectionPath('Clients', '#/components/schemas/ClientInput', true),
     '/api/clients/{id}': itemPath('Client'),
     '/api/projects': collectionPath('Projects', '#/components/schemas/ProjectInput', true),
     '/api/projects/{id}': itemPath('Project'),
     '/api/tickets': collectionPath('Tickets', '#/components/schemas/TicketInput', true),
+    '/api/tickets/queue': {
+      get: {
+        ...securedOperation('Paginated, scoped ticket queue'),
+        description:
+          'data: {items: Ticket[], total, page, limit}. Full-scope count and page use one repeatable-read snapshot. CLIENT scope is enforced server-side. Legacy GET /api/tickets retains its array response. attention sorts priority CRITICAL first, then oldest createdAt, then UUID; newest sorts createdAt and UUID descending.',
+        parameters: [
+          {
+            name: 'status',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: [
+                'OPEN',
+                'IN_PROGRESS',
+                'WAITING_FOR_CLIENT',
+                'RESOLVED',
+                'CLOSED',
+                'UNRESOLVED',
+              ],
+            },
+          },
+          {
+            name: 'priority',
+            in: 'query',
+            schema: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] },
+          },
+          {
+            name: 'category',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['BUG', 'FEATURE_REQUEST', 'SUPPORT', 'SECURITY', 'PERFORMANCE'],
+            },
+          },
+          {
+            name: 'assignment',
+            in: 'query',
+            description: 'Internal only',
+            schema: { type: 'string', enum: ['mine', 'unassigned'] },
+          },
+          {
+            name: 'assignedToId',
+            in: 'query',
+            description: 'Internal only',
+            schema: { type: 'string', format: 'uuid' },
+          },
+          { name: 'projectId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'search',
+            in: 'query',
+            description: 'Literal title/description substring, max 200 characters',
+            schema: { type: 'string', maxLength: 200 },
+          },
+          {
+            name: 'resolvedMonth',
+            in: 'query',
+            description:
+              'YYYY-MM, UTC recorded resolvedAt within month. Includes reopened tickets with retained resolution timestamp.',
+            schema: { type: 'string', example: '2026-09' },
+          },
+          {
+            name: 'order',
+            in: 'query',
+            schema: { type: 'string', enum: ['newest', 'attention'], default: 'newest' },
+          },
+          {
+            name: 'page',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 10000, default: 1 },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
+          },
+        ],
+      },
+    },
+    '/api/dashboard/activity': {
+      get: {
+        ...securedOperation('Paginated permitted ticket activity and releases'),
+        description:
+          'data: {items: [{id,recordId,title,project,actor,action,createdAt,kind}],hasMore,page,limit,before}. Descending createdAt then id. Carry before to later pages. CLIENT sees only own ticket creation/status changes, public comments and releases. Comment entries use comment visibility and creation time, never hidden events or ticket updatedAt. Actor null for releases: schema has no release author. No comment body previews.',
+        parameters: [
+          {
+            name: 'page',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 10000, default: 1 },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 30, default: 6 },
+          },
+          { name: 'before', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'kind', in: 'query', schema: { type: 'string', enum: ['ticket', 'release'] } },
+        ],
+      },
+    },
     '/api/tickets/{id}': itemPath('Ticket', true),
     '/api/tickets/{id}/triage-suggestion': {
       post: triageOperation(
@@ -276,7 +447,7 @@ function authPath(summary: string) {
 function securedOperation(summary: string, requestSchema?: string, hasIdParam = false) {
   return {
     summary,
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }],
     ...(hasIdParam
       ? {
           parameters: [
@@ -304,8 +475,7 @@ function securedOperation(summary: string, requestSchema?: string, hasIdParam = 
     responses: {
       '200': { description: 'Successful response' },
       '201': { description: 'Created' },
-      '400': { description: 'Invalid reference', content: jsonErrorContent() },
-      '422': { description: 'Validation error', content: jsonErrorContent() },
+      '400': { description: 'Invalid reference or validation error', content: jsonErrorContent() },
       '401': { description: 'Authentication required', content: jsonErrorContent() },
       '403': { description: 'Forbidden', content: jsonErrorContent() },
       '404': { description: 'Not found', content: jsonErrorContent() },
@@ -318,7 +488,7 @@ function triageOperation(summary: string, responseSchema: string) {
     summary,
     description:
       'ADMIN and DEVELOPER only. Deterministic rules, not a live LLM. Ticket detail loads the saved suggestion for internal users only. Application is transactional and idempotent: repeating an accepted suggestion does not change the ticket or create another event.',
-    security: [{ bearerAuth: [] }],
+    security: [{ cookieAuth: [] }],
     parameters: [
       {
         name: 'id',
@@ -384,6 +554,38 @@ function jsonErrorContent() {
   return {
     'application/json': {
       schema: { $ref: '#/components/schemas/ErrorResponse' },
+    },
+  };
+}
+
+function accountOperation(summary: string, properties: Record<string, unknown>) {
+  return {
+    summary,
+    description:
+      'Requires the synchronizer X-CSRF-Token header and its session cookie. Invalid/expired/used tokens return LINK_INVALID. Authentication and recovery are rate limited.',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            required: Object.keys(properties),
+            properties,
+          },
+        },
+      },
+    },
+    responses: {
+      '200': { description: 'Successful operation, data envelope' },
+      '201': { description: 'Invitation delivered' },
+      '202': { description: 'Generic recovery acknowledgement' },
+      '400': { description: 'Invalid input or expired/used link' },
+      '401': { description: 'Session ended' },
+      '403': { description: 'Forbidden or CSRF invalid' },
+      '409': { description: 'Account conflict' },
+      '429': { description: 'Rate limited' },
+      '503': { description: 'Mail or authentication service unavailable' },
     },
   };
 }

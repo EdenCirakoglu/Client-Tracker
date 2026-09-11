@@ -7,6 +7,9 @@ import { LogIn, ShieldCheck, UserCog, Users } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { FieldLabel, Input } from '../../components/ui/input';
 import { useAuth } from '../../lib/auth';
+import { api } from '../../lib/api';
+import Link from 'next/link';
+import { ThemePicker } from '../../components/ui/preferences';
 
 const demoUsers = [
   { label: 'Admin', email: 'admin@example.com', icon: ShieldCheck },
@@ -16,11 +19,18 @@ const demoUsers = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, status } = useAuth();
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password123');
+  const { login, status, sessionEnded } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [demoEnabled, setDemoEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  useEffect(() => {
+    void api
+      .config()
+      .then((config) => setDemoEnabled(config.demoEnabled))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -44,17 +54,18 @@ export default function LoginPage() {
 
   return (
     <main className="grid min-h-screen place-items-center bg-surface px-4 py-10">
-      <div className="w-full max-w-5xl">
-        <div className="grid overflow-hidden rounded-lg border border-border bg-white shadow-soft lg:grid-cols-[1fr_420px]">
-          <section className="flex flex-col justify-between bg-ink p-8 text-white">
+      <div className="w-full max-w-md">
+        <div className="mb-4 flex justify-end">
+          <ThemePicker />
+        </div>
+        <div className="overflow-hidden rounded-lg border border-border bg-panel">
+          <section className="border-b border-border p-6 sm:p-8">
             <div>
-              <div className="grid h-11 w-11 place-items-center rounded-md bg-white text-sm font-bold text-ink">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-action text-sm font-bold text-white">
                 CT
               </div>
-              <h1 className="mt-8 max-w-xl text-3xl font-semibold leading-tight">
-                ClientOps Tracker
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300">
+              <h1 className="mt-4 text-[28px] font-semibold leading-tight">ClientOps Tracker</h1>
+              <p className="mt-3 text-sm leading-6 text-muted">
                 ClientOps Tracker helps software teams manage clients, projects, support tickets,
                 releases, and delivery workflow.
               </p>
@@ -68,6 +79,11 @@ export default function LoginPage() {
               <p className="mt-2 text-sm text-muted">Sign in to your workspace.</p>
             </div>
 
+            {sessionEnded ? (
+              <p role="status" className="mt-4 text-sm text-muted">
+                Your session has ended. Sign in again to continue.
+              </p>
+            ) : null}
             <form
               className="mt-8 space-y-4"
               onSubmit={(event) => {
@@ -110,29 +126,36 @@ export default function LoginPage() {
                 {submitting ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
+            <Link
+              href="/forgot-password"
+              className="mt-4 inline-block text-sm font-medium text-brand-700 underline"
+            >
+              Forgot password?
+            </Link>
+            {demoEnabled ? (
+              <div className="mt-6 grid gap-2">
+                {demoUsers.map((demo) => {
+                  const Icon = demo.icon;
 
-            <div className="mt-6 grid gap-2">
-              {demoUsers.map((demo) => {
-                const Icon = demo.icon;
-
-                return (
-                  <Button
-                    disabled={submitting}
-                    key={demo.email}
-                    onClick={() => {
-                      setEmail(demo.email);
-                      setPassword('password123');
-                      void handleLogin(demo.email, 'password123');
-                    }}
-                    type="button"
-                    variant="secondary"
-                  >
-                    <Icon className="h-4 w-4" />
-                    Continue as {demo.label}
-                  </Button>
-                );
-              })}
-            </div>
+                  return (
+                    <Button
+                      disabled={submitting}
+                      key={demo.email}
+                      onClick={() => {
+                        setEmail(demo.email);
+                        setPassword('password123');
+                        void handleLogin(demo.email, 'password123');
+                      }}
+                      type="button"
+                      variant="secondary"
+                    >
+                      <Icon className="h-4 w-4" />
+                      Continue as {demo.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            ) : null}
           </section>
         </div>
       </div>
