@@ -12,6 +12,7 @@ if (
 }
 
 export default defineConfig({
+  captureGitInfo: { commit: false, diff: false },
   testDir: './e2e',
   outputDir: 'test-results/browser',
   workers: 1,

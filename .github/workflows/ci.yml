@@ -113,8 +113,13 @@ jobs:
           ACCOUNT_MAIL_URL: http://localhost:8026
         run: pnpm test:e2e
 
-      - name: Preserve browser reports and screenshots
+      - name: Check browser artifact privacy
+        id: artifact-privacy
         if: always()
+        run: node scripts/check-browser-evidence.mjs
+
+      - name: Preserve browser reports and screenshots
+        if: always() && steps.artifact-privacy.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: browser-evidence-${{ github.event.pull_request.head.sha || github.sha }}

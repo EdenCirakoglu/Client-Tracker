@@ -22,6 +22,16 @@ CI fetches full history, uses a digest-pinned scanner and redacts scanner output
 
 ## Historical Email Options (No Rewrite Performed)
 
+### Artifact and Image Review
+
+Main CI artifact `10320699009` contains a personal email in automatically collected `config.metadata.gitCommit` in `test-results/browser-results.json`. Value: `[redacted personal email]`. Its explicit revision is correct. Future reports disable automatic Git commit/diff capture; the upload gate rejects those fields. The existing artifact was not deleted or modified. Operator options are to let its retention expire or explicitly authorise deletion/replacement with a clearly labelled sanitised copy. Neither removes the original Git identity from history.
+
+The downloaded artifact's Gitleaks scan found no secret candidates. Identity matching additionally detected the metadata above; secret scanning does not replace privacy review. Sample dashboard/ticket screenshots were opened: visible people, organisations and requests are fictional. This is not an OCR audit of every historical image or expired artifact.
+
+Both baseline image filesystems were exported without execution and scanned, with archive depth 1 (nested operating-system package archives were skipped). Candidate findings were: the API's shipped fictional security-test password; a Node header integer constant; and Next.js generated preview/action encryption keys in server manifests. The last category is framework runtime material, not an application session secret, and should not be copied to documentation. No draft-preview or Server Action endpoints currently use it. Reassess before enabling those features; public images must not carry production-injected secrets. Exact historical personal-email matching found no matches in either exported filesystem. This scan covers flattened runtime files, not a claim about every upstream image layer, registry log or inaccessible/expired workflow artifact.
+
+Intended attribution in LICENSE and project documentation remains unchanged.
+
 1. Keep history, use noreply going forward. This preserves signatures, SHAs, release provenance and external references, but historical email remains visible.
 2. Add a `.mailmap` mapping to noreply. Some Git views use it, but raw commit objects still contain the original email. This is presentation cleanup, not erasure.
 3. In a separately approved maintenance window, use `git filter-repo` with an exact old-email mapping, retaining author names and commit topology. Author/committer changes alter affected SHAs and all descendant SHAs, invalidate signatures and require coordinated force updates, clone migration and PR/cache handling. Forks, downloaded artifacts and registry provenance may retain old values. GitHub Support may be needed for sensitive cached objects.

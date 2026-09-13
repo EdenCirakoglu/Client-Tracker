@@ -1,9 +1,12 @@
 # Release Readiness Evidence
 
-## Operations UI and Account Hardening: Current Review
+## Current Published Release
 
-[Draft PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3) remains open,
-draft and unmerged. Tested application revision:
+PR #3 is merged as `bdc749421187c017f4cc3ba36b2b9ef1d09fda80`. Main CI and image publication passed. Both published digest-pinned images also passed separate local verification without rebuilding: nine browser scenarios, account flows, tenant isolation, logout replay rejection and persistence. See [exact release evidence and commands](RELEASE_BDC749.md). Public deployment has not occurred. Operational follow-up remains review work, not a merged release.
+
+## Operations UI and Account Hardening: Historical PR Evidence
+
+[PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3) was draft and unmerged at this historical checkpoint. Tested application revision:
 `4614642887c69bf112efb32dd59c6dff3d583b9e`. The evidence-only commit that records
 these results follows it; later head checks are linked from the PR, not assigned
 retroactively to these captures. Earlier session and registry results below keep

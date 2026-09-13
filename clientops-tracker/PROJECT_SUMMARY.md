@@ -27,14 +27,13 @@ The web application calls Express with cookie sessions and synchronizer CSRF tok
 
 ## Testing and CI
 
-The unmerged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
-has [verified CI at `4614642`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34612080774):
+The merged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
+has [verified main CI at `bdc7494`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34767427740):
 60 API/configuration tests and nine real browser/accessibility scenarios, including
 HTTPS cookies, Mailpit invitation/recovery, role queues, URL filters, both themes
 and a populated database upgrade without reseeding. Earlier results at `2341e61`
 remain revision-specific in the release evidence.
-These are runner/local verification results, not a production email service or
-public deployment. Exact revisions and reports are in the release evidence below.
+Both published images were additionally pulled and tested locally without rebuilding: nine browser scenarios, organisation isolation, logout replay rejection and persistence passed. [Release evidence](docs/RELEASE_BDC749.md) separates hosted CI, publication and local verification. Neither production email nor public deployment is claimed.
 
 The merged release revision `3fa8d7f` passed hosted CI with 37 API tests and four browser/accessibility scenarios. Both GHCR images were published for that exact SHA, pulled locally without rebuilding, and passed all four browser scenarios again. Database fingerprints verified persistence after full container recreation and preservation of existing databases. See [published-image evidence](docs/REGISTRY_VERIFICATION.md) for exact revisions, digests and reports. Twenty-one fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). Public deployment has not been performed.
 
