@@ -3,6 +3,7 @@ import { ZodError } from 'zod';
 
 import { env } from '../config/env';
 import { ApiError } from '../utils/http';
+import { invalidCsrfTokenError } from './session';
 
 export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({
@@ -14,6 +15,15 @@ export const notFoundHandler: RequestHandler = (req, res) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (error === invalidCsrfTokenError) {
+    res.status(403).json({
+      error: {
+        code: 'CSRF_INVALID',
+        message: 'Your form has expired. Refresh the page and try again.',
+      },
+    });
+    return;
+  }
   if (error instanceof ApiError) {
     res.status(error.statusCode).json({
       error: {

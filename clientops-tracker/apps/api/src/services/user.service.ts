@@ -4,7 +4,7 @@ import { db } from '../db/client';
 import { users } from '../db/schema';
 import type { AuthenticatedUser } from '../types/auth';
 
-const publicUserColumns = {
+export const publicUserColumns = {
   id: users.id,
   name: users.name,
   email: users.email,
@@ -22,6 +22,9 @@ export async function findUserWithPasswordByEmail(email: string) {
     .select({
       ...publicUserColumns,
       passwordHash: users.passwordHash,
+      accountStatus: users.accountStatus,
+      authVersion: users.authVersion,
+      isDemo: users.isDemo,
     })
     .from(users)
     .where(eq(users.email, email))
@@ -34,7 +37,7 @@ export async function findDeveloperById(id: string) {
   const [developer] = await db
     .select(publicUserColumns)
     .from(users)
-    .where(and(eq(users.id, id), eq(users.role, 'DEVELOPER')))
+    .where(and(eq(users.id, id), eq(users.role, 'DEVELOPER'), eq(users.accountStatus, 'ACTIVE')))
     .limit(1);
 
   return developer ?? null;

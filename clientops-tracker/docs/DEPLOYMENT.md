@@ -1,7 +1,7 @@
 # Deployment and Local Stack Verification
 
-Public deployment is a separate operator-controlled step. No server, domain, TLS
-certificate, or successful hosted CI run is claimed by this document. See
+Public deployment is a separate operator-controlled step. No public server, domain
+or trusted TLS certificate is claimed by this document. See
 [release evidence](RELEASE_READINESS.md) for checks actually performed.
 
 ## Paths and Addresses
@@ -9,11 +9,11 @@ certificate, or successful hosted CI run is claimed by this document. See
 The Git root contains `.github/workflows/`; the workspace is `clientops-tracker/`.
 All Compose commands below run inside the workspace.
 
-| Context                      | Database address                 |
-| ---------------------------- | -------------------------------- |
-| Host development process     | `localhost:5432/clientops_demo`  |
-| Host automated tests         | `localhost:55433/clientops_test` |
-| API/migration inside Compose | `postgres:5432/<POSTGRES_DB>`    |
+| Context                      | Database address                           |
+| ---------------------------- | ------------------------------------------ |
+| Host development process     | `localhost:5432/clientops_demo`            |
+| Host automated tests         | `localhost:55434/clientops_hardening_test` |
+| API/migration inside Compose | `postgres:5432/<POSTGRES_DB>`              |
 
 `localhost` inside a container refers to that container, not PostgreSQL.
 The production database has no published host port. Do not run a host-side migration
@@ -21,41 +21,39 @@ with a URL containing `postgres`. Use the migration executable inside the API im
 
 ## Isolated Local Production-Style Run
 
-Docker Desktop must be running. These commands use separate project/volume names and
-loopback port 8180. They do not reset the existing development database.
+Docker Desktop and OpenSSL must be available. The current hardening runbook uses
+two separate HTTPS projects/volumes on loopback ports 8443/8444. Older port-8180/8181
+evidence and volumes are preserved; their JWT-era configuration is not the current
+session startup procedure.
 
 ```powershell
 cd "C:\Users\PnP\Desktop\Client Tracker\clientops-tracker"
-function dc { docker compose -p clientops-readiness --env-file .env.verify.example -f docker-compose.prod.yml @args }
-dc config --quiet
-dc build
-dc up -d --wait postgres
-dc run --rm --no-deps api node dist/migrate.js
-dc run --rm --no-deps -e NODE_ENV=development -e DISPOSABLE_DATABASE_NAME=clientops_verify_demo -e SEED_RESET=true api node dist/seed.js
-dc up -d --no-build --wait
-dc ps
+pnpm.cmd verify:stack
 ```
 
-The seed step is explicitly destructive only for this disposable local demo.
-Do not add it to any production workflow.
+The script seeds only a new, explicitly disposable fixture using the old verified
+image, then checks that additive upgrades preserve business records without
+reseeding. A second empty fixture exercises real bootstrap with demo mode off.
+See [SESSION_HARDENING.md](SESSION_HARDENING.md) for browser/email tests and reports.
 
 Open:
 
-- Frontend: http://localhost:8180/login
-- API liveness: http://localhost:8180/api/health
-- Swagger: http://localhost:8180/api/docs/
+- Frontend: https://localhost:8443/login
+- API liveness: https://localhost:8443/api/health
+- Swagger: https://localhost:8443/api/docs/
 
-To verify persistence, create a ticket and comment, then run `dc restart`, wait for
-healthy services, and reopen the ticket. For a content-level check:
+To verify persistence, create a ticket and comment, compare business fingerprints,
+restart only the hardening fixture, wait for health, and reopen the ticket:
 
 ```powershell
-dc run --rm --no-deps api node dist/fingerprint.js
+function dc { docker compose -p clientops-hardening --env-file .env.hardening.example -f docker-compose.hardening.yml @args }
+node scripts/hardening-stack.mjs snapshot
 dc restart
 dc up -d --no-build --wait
-dc run --rm --no-deps api node dist/fingerprint.js
+node scripts/hardening-stack.mjs snapshot
 ```
 
-Compare the SHA-256 values when nobody is writing data. `dc down` stops this stack
+Compare the per-table hashes when nobody is writing data. `dc down` stops this stack
 without deleting its named volume. Never use `down -v` on a database you need.
 
 `config --quiet` validates configuration only. Successful builds, migrations,
@@ -117,7 +115,7 @@ nano .env.production
 chmod 600 .env.production
 ```
 
-Use the two independently generated values for the database password and JWT secret.
+Use the two independently generated values for the database password and session secret.
 Do not paste real secrets into issue reports, workflow logs or screenshots.
 Keep the PostgreSQL password in `DATABASE_URL` consistent with `POSTGRES_PASSWORD`;
 URL-encode non-hex passwords. Never source an env file as shell code.
@@ -130,12 +128,17 @@ URL-encode non-hex passwords. Never source an env file as shell code.
 | `IMAGE_TAG`                                         | Full commit SHA whose CI and image publication succeeded                    |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Unique database identity; do not use a disposable suffix                    |
 | `DATABASE_URL`                                      | Connection URL using `postgres:5432`, not localhost                         |
-| `JWT_SECRET`                                        | Independently generated secret, at least 32 characters                      |
-| `CORS_ORIGIN`                                       | Exact public HTTPS origin, no trailing slash                                |
+| `SESSION_SECRET`                                    | Independently generated signing secret, at least 32 characters              |
+| `APP_ORIGIN`                                        | Exact public HTTPS origin, no trailing slash                                |
+| `SESSION_IDLE_SECONDS`, `SESSION_ABSOLUTE_SECONDS`  | Server expiry defaults: 1800 and 28800                                      |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`             | Real mail transport; STARTTLS required when not using implicit TLS          |
+| `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`           | SMTP credentials and verified sender address                                |
+| `TLS_CERTS_DIR`                                     | Directory with trusted `fullchain.pem` and `privkey.pem`, mounted read-only |
+| `HTTPS_PORT`                                        | Normally 443; the public origin must match                                  |
 | `NEXT_PUBLIC_API_URL`                               | `/` for the supplied same-origin image                                      |
 | `HTTP_BIND`, `HTTP_PORT`                            | Default loopback listener; expose only behind an approved HTTPS entry point |
 
-The API rejects placeholder JWT secrets and wildcard production CORS. Real env files
+The API rejects placeholder session secrets and non-HTTPS production origins. Real env files
 are ignored by Git and excluded from Docker build contexts. No production defaults
 are used for database credentials.
 
@@ -161,22 +164,24 @@ dc up -d --wait postgres
 dc run --rm --no-deps api node dist/migrate.js
 dc up -d --no-build --wait
 dc ps
-curl --fail http://127.0.0.1/api/health
+curl --fail https://YOUR_CONFIGURED_DOMAIN/api/health
 ```
 
-An empty production database has no login users. Account provisioning with strong
-unique credentials is a remaining public-release requirement; do not work around
-this by running the destructive demo seed against production.
+An empty database has no users. Run the one-time administrator bootstrap described
+in [SESSION_HARDENING.md](SESSION_HARDENING.md#non-demo-bootstrap-and-manual-acceptance)
+after migration; do not run demo seeds. Configure production SMTP, sender-domain
+verification and trusted certificates **before** starting the public stack.
 
-Do not transmit passwords/JWTs over public HTTP. For a private smoke test use
-`ssh -L 8180:127.0.0.1:80 deploy@SERVER_IP` and open `http://localhost:8180`.
-Before sending a public link, configure DNS and trusted HTTPS termination at a
-load balancer or hardened reverse proxy. The checked-in Nginx config is HTTP-only;
-no TLS automation or certificates are claimed. Use a consistent HTTPS origin in
-CORS and forward the original scheme from your trusted TLS terminator.
+`nginx/production.conf` redirects HTTP to HTTPS and reads operator-managed
+certificates from `TLS_CERTS_DIR`. It overwrites forwarding headers; the API trusts
+one private proxy hop and publishes no port. Default listeners remain loopback;
+set HTTP_BIND to the intended interface only after firewall/TLS review. Certificate
+issuance and renewal automation are not provisioned here. If adding another proxy,
+review the trust boundary instead of blindly forwarding client-supplied headers.
+The local self-signed harness does not verify production TLS or SMTP delivery.
 
 Swagger currently publishes the contract without authentication; data routes still
-require bearer tokens. Gate `/api/docs` at the public edge if that contract should
+require server sessions. Gate `/api/docs` at the public edge if that contract should
 not be public. Never advertise a public demo while default accounts are installed.
 
 ## Later Updates and Recovery
@@ -207,7 +212,8 @@ Workflow files are at the Git root, not inside the workspace.
 
 - CI runs install, lint, typecheck, formatting, migration, isolated tests, build,
   both Compose validations, and browser/accessibility checks against a freshly
-  seeded disposable container stack. It uploads screenshots as run artifacts.
+  upgraded disposable HTTPS stack plus a separately bootstrapped account stack.
+  It uploads browser reports/screenshots and upgrade hashes, excluding TLS keys.
 - Docker Images publishes only a revision with successful `main` CI, tags both
   images with its full SHA, and builds the web image for same-origin requests.
 - Deploy to DigitalOcean is manual, checks successful CI for the requested SHA,
@@ -255,7 +261,7 @@ GitHub supplies the publishing workflow's `GITHUB_TOKEN`; do not create your own
 | 502 after replacing containers          | Check `dc logs --tail=100 api web nginx`, then recreate Nginx                                                    |
 | Test command refuses configuration      | Copy `apps/api/.env.test.example` to `.env.test` and start the separate test cluster                             |
 | Seed refuses reset                      | Only an explicitly designated `clientops_*demo`/`clientops_*test` DB, with `SEED_RESET=true`, outside production |
-| Failed login after production migration | Migration creates schema, not users; secure account provisioning is still required                               |
+| Failed login after production migration | Bootstrap once on a new database, then invite accounts; demo identities are rejected                             |
 
 Inspect `dc logs --tail=100` privately. Prefer `config --quiet` because plain
 `config` prints resolved environment values. Do not delete volumes to fix an auth
@@ -271,7 +277,7 @@ Export only the public CA as PEM to a local ignored directory, then run:
 
 ```powershell
 $env:BUILD_CA_FILE=(Resolve-Path '../artifacts/avg-root.pem').Path
-docker compose -p clientops-readiness --env-file .env.verify.example -f docker-compose.prod.yml -f docker-compose.build-ca.yml build
+pnpm.cmd verify:stack
 ```
 
 The optional override mounts the public CA as a BuildKit secret only during npm/pnpm

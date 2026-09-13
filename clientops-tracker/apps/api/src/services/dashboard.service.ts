@@ -1,81 +1,116 @@
-import { eq } from 'drizzle-orm';
-
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../db/client';
-import { users } from '../db/schema';
+import { clients, projects, tickets, users } from '../db/schema';
 import type { AuthenticatedUser } from '../types/auth';
-import { listTicketsForUser } from './ticket.service';
+import {
+  monthBounds,
+  organisationScope,
+  queuePredicate,
+  unresolvedStatuses,
+} from './queue.service';
 
-const ticketStatuses = ['OPEN', 'IN_PROGRESS', 'WAITING_FOR_CLIENT', 'RESOLVED', 'CLOSED'] as const;
-const ticketPriorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
+const statuses = ['OPEN', 'IN_PROGRESS', 'WAITING_FOR_CLIENT', 'RESOLVED', 'CLOSED'] as const;
+const priorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
 
 export async function getDashboardMetrics(user: AuthenticatedUser) {
-  const scopedTickets = await listTicketsForUser(user);
   const now = new Date();
-  const firstDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const resolvedTickets = scopedTickets.filter(
-    (ticket) => ticket.resolvedAt && ticket.resolvedAt >= ticket.createdAt,
+  const resolvedMonth = now.toISOString().slice(0, 7);
+  const { start, end } = monthBounds(resolvedMonth);
+  const scope = organisationScope(user);
+  return db.transaction(
+    async (tx) => {
+      const [metrics] = await tx
+        .select({
+          totalOpenTickets: sql<number>`count(*) filter (where ${tickets.status} = 'OPEN')`.mapWith(
+            Number,
+          ),
+          unresolvedTickets:
+            sql<number>`count(*) filter (where ${inArray(tickets.status, [...unresolvedStatuses])})`.mapWith(
+              Number,
+            ),
+          criticalTickets:
+            sql<number>`count(*) filter (where ${queuePredicate(user, { status: 'UNRESOLVED', priority: 'CRITICAL' })})`.mapWith(
+              Number,
+            ),
+          ticketsWaitingForClient:
+            sql<number>`count(*) filter (where ${tickets.status} = 'WAITING_FOR_CLIENT')`.mapWith(
+              Number,
+            ),
+          resolvedTicketsThisMonth:
+            sql<number>`count(*) filter (where ${tickets.resolvedAt} >= ${start.toISOString()} and ${tickets.resolvedAt} < ${end.toISOString()})`.mapWith(
+              Number,
+            ),
+          averageResolutionTimeHours: sql<
+            string | null
+          >`round(avg(extract(epoch from (${tickets.resolvedAt} - ${tickets.createdAt})) / 3600) filter (where ${tickets.resolvedAt} >= ${tickets.createdAt}), 1)`,
+        })
+        .from(tickets)
+        .innerJoin(projects, eq(tickets.projectId, projects.id))
+        .where(scope);
+      const byStatus = await tx
+        .select({ status: tickets.status, count: count() })
+        .from(tickets)
+        .innerJoin(projects, eq(tickets.projectId, projects.id))
+        .where(scope)
+        .groupBy(tickets.status);
+      const byPriority = await tx
+        .select({ priority: tickets.priority, count: count() })
+        .from(tickets)
+        .innerJoin(projects, eq(tickets.projectId, projects.id))
+        .where(scope)
+        .groupBy(tickets.priority);
+      const workload =
+        user.role === 'CLIENT'
+          ? []
+          : await tx
+              .select({
+                developerId: users.id,
+                name: users.name,
+                email: users.email,
+                openTickets: count(tickets.id),
+              })
+              .from(users)
+              .leftJoin(
+                tickets,
+                and(
+                  eq(tickets.assignedToId, users.id),
+                  inArray(tickets.status, [...unresolvedStatuses]),
+                ),
+              )
+              .where(eq(users.role, 'DEVELOPER'))
+              .groupBy(users.id)
+              .orderBy(desc(count(tickets.id)), users.id)
+              .limit(10);
+      const [client] = user.clientId
+        ? await tx
+            .select({ name: clients.name })
+            .from(clients)
+            .where(eq(clients.id, user.clientId))
+            .limit(1)
+        : [];
+      return {
+        ...metrics,
+        averageResolutionTimeHours:
+          metrics?.averageResolutionTimeHours == null
+            ? null
+            : Number(metrics.averageResolutionTimeHours),
+        scope:
+          user.role === 'CLIENT'
+            ? (client?.name ?? 'Your organisation')
+            : 'All client organisations',
+        generatedAt: now.toISOString(),
+        resolvedMonth,
+        ticketsByStatus: statuses.map((status) => ({
+          status,
+          count: byStatus.find((row) => row.status === status)?.count ?? 0,
+        })),
+        ticketsByPriority: priorities.map((priority) => ({
+          priority,
+          count: byPriority.find((row) => row.priority === priority)?.count ?? 0,
+        })),
+        ...(user.role !== 'CLIENT' ? { developerWorkload: workload } : {}),
+      };
+    },
+    { isolationLevel: 'repeatable read', accessMode: 'read only' },
   );
-
-  const averageResolutionTimeHours =
-    resolvedTickets.length === 0
-      ? null
-      : Number(
-          (
-            resolvedTickets.reduce((total, ticket) => {
-              const resolvedAt = ticket.resolvedAt;
-              return resolvedAt
-                ? total + (resolvedAt.getTime() - ticket.createdAt.getTime())
-                : total;
-            }, 0) /
-            resolvedTickets.length /
-            1000 /
-            60 /
-            60
-          ).toFixed(1),
-        );
-
-  const developers =
-    user.role === 'CLIENT'
-      ? []
-      : await db
-          .select({
-            id: users.id,
-            name: users.name,
-            email: users.email,
-          })
-          .from(users)
-          .where(eq(users.role, 'DEVELOPER'));
-
-  const developerWorkload = developers.map((developer) => ({
-    developerId: developer.id,
-    name: developer.name,
-    email: developer.email,
-    openTickets: scopedTickets.filter(
-      (ticket) =>
-        ticket.assignedToId === developer.id && !['RESOLVED', 'CLOSED'].includes(ticket.status),
-    ).length,
-  }));
-
-  return {
-    totalOpenTickets: scopedTickets.filter((ticket) => ticket.status === 'OPEN').length,
-    criticalTickets: scopedTickets.filter(
-      (ticket) => ticket.priority === 'CRITICAL' && !['RESOLVED', 'CLOSED'].includes(ticket.status),
-    ).length,
-    ticketsWaitingForClient: scopedTickets.filter(
-      (ticket) => ticket.status === 'WAITING_FOR_CLIENT',
-    ).length,
-    resolvedTicketsThisMonth: scopedTickets.filter(
-      (ticket) => ticket.resolvedAt && ticket.resolvedAt >= firstDayOfMonth,
-    ).length,
-    averageResolutionTimeHours,
-    ticketsByStatus: ticketStatuses.map((status) => ({
-      status,
-      count: scopedTickets.filter((ticket) => ticket.status === status).length,
-    })),
-    ticketsByPriority: ticketPriorities.map((priority) => ({
-      priority,
-      count: scopedTickets.filter((ticket) => ticket.priority === priority).length,
-    })),
-    ...(user.role !== 'CLIENT' ? { developerWorkload } : {}),
-  };
 }

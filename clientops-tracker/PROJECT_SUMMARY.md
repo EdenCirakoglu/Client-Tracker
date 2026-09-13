@@ -13,7 +13,7 @@ The project was built to demonstrate production-minded full-stack engineering th
 - Next.js TypeScript dashboard using the App Router and Tailwind CSS.
 - Express TypeScript REST API with route, controller, service, middleware, and validation layers.
 - PostgreSQL relational schema implemented with Drizzle ORM and versioned migrations.
-- JWT authentication with bcryptjs password verification.
+- PostgreSQL-backed revocable sessions, HttpOnly/Secure cookies, CSRF protection and bcryptjs password verification.
 - Role-based and ownership-based authorization for administrators, developers, and clients.
 - Zod validation and centralized JSON error handling.
 - Swagger/OpenAPI documentation for the API contract.
@@ -23,13 +23,22 @@ The project was built to demonstrate production-minded full-stack engineering th
 
 ## Architecture
 
-The web application calls the Express API with bearer tokens. The API authenticates and authorizes each protected request, validates input, delegates domain operations to services, and persists data through Drizzle ORM in PostgreSQL. The triage service is isolated so a future LLM provider can be introduced without changing route contracts.
+The web application calls Express with cookie sessions and synchronizer CSRF tokens. The API enforces idle/absolute expiry, revocation, current roles and organisation ownership, validates input, delegates domain operations to services, and persists through Drizzle/PostgreSQL. Controlled bootstrap, administrator invitations and single-use password recovery provide non-demo account setup. The triage provider boundary remains deterministic and unchanged.
 
 ## Testing and CI
 
+The unmerged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
+has [verified CI at `4614642`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34612080774):
+60 API/configuration tests and nine real browser/accessibility scenarios, including
+HTTPS cookies, Mailpit invitation/recovery, role queues, URL filters, both themes
+and a populated database upgrade without reseeding. Earlier results at `2341e61`
+remain revision-specific in the release evidence.
+These are runner/local verification results, not a production email service or
+public deployment. Exact revisions and reports are in the release evidence below.
+
 The merged release revision `3fa8d7f` passed hosted CI with 37 API tests and four browser/accessibility scenarios. Both GHCR images were published for that exact SHA, pulled locally without rebuilding, and passed all four browser scenarios again. Database fingerprints verified persistence after full container recreation and preservation of existing databases. See [published-image evidence](docs/REGISTRY_VERIFICATION.md) for exact revisions, digests and reports. Twenty-one fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). Public deployment has not been performed.
 
-The pnpm workspace provides commands for linting, typechecking, testing, building, formatting, migrations and Compose validation. GitHub-discoverable root workflows check out the exact PR head and run these checks plus real container/browser scenarios. See [revision-specific verification evidence](docs/RELEASE_READINESS.md) for hosted results and [browser reproduction](docs/BROWSER_TESTS.md) for HTML/JSON reports. Tests use a separately designated disposable database, with two-client privacy regression tests and transactional/idempotent triage coverage.
+The pnpm workspace provides commands for linting, typechecking, testing, building, formatting, migrations and Compose validation. GitHub-discoverable root workflows check out the exact PR head and run these checks plus real container/browser scenarios. See [revision-specific verification evidence](docs/RELEASE_READINESS.md) for hosted results and [current browser reproduction](docs/SESSION_HARDENING.md#isolated-https-browser-verification) for HTML/JSON reports. Tests use a separately designated disposable database, with two-client privacy regression tests and transactional/idempotent triage coverage.
 
 ## Deployment Readiness
 
@@ -41,7 +50,7 @@ The older main commit (`611ca061`) contained the placeholder frontend. PR #1 pre
 
 ## Future Improvements
 
-Planned improvements include secure HTTP-only cookie sessions, rate limiting, audit logging, pagination, richer tenant administration, integrations, hosted SaaS capabilities, and an optional provider-backed triage adapter.
+Cookie sessions, recovery, invitations and PostgreSQL-backed authentication rate limits are implemented in the hardening branch. Its [UI refinement](docs/UI_REFINEMENT.md) adds role-specific work queues, database-backed pagination, exact metric links, private activity and consistent accessible themes. The expanded suite retains earlier coverage and adds dashboard behavior: 60 API/configuration tests and nine browser scenarios, with revision-specific results in the release evidence. The next milestone covers backup/restore drills, monitoring, real TLS/secrets/SMTP configuration, security-event audit retention and durable email delivery. MFA, pagination of remaining legacy collections, integrations and an optional provider-backed triage adapter remain future improvements. See [session hardening](docs/SESSION_HARDENING.md) for design and local verification, distinct from public deployment.
 
 ## Links
 

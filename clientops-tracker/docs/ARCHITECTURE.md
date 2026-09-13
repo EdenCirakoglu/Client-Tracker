@@ -6,7 +6,7 @@ ClientOps Tracker is a pnpm monorepo with a browser application, an HTTP API, an
 
 ```mermaid
 flowchart TB
-    Web[apps/web - Next.js App Router] -->|HTTP JSON and Bearer JWT| API[apps/api - Express REST API]
+    Web[apps/web - Next.js App Router] -->|Cookie session and CSRF-protected JSON| API[apps/api - Express REST API]
     API --> Middleware[Helmet, CORS, validation, auth, RBAC]
     Middleware --> Controllers[Controllers]
     Controllers --> Services[Domain services]
@@ -18,11 +18,21 @@ flowchart TB
 
 ### Web application
 
-`apps/web` provides the authenticated dashboard, login page, role-aware navigation, ticket workflows, comments, releases, and triage controls. Its API client reads `NEXT_PUBLIC_API_URL`, attaches the stored bearer token, and converts API errors into typed frontend errors.
+`apps/web` provides dashboard, login, account setup/recovery, role-aware navigation and operational workflows. Its API client reads `NEXT_PUBLIC_API_URL`, uses credentialed fetch and in-memory synchronizer CSRF tokens, and converts API errors into typed frontend errors. No JWT is stored or attached.
+
+Role-specific dashboard feature components use bounded queue/activity APIs, not
+mock records or filtered subsets for summary counts. Light/Dark/System and sidebar
+preferences use separate presentation-only storage keys. [UI refinement](UI_REFINEMENT.md)
+documents the navigation, visual tokens and browser evidence.
 
 ### API application
 
 `apps/api` owns authentication, authorization, validation, request handling, domain services, OpenAPI documentation, and database access. Routes are thin and delegate business behavior to controllers and services.
+
+Queue predicates are shared with dashboard aggregates so metric links and list
+totals agree. Activity uses a tenant-scoped source allowlist before pagination;
+client timestamps never derive from hidden internal activity. See the
+[dashboard query contract](DASHBOARD_QUERIES.md).
 
 ### Database
 
@@ -30,7 +40,7 @@ PostgreSQL is the source of truth for users, client ownership, projects, tickets
 
 ## Request Flow
 
-1. The browser calls the Express API with JSON and, for protected routes, a bearer JWT.
+1. The browser calls Express with JSON and an HttpOnly SID cookie; unsafe requests include a CSRF header.
 2. Express applies security headers, CORS, JSON parsing, authentication, and role checks.
 3. Zod validates request bodies and route parameters.
 4. Controllers call services for authorization-aware database operations.
@@ -39,9 +49,13 @@ PostgreSQL is the source of truth for users, client ownership, projects, tickets
 
 ## Authentication Flow
 
-Login looks up a user by email, verifies the bcryptjs password hash, and signs a JWT containing the user identity and role. Protected requests verify the token and reload the current user from the database before authorization is applied. Password hashes are never returned to the client.
-
-The current web MVP stores the token in localStorage. This is documented as a limitation; a production hosted version should use secure, HTTP-only cookies with HTTPS.
+Login verifies bcrypt and active/demo eligibility, rotates the SID and CSRF token,
+and creates a PostgreSQL authorization grant. Every protected request checks server
+idle/absolute expiry, revocation and current user version, role and organisation.
+Logout, password changes and administrative access changes revoke sessions.
+See [security model](SECURITY.md) for concurrency semantics, cookie policy and limits.
+Accounts are created by a one-time operator bootstrap or administrator invitation;
+expiring token hashes and atomic consumption keep recovery separate from login.
 
 ## RBAC and Ownership
 
@@ -72,4 +86,4 @@ nested under `clientops-tracker/`. CI is configured to run checks against a sepa
 disposable PostgreSQL cluster. Image publication requires passing CI for the same
 commit. Production Compose uses same-origin Nginx routing and container-executed
 migrations. Manual deployment is gated by an operator-configured production
-environment. Hosted CI and deployment are pending until actual runs succeed.
+environment. Exact hosted CI results are recorded in [release evidence](RELEASE_READINESS.md); public deployment remains unperformed.

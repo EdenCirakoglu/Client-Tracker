@@ -7,3 +7,4 @@
 !.env.production.example
 !.env.test.example
 !.env.verify.example
+!.env.hardening.example

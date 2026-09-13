@@ -6,12 +6,13 @@ import { createApp } from '../src/app';
 import { db, pool } from '../src/db/client';
 import { seedDatabase } from '../src/db/seed';
 import { ticketEvents } from '../src/db/schema';
+import { authHeader, loginResponse, loginSession, type SessionAuth } from './helpers/auth';
 
 const app = createApp();
 
-let adminToken: string;
-let developerToken: string;
-let clientToken: string;
+let adminToken: SessionAuth;
+let developerToken: SessionAuth;
+let clientToken: SessionAuth;
 
 describe('ClientOps Tracker API', () => {
   beforeAll(async () => {
@@ -26,13 +27,11 @@ describe('ClientOps Tracker API', () => {
   });
 
   it('logs in successfully with admin@example.com / password123', async () => {
-    const response = await request(app).post('/api/auth/login').send({
-      email: 'admin@example.com',
-      password: 'password123',
-    });
+    const response = await loginResponse(app, 'admin@example.com');
 
     expect(response.status).toBe(200);
-    expect(response.body.data.token).toEqual(expect.any(String));
+    expect(response.body.data.token).toBeUndefined();
+    expect(response.headers['set-cookie']?.[0]).toContain('HttpOnly');
     expect(response.body.data.user).toMatchObject({
       email: 'admin@example.com',
       role: 'ADMIN',
@@ -41,10 +40,7 @@ describe('ClientOps Tracker API', () => {
   });
 
   it('rejects login with a wrong password', async () => {
-    const response = await request(app).post('/api/auth/login').send({
-      email: 'admin@example.com',
-      password: 'wrong-password',
-    });
+    const response = await loginResponse(app, 'admin@example.com', 'wrong-password');
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('INVALID_CREDENTIALS');
@@ -311,22 +307,10 @@ describe('ClientOps Tracker API', () => {
 });
 
 async function loginAs(email: string) {
-  const response = await request(app).post('/api/auth/login').send({
-    email,
-    password: 'password123',
-  });
-
-  expect(response.status).toBe(200);
-  return response.body.data.token as string;
+  return loginSession(app, email);
 }
 
-function authHeader(token: string) {
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-}
-
-async function findTicketByTitle(token: string, title: string) {
+async function findTicketByTitle(token: SessionAuth, title: string) {
   const response = await request(app).get('/api/tickets').set(authHeader(token));
 
   expect(response.status).toBe(200);
@@ -338,7 +322,7 @@ async function findTicketByTitle(token: string, title: string) {
 }
 
 async function createTicket(
-  token: string,
+  token: SessionAuth,
   data: {
     title: string;
     description: string;
@@ -361,7 +345,7 @@ async function createTicket(
   return response;
 }
 
-async function getFirstProjectId(token: string) {
+async function getFirstProjectId(token: SessionAuth) {
   const response = await request(app).get('/api/projects').set(authHeader(token));
 
   expect(response.status).toBe(200);

@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { getTicketQueue, queueQuerySchema } from '../services/queue.service';
+import { asyncHandler, requireUser, sendSuccess } from '../utils/http';
 
 import {
   applyTriageSuggestionController,
@@ -22,6 +24,12 @@ import {
 export const ticketsRouter = Router();
 
 ticketsRouter.get('/', listTicketsController);
+ticketsRouter.get(
+  '/queue',
+  asyncHandler(async (req, res) => {
+    sendSuccess(res, await getTicketQueue(requireUser(req), queueQuerySchema.parse(req.query)));
+  }),
+);
 ticketsRouter.post('/', validateRequest({ body: createTicketBodySchema }), createTicketController);
 ticketsRouter.get('/:id', validateRequest({ params: idParamsSchema }), getTicketController);
 ticketsRouter.patch(

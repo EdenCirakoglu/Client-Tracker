@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AuthProvider } from '../lib/auth';
+import { PreferencesProvider } from '../components/ui/preferences';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,9 +15,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <PreferencesProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </PreferencesProvider>
       </body>
     </html>
   );

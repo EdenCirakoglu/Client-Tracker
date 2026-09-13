@@ -9,6 +9,7 @@ out/
 coverage/
 test-results/
 playwright-report/
+certs/
 *.tsbuildinfo
 
 # Environment
@@ -18,6 +19,7 @@ playwright-report/
 !.env.production.example
 !.env.test.example
 !.env.verify.example
+!.env.hardening.example
 
 # Logs
 *.log

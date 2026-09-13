@@ -7,7 +7,7 @@ ClientOps Tracker is an open-source support and delivery operations platform for
 
 > See [screenshots](docs/SCREENSHOTS.md) and [release verification evidence](docs/RELEASE_READINESS.md). Local verification, hosted CI and public deployment are reported separately.
 
-![Administrator dashboard from the verified local container stack](docs/assets/screenshots/admin-dashboard.png)
+![Administrator dashboard from an isolated CI container stack using fictional data](docs/assets/screenshots/ui/after/ui-admin-dashboard.png)
 
 ## Why ClientOps Tracker
 
@@ -15,7 +15,7 @@ Small software teams often split client requests between email, chat, spreadshee
 
 ## Features
 
-- JWT login with seeded local demo accounts.
+- Revocable PostgreSQL sessions, HttpOnly cookies, CSRF protection, administrator invitations and password recovery.
 - Role-based access control for administrators, developers, and clients.
 - Client, project, ticket, comment, release, and dashboard workflows.
 - PostgreSQL persistence with Drizzle ORM migrations and relations.
@@ -23,7 +23,8 @@ Small software teams often split client requests between email, chat, spreadshee
 - Swagger/OpenAPI documentation for the REST API.
 - Rule-based ticket triage that suggests category, priority, summary, next action, and a heuristic rule-match score.
 - Advisory triage application with ticket event history.
-- Responsive Next.js dashboard using the real Express API.
+- Role-specific work queues, linked metrics and private activity from the real Express API.
+- Responsive, collapsible navigation and Light/Dark/System themes across portal and account screens.
 - Vitest/Supertest API tests plus real-container Playwright journeys and axe accessibility checks.
 - Docker Compose development setup and production container definitions.
 - GitHub Actions CI and GitHub Container Registry image publishing.
@@ -32,8 +33,8 @@ Small software teams often split client requests between email, chat, spreadshee
 
 ```mermaid
 flowchart LR
-    Browser[Next.js browser app] -->|Bearer JWT and JSON| API[Express REST API]
-    API --> Auth[JWT auth and RBAC middleware]
+    Browser[Next.js browser app] -->|Cookie session, CSRF and JSON| API[Express REST API]
+    API --> Auth[Session auth and RBAC middleware]
     API --> Services[Controllers and domain services]
     Services --> ORM[Drizzle ORM]
     ORM --> DB[(PostgreSQL)]
@@ -132,12 +133,14 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     User->>Web: Submit email and password
-    Web->>API: POST /api/auth/login
+    Web->>API: GET csrf then POST login with cookie and CSRF
     API->>DB: Find user by email
-    API->>API: Verify bcrypt hash and sign JWT
-    API-->>Web: Token and safe user profile
-    Web->>API: Authenticated request with Bearer token
-    API->>API: Verify JWT, reload user, enforce role and ownership
+    API->>API: Verify bcrypt hash and rotate SID
+    API->>DB: Persist revocable session grant
+    API-->>Web: HttpOnly cookie, CSRF and safe profile
+    Web->>API: Request with cookie and CSRF header
+    API->>DB: Check revocation, expiry and current account
+    API->>API: Enforce role and ownership
     API->>DB: Execute scoped Drizzle query
     DB-->>API: Result
     API-->>Web: { data: ... }
@@ -219,9 +222,9 @@ Local URLs:
 
 With the production Compose stack, Nginx is the only public entry point:
 
-- Frontend: `http://SERVER_IP/` or `https://your-domain.example`
-- API health: `http://SERVER_IP/api/health`
-- API docs: `http://SERVER_IP/api/docs`
+- Frontend: `https://your-domain.example`
+- API health: `https://your-domain.example/api/health`
+- API docs: `https://your-domain.example/api/docs`
 
 Seed resets require `DISPOSABLE_DATABASE_NAME` to exactly match a `clientops_*demo` or `clientops_*test` database and `SEED_RESET=true`; production mode is rejected. The default development database is now `clientops_demo`. Existing `clientops_tracker` data is preserved, not automatically migrated or reset. If the old `clientops-postgres` container occupies 5432, stop it deliberately before starting a new demo container, or use the isolated stack below on port 8180.
 
@@ -236,7 +239,7 @@ client@example.com    / password123 / CLIENT (Northstar)
 bluewave@example.com  / password123 / CLIENT (Bluewave)
 ```
 
-Do not use these credentials in a hosted or production environment. The seed data uses `.example` email domains and fictional demo organisations; it contains no customer or personal data.
+Do not use these credentials in a hosted environment. Demo login requires `DEMO_MODE=true`, a designated disposable database and a loopback origin; otherwise the server rejects these accounts. The additive migration marks legacy seed accounts as demo identities. Production startup never seeds users. Use the [one-time bootstrap and invitation runbook](docs/SESSION_HARDENING.md) for non-demo account setup.
 
 ## API
 
@@ -246,10 +249,10 @@ The API uses JSON responses with a consistent envelope:
 { "data": {} }
 ```
 
-Errors use an `error` object with a stable code and message. Authenticated requests use:
+Errors use an `error` object with a stable code and message. Browsers use credentialed fetch and an HttpOnly cookie. Unsafe requests also send:
 
 ```text
-Authorization: Bearer <jwt>
+X-CSRF-Token: <token from GET /api/auth/csrf>
 ```
 
 Swagger/OpenAPI is available at `/api/docs`. Endpoint details and curl examples are in [docs/API.md](docs/API.md).
@@ -257,11 +260,13 @@ Swagger/OpenAPI is available at `/api/docs`. Endpoint details and curl examples 
 Main route groups:
 
 - Authentication: `/api/auth`
+- Administrator-controlled accounts: `/api/users`
 - Clients: `/api/clients`
 - Projects: `/api/projects`
 - Tickets and comments: `/api/tickets`
 - Releases: `/api/releases`
-- Dashboard metrics: `/api/dashboard/metrics`
+- Dashboard metrics and activity: `/api/dashboard/metrics`, `/api/dashboard/activity`
+- Bounded ticket filtering and pagination: `/api/tickets/queue`
 - Health: `/health`
 
 ## Roles
@@ -305,16 +310,10 @@ pnpm db:down
 For an isolated local production-style demonstration:
 
 ```powershell
-function dc { docker compose -p clientops-readiness --env-file .env.verify.example -f docker-compose.prod.yml @args }
-dc config --quiet
-dc build
-dc up -d --wait postgres
-dc run --rm --no-deps api node dist/migrate.js
-dc run --rm --no-deps -e NODE_ENV=development -e DISPOSABLE_DATABASE_NAME=clientops_verify_demo -e SEED_RESET=true api node dist/seed.js
-dc up -d --no-build --wait
+pnpm verify:stack
 ```
 
-Open http://localhost:8180/login. Nginx publishes loopback port 8180 in this verification configuration and proxies `/` to the web container and `/api/` to the API container. PostgreSQL, port 3000, and port 8080 are kept on the internal Compose network. Production deployment requires explicit migrations and real secrets. Follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). No production deployment is currently claimed.
+Open https://localhost:8443/login (disposable demo) or https://localhost:8444/login (non-demo account fixture). These use local self-signed certificates, never public trust. The script creates separate named volumes, upgrades an old populated fixture without reseeding and bootstraps only the empty account fixture. OpenSSL is required; Windows defaults to Git for Windows' OpenSSL. Requirements, fictional owner credentials and local Mailpit URLs are in [SESSION_HARDENING.md](docs/SESSION_HARDENING.md). No production deployment is claimed.
 
 ## Quality Checks
 
@@ -323,7 +322,7 @@ or production URL fallback. Copy the example only if the local test file does no
 
 ```powershell
 if (!(Test-Path apps/api/.env.test)) { Copy-Item apps/api/.env.test.example apps/api/.env.test }
-docker compose -p clientops-tests -f docker-compose.test.yml up -d --wait
+pnpm db:test:up
 ```
 
 ```powershell
@@ -338,7 +337,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production.example con
 
 Root GitHub workflows run application checks, migration, isolated tests, Compose image builds and browser/accessibility scenarios. See [revision-specific results](docs/RELEASE_READINESS.md) for actual hosted evidence, separate from local checks. Image publishing requires successful main CI for the same full commit SHA. The optional manual DigitalOcean workflow requires an approved production environment.
 
-API tests and browser tests are separate commands. See [Browser Verification](docs/BROWSER_TESTS.md) for the exact environment, four scenarios, fresh database setup and HTML/JSON report locations.
+API tests and browser tests are separate commands. Tests require the dedicated security-test cluster and local Mailpit; update existing `.env.test` values from the example without overwriting unrelated settings. See [hardening verification](docs/SESSION_HARDENING.md) and [UI refinement](docs/UI_REFINEMENT.md) for all nine browser scenarios, exact commands and report locations. [Earlier browser evidence](docs/BROWSER_TESTS.md) remains revision-specific.
 
 For browser checks against the isolated stack (these create fictional records):
 
@@ -350,20 +349,20 @@ Remove-Item Env:E2E_ALLOW_DISPOSABLE_DEMO
 ```
 
 On this Windows machine the verified run used installed Chrome in a fresh profile:
-set `$env:BROWSER_CHANNEL='chrome'` instead of downloading Chromium. Re-seed only
-the designated disposable demo before rerunning the full browser scenario.
+set `$env:BROWSER_CHANNEL='chrome'` instead of downloading Chromium. Use only
+the designated disposable fixtures; existing development and older verification databases are not reset.
 
 See [deployment troubleshooting](docs/DEPLOYMENT.md) for Docker TLS inspection errors. Never disable certificate verification.
 
 ## Security
 
-Passwords are hashed with bcryptjs. API requests use JWT authentication, role and ownership checks, Zod validation, Helmet, and configured CORS. The browser currently stores the JWT in localStorage for MVP simplicity; a hosted production deployment should use secure HTTP-only cookies over HTTPS.
+Passwords are hashed with bcryptjs. API requests use server-revocable HttpOnly cookie sessions, synchronizer CSRF tokens, role/ownership checks, Zod, Helmet and exact-origin CORS. Idle/absolute expiry, password-reset revocation and account disablement are server-enforced. PostgreSQL-backed rate limits cover authentication and recovery. No JWT/localStorage authentication remains.
 
 Read [SECURITY.md](SECURITY.md) for vulnerability reporting and [docs/SECURITY.md](docs/SECURITY.md) for the technical security model.
 
 ## Deployment Readiness
 
-The project includes Dockerfiles, production Compose configuration, GHCR publishing, and an optional manual DigitalOcean VPS workflow. Public deployment has not been performed. A real deployment still requires a managed or secured PostgreSQL instance, production environment variables, a strong JWT secret, a domain, HTTPS, backups, monitoring, and an operational deployment policy, and securely provisioned non-demo accounts.
+The project includes Dockerfiles, HTTPS production Compose configuration, GHCR publishing and a manual DigitalOcean workflow. Public deployment has not been performed. Launch still requires production TLS certificates/renewal, domain, secrets, SMTP sender verification, backups/restore drills, monitoring and an operational release policy. Secure account provisioning is implemented but real accounts and email services are not configured by local verification.
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md).
 

@@ -88,7 +88,7 @@ export default function ReleasesPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {releasesState.data.map((release) => (
-                  <tr key={release.id}>
+                  <tr key={release.id} id={`release-${release.id}`} className="scroll-mt-24">
                     <Td className="font-semibold text-ink">{release.version}</Td>
                     <Td>{release.title}</Td>
                     <Td>

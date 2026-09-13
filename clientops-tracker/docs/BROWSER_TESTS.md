@@ -1,5 +1,10 @@
 # Browser Verification
 
+For the current six-scenario cookie-session suite, HTTPS fixtures and captured
+email requirements, use [SESSION_HARDENING.md](SESSION_HARDENING.md). The four-scenario
+commands and JWT-era evidence below describe the earlier release revisions only;
+do not use their HTTP fixture with the hardened production-cookie configuration.
+
 `pnpm test` runs Vitest API/database tests. It does **not** run the browser suite.
 Run `pnpm test:e2e` separately. There are four Playwright scenarios in
 `e2e/portal.spec.ts`, with axe WCAG 2 A/AA and 2.1 AA assertions on the checked pages.

@@ -9,7 +9,7 @@ export const loginBodySchema = z.object({
     .string()
     .email()
     .transform((value) => value.toLowerCase()),
-  password: z.string().min(1),
+  password: z.string().min(1).max(256),
 });
 
 export const createClientBodySchema = z.object({

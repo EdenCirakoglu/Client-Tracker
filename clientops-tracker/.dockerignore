@@ -15,5 +15,6 @@ coverage
 docs/assets
 test-results
 playwright-report
+certs
 pnpm-debug.log*
 README.md

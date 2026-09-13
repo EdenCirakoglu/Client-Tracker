@@ -2,7 +2,7 @@ import { loginWithPassword } from '../services/auth.service';
 import { asyncHandler, requireUser, sendSuccess } from '../utils/http';
 
 export const loginController = asyncHandler(async (req, res) => {
-  const result = await loginWithPassword(req.body.email, req.body.password);
+  const result = await loginWithPassword(req, req.body.email, req.body.password);
   sendSuccess(res, result);
 });
 

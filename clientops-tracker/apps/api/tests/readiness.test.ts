@@ -7,22 +7,19 @@ import { createApp } from '../src/app';
 import { db, pool } from '../src/db/client';
 import { clients, ticketEvents, users } from '../src/db/schema';
 import { seedDatabase } from '../src/db/seed';
+import { authHeader, loginSession, type SessionAuth } from './helpers/auth';
 
 const app = createApp();
-let admin: string;
-let developer: string;
-let northstar: string;
-let bluewave: string;
+let admin: SessionAuth;
+let developer: SessionAuth;
+let northstar: SessionAuth;
+let bluewave: SessionAuth;
 
 async function login(email: string) {
-  const response = await request(app)
-    .post('/api/auth/login')
-    .send({ email, password: 'password123' });
-  expect(response.status).toBe(200);
-  return response.body.data.token as string;
+  return loginSession(app, email);
 }
 
-const get = (path: string, token: string) => request(app).get(path).auth(token, { type: 'bearer' });
+const get = (path: string, token: SessionAuth) => request(app).get(path).set(authHeader(token));
 
 describe('Release permission and persistence boundaries', () => {
   beforeAll(async () => {
@@ -85,7 +82,7 @@ describe('Release permission and persistence boundaries', () => {
       }
       expect(
         (
-          await request(app).post('/api/tickets').auth(own, { type: 'bearer' }).send({
+          await request(app).post('/api/tickets').set(authHeader(own)).send({
             projectId: otherProject.id,
             title: 'Cross-tenant attempt',
             description: 'Must not be persisted.',
@@ -97,7 +94,7 @@ describe('Release permission and persistence boundaries', () => {
         (
           await request(app)
             .post(`/api/tickets/${otherTicket.id}/comments`)
-            .auth(own, { type: 'bearer' })
+            .set(authHeader(own))
             .send({ body: 'Must not be persisted.' })
         ).status,
       ).toBe(404);
@@ -160,12 +157,12 @@ describe('Release permission and persistence boundaries', () => {
     const ownTicket = (await get('/api/tickets', northstar)).body.data[0];
     await request(app)
       .post(`/api/tickets/${ownTicket.id}/comments`)
-      .auth(admin, { type: 'bearer' })
+      .set(authHeader(admin))
       .send({ body: 'Private investigation note', isInternal: true })
       .expect(201);
     await request(app)
       .post(`/api/tickets/${ownTicket.id}/comments`)
-      .auth(northstar, { type: 'bearer' })
+      .set(authHeader(northstar))
       .send({ body: 'Public update' })
       .expect(201);
     const comments = await get(`/api/tickets/${ownTicket.id}/comments`, northstar);
@@ -179,31 +176,28 @@ describe('Release permission and persistence boundaries', () => {
     );
     await request(app)
       .post(`/api/tickets/${ownTicket.id}/comments`)
-      .auth(northstar, { type: 'bearer' })
+      .set(authHeader(northstar))
       .send({ body: 'Internal attempt', isInternal: true })
       .expect(403);
     await request(app)
       .post(`/api/tickets/${ownTicket.id}/triage-suggestion`)
-      .auth(northstar, { type: 'bearer' })
+      .set(authHeader(northstar))
       .expect(403);
     await request(app)
       .patch(`/api/tickets/${ownTicket.id}/apply-triage-suggestion`)
-      .auth(northstar, { type: 'bearer' })
+      .set(authHeader(northstar))
       .expect(403);
   });
 
   it('does not expose the initial internal suggestion to a client', async () => {
     const project = (await get('/api/projects', northstar)).body.data[0];
-    const response = await request(app)
-      .post('/api/tickets')
-      .auth(northstar, { type: 'bearer' })
-      .send({
-        projectId: project.id,
-        title: 'Client security question',
-        description: 'Please review account security.',
-        category: 'SUPPORT',
-        priority: 'LOW',
-      });
+    const response = await request(app).post('/api/tickets').set(authHeader(northstar)).send({
+      projectId: project.id,
+      title: 'Client security question',
+      description: 'Please review account security.',
+      category: 'SUPPORT',
+      priority: 'LOW',
+    });
     expect(response.status).toBe(201);
     expect(response.body.data).not.toHaveProperty('triageSuggestion');
     expect(response.body.data.category).toBe('SUPPORT');
@@ -215,21 +209,21 @@ describe('Release permission and persistence boundaries', () => {
   it('enforces write permissions independently of frontend navigation', async () => {
     const ticket = (await get('/api/tickets', northstar)).body.data[0];
     for (const token of [northstar, bluewave, developer]) {
-      await request(app).post('/api/clients').auth(token, { type: 'bearer' }).send({}).expect(403);
-      await request(app).post('/api/projects').auth(token, { type: 'bearer' }).send({}).expect(403);
-      await request(app).post('/api/releases').auth(token, { type: 'bearer' }).send({}).expect(403);
+      await request(app).post('/api/clients').set(authHeader(token)).send({}).expect(403);
+      await request(app).post('/api/projects').set(authHeader(token)).send({}).expect(403);
+      await request(app).post('/api/releases').set(authHeader(token)).send({}).expect(403);
     }
     for (const token of [northstar, bluewave]) {
       await request(app)
         .patch(`/api/tickets/${ticket.id}`)
-        .auth(token, { type: 'bearer' })
+        .set(authHeader(token))
         .send({ status: 'CLOSED' })
         .expect(403);
       const ownProject = (await get('/api/projects', token)).body.data[0];
       const me = (await get('/api/auth/me', developer)).body.data;
       await request(app)
         .post('/api/tickets')
-        .auth(token, { type: 'bearer' })
+        .set(authHeader(token))
         .send({
           projectId: ownProject.id,
           title: 'Assignment attempt',
@@ -243,7 +237,7 @@ describe('Release permission and persistence boundaries', () => {
 
   it('loads the saved suggestion and applies it once even for concurrent requests', async () => {
     const project = (await get('/api/projects', admin)).body.data[0];
-    const created = await request(app).post('/api/tickets').auth(admin, { type: 'bearer' }).send({
+    const created = await request(app).post('/api/tickets').set(authHeader(admin)).send({
       projectId: project.id,
       title: 'Security breach investigation',
       description: 'Exposed records need investigation.',
@@ -256,9 +250,7 @@ describe('Release permission and persistence boundaries', () => {
     expect(detail.body.data.triageSuggestion?.id).toBe(created.body.data.triageSuggestion.id);
     const applied = await Promise.all(
       [1, 2, 3].map(() =>
-        request(app)
-          .patch(`/api/tickets/${id}/apply-triage-suggestion`)
-          .auth(developer, { type: 'bearer' }),
+        request(app).patch(`/api/tickets/${id}/apply-triage-suggestion`).set(authHeader(developer)),
       ),
     );
     expect(applied.every((response) => response.status === 200)).toBe(true);
@@ -278,12 +270,12 @@ describe('Release permission and persistence boundaries', () => {
     expect(events[0]?.fromValue).toBe('SUPPORT/LOW');
     await request(app)
       .patch(`/api/tickets/${id}`)
-      .auth(developer, { type: 'bearer' })
+      .set(authHeader(developer))
       .send({ priority: 'MEDIUM' })
       .expect(200);
     await request(app)
       .patch(`/api/tickets/${id}/apply-triage-suggestion`)
-      .auth(developer, { type: 'bearer' })
+      .set(authHeader(developer))
       .expect(200);
     expect((await get(`/api/tickets/${id}`, developer)).body.data.priority).toBe('MEDIUM');
   });
@@ -294,7 +286,7 @@ describe('Release permission and persistence boundaries', () => {
       const project = (await get('/api/projects', admin)).body.data[0];
       const created = await request(app)
         .post('/api/tickets')
-        .auth(admin, { type: 'bearer' })
+        .set(authHeader(admin))
         .send({
           projectId: project.id,
           title: 'History failure regression',
@@ -314,11 +306,11 @@ describe('Release permission and persistence boundaries', () => {
           operation === 'update'
             ? await request(app)
                 .patch(`/api/tickets/${id}`)
-                .auth(developer, { type: 'bearer' })
+                .set(authHeader(developer))
                 .send({ status: 'IN_PROGRESS', category: 'BUG' })
             : await request(app)
                 .post(`/api/tickets/${id}/comments`)
-                .auth(admin, { type: 'bearer' })
+                .set(authHeader(admin))
                 .send({ body: 'This comment must roll back.' });
         expect(response.status).toBe(500);
       } finally {
@@ -336,7 +328,7 @@ describe('Release permission and persistence boundaries', () => {
     const project = (await get('/api/projects', admin)).body.data[0];
     const created = await request(app)
       .post('/api/tickets')
-      .auth(admin, { type: 'bearer' })
+      .set(authHeader(admin))
       .send({
         projectId: project.id,
         title: 'Concurrent update regression',
@@ -350,7 +342,7 @@ describe('Release permission and persistence boundaries', () => {
       [1, 2, 3].map(() =>
         request(app)
           .patch(`/api/tickets/${id}`)
-          .auth(developer, { type: 'bearer' })
+          .set(authHeader(developer))
           .send({ status: 'IN_PROGRESS', category: 'BUG' }),
       ),
     );
