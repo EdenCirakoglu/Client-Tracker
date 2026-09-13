@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: clientops_test
       POSTGRES_PASSWORD: disposable_test_password
       POSTGRES_DB: clientops_hardening_test
-    ports: ['127.0.0.1:55434:5432']
+    ports: ['127.0.0.1:${TEST_PG_PORT:-55434}:5432']
     tmpfs: ['/var/lib/postgresql/data']
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U clientops_test -d clientops_hardening_test']
@@ -15,4 +15,4 @@ services:
       retries: 20
   mailpit:
     image: axllent/mailpit:v1.27.4
-    ports: ['127.0.0.1:11025:1025', '127.0.0.1:18025:8025']
+    ports: ['127.0.0.1:${TEST_SMTP_PORT:-11025}:1025', '127.0.0.1:${TEST_MAIL_PORT:-18025}:8025']

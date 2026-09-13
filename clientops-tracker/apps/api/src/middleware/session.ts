@@ -28,6 +28,7 @@ export const sessionStore = new PgStore({
   pool,
   tableName: 'web_sessions',
   createTableIfMissing: false,
+  errorLog: () => console.error('Session storage unavailable.'),
   pruneSessionInterval: env.NODE_ENV === 'test' ? false : 900,
 });
 export const sessionMiddleware = session({
