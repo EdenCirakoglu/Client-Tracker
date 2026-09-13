@@ -19,7 +19,8 @@ The test runner starts its own clean browser profile, not your personal profile.
 From a fresh checkout in PowerShell:
 
 ```powershell
-cd "C:\Users\PnP\Desktop\Client Tracker\clientops-tracker"
+# From the Git repository root:
+cd clientops-tracker
 pnpm.cmd install --frozen-lockfile
 # Remove inherited overrides from this shell; Compose must use the verification example.
 Remove-Item Env:DATABASE_URL,Env:JWT_SECRET,Env:TEST_DATABASE_URL,Env:DISPOSABLE_DATABASE_NAME -ErrorAction SilentlyContinue

@@ -99,7 +99,8 @@ API/configuration tests: all previous 55 plus five dashboard/queue/privacy tests
 For a separate UI stack, preserve any existing 8443/8444 fixtures:
 
 ```powershell
-cd "C:\Users\PnP\Desktop\Client Tracker\clientops-tracker"
+# From the Git repository root:
+cd clientops-tracker
 node scripts/hardening-stack.mjs start --ui
 $env:BROWSER_CHANNEL='chrome'
 $env:E2E_ALLOW_DISPOSABLE_DEMO='true'

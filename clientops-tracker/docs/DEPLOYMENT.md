@@ -27,7 +27,8 @@ evidence and volumes are preserved; their JWT-era configuration is not the curre
 session startup procedure.
 
 ```powershell
-cd "C:\Users\PnP\Desktop\Client Tracker\clientops-tracker"
+# From the Git repository root:
+cd clientops-tracker
 pnpm.cmd verify:stack
 ```
 

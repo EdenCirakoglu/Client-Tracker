@@ -1,0 +1,16 @@
+title = "ClientOps public repository secret scan"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Exact fictional account password in the disposable security suite only"
+condition = "AND"
+paths = ['''^clientops-tracker/apps/api/tests/security\.test\.ts$''']
+regexes = ['''^Fictional-test-passphrase-42$''']
+
+[[allowlists]]
+description = "Public image revision, not a credential; retained historical evidence"
+condition = "AND"
+paths = ['''^clientops-tracker/docs/REGISTRY_VERIFICATION\.md$''']
+regexes = ['''^3fa8d7f51a3dc9bfc9225697085131d75d9ec197$''']
