@@ -114,7 +114,6 @@ export default function TicketDetailPage() {
       setComments((current) => [...current, comment]);
       setCommentMessage(comment.isInternal ? 'Internal note added.' : 'Reply sent.');
       setCommentBody('');
-      setIsInternal(false);
     } catch (caught) {
       setActionError(caught instanceof Error ? caught.message : 'Comment could not be added.');
     } finally {

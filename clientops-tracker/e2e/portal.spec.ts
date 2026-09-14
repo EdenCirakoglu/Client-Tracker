@@ -194,6 +194,8 @@ test('real administrator, developer and client workflows with persisted advisory
   await page.getByLabel('Internal note', { exact: true }).check();
   await page.getByRole('button', { name: 'Add internal note', exact: true }).click();
   await expect(page.getByText('Internal note added.', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Internal note', { exact: true })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Add internal note', exact: true })).toBeVisible();
   await expect(
     page.getByText('Investigating the dispatch query plan with the delivery team.', {
       exact: true,
