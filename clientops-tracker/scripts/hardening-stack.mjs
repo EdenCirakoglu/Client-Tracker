@@ -7,16 +7,21 @@ import { resolve } from 'node:path';
 const root = process.cwd();
 const uiFixture = process.argv.includes('--ui');
 const opsFixture = process.argv.includes('--ops');
-const demoProject = opsFixture
-  ? 'clientops-ops'
-  : uiFixture
-    ? 'clientops-ui'
-    : 'clientops-hardening';
-const accountsProject = opsFixture
-  ? 'clientops-ops-accounts'
-  : uiFixture
-    ? 'clientops-ui-accounts'
-    : 'clientops-accounts';
+const followup = process.argv.includes('--followup');
+const demoProject = followup
+  ? 'clientops-followup'
+  : opsFixture
+    ? 'clientops-ops'
+    : uiFixture
+      ? 'clientops-ui'
+      : 'clientops-hardening';
+const accountsProject = followup
+  ? 'clientops-followup-accounts'
+  : opsFixture
+    ? 'clientops-ops-accounts'
+    : uiFixture
+      ? 'clientops-ui-accounts'
+      : 'clientops-accounts';
 const legacy =
   'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83';
 mkdirSync('test-results/tls', { recursive: true });
@@ -33,13 +38,15 @@ if (!existsSync(keysFile))
 const keys = JSON.parse(readFileSync(keysFile, 'utf8'));
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: opsFixture
-    ? 'clientops_ops_demo'
-    : uiFixture
-      ? 'clientops_ui_demo'
-      : 'clientops_hardening_demo',
-  HTTPS_PORT: opsFixture ? '8452' : uiFixture ? '8445' : '8443',
-  MAIL_PORT: opsFixture ? '8032' : uiFixture ? '8027' : '8025',
+  HARDENING_DATABASE: followup
+    ? 'clientops_followup_demo'
+    : opsFixture
+      ? 'clientops_ops_demo'
+      : uiFixture
+        ? 'clientops_ui_demo'
+        : 'clientops_hardening_demo',
+  HTTPS_PORT: followup ? '8456' : opsFixture ? '8452' : uiFixture ? '8445' : '8443',
+  MAIL_PORT: followup ? '8036' : opsFixture ? '8032' : uiFixture ? '8027' : '8025',
   HARDENING_API_IMAGE: `${demoProject}-api:local`,
   HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
@@ -48,13 +55,15 @@ const baseEnv = {
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: opsFixture
-    ? 'clientops_ops_accounts_demo'
-    : uiFixture
-      ? 'clientops_ui_accounts_demo'
-      : 'clientops_accounts_demo',
-  HTTPS_PORT: opsFixture ? '8453' : uiFixture ? '8446' : '8444',
-  MAIL_PORT: opsFixture ? '8033' : uiFixture ? '8028' : '8026',
+  HARDENING_DATABASE: followup
+    ? 'clientops_followup_accounts_demo'
+    : opsFixture
+      ? 'clientops_ops_accounts_demo'
+      : uiFixture
+        ? 'clientops_ui_accounts_demo'
+        : 'clientops_accounts_demo',
+  HTTPS_PORT: followup ? '8457' : opsFixture ? '8453' : uiFixture ? '8446' : '8444',
+  MAIL_PORT: followup ? '8037' : opsFixture ? '8033' : uiFixture ? '8028' : '8026',
   DEMO_MODE: 'false',
 };
 function run(command, args, env = baseEnv, capture = false) {
@@ -213,7 +222,7 @@ const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  `test-results/${opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
+  `test-results/${followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),

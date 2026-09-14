@@ -166,7 +166,9 @@ if (!before) {
     const header = await page.locator('header').boundingBox();
     expect(field.y).toBeGreaterThanOrEqual(header.y + header.height);
     await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => globalThis.document.activeElement?.tagName)).toBe('INPUT');
+    await expect(
+      page.getByRole('button', { name: 'Show current password', exact: true }),
+    ).toBeFocused();
     await nativeCapture('native-200-keyboard-focus');
     evidence.nativeZoom = {
       normal,

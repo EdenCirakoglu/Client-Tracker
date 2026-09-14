@@ -38,6 +38,7 @@ export default function TicketDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [commentBody, setCommentBody] = useState('');
   const [isInternal, setIsInternal] = useState(false);
+  const [commentMessage, setCommentMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [updateMessage, setUpdateMessage] = useState('');
@@ -103,6 +104,7 @@ export default function TicketDetailPage() {
     event.preventDefault();
     setSaving(true);
     setActionError(null);
+    setCommentMessage('');
 
     try {
       const comment = await api.createComment(ticketId, {
@@ -110,6 +112,7 @@ export default function TicketDetailPage() {
         isInternal: internalUser ? isInternal : false,
       });
       setComments((current) => [...current, comment]);
+      setCommentMessage(comment.isInternal ? 'Internal note added.' : 'Reply sent.');
       setCommentBody('');
       setIsInternal(false);
     } catch (caught) {
@@ -291,26 +294,54 @@ export default function TicketDetailPage() {
                 )}
               </div>
               <form className="space-y-3 border-t border-border p-5" onSubmit={addComment}>
-                <FieldLabel htmlFor="comment-body">Add comment</FieldLabel>
+                {internalUser ? (
+                  <fieldset className="flex flex-wrap gap-3" disabled={saving}>
+                    <legend className="mb-2 text-sm font-semibold">Comment audience</legend>
+                    <label className="flex min-h-10 items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name="comment-audience"
+                        checked={!isInternal}
+                        onChange={() => setIsInternal(false)}
+                      />
+                      Reply to client
+                    </label>
+                    <label className="flex min-h-10 items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name="comment-audience"
+                        checked={isInternal}
+                        onChange={() => setIsInternal(true)}
+                      />
+                      Internal note
+                    </label>
+                  </fieldset>
+                ) : null}
+                <FieldLabel htmlFor="comment-body">
+                  {internalUser && isInternal ? 'Note' : 'Reply'}
+                </FieldLabel>
                 <Textarea
                   id="comment-body"
+                  aria-describedby="comment-audience-help"
                   onChange={(event) => setCommentBody(event.target.value)}
                   required
                   value={commentBody}
                 />
-                {internalUser ? (
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
-                    <input
-                      checked={isInternal}
-                      onChange={(event) => setIsInternal(event.target.checked)}
-                      type="checkbox"
-                    />
-                    Internal comment
-                  </label>
-                ) : null}
+                <p id="comment-audience-help" className="text-xs text-muted">
+                  {internalUser && isInternal
+                    ? 'Visible only to the internal team.'
+                    : 'Visible to the client and internal team on this ticket.'}
+                </p>
                 <Button disabled={saving || !commentBody.trim()} type="submit">
-                  Add comment
+                  {saving
+                    ? 'Sending...'
+                    : internalUser && isInternal
+                      ? 'Add internal note'
+                      : 'Send reply'}
                 </Button>
+                <p role="status" className="text-sm text-brand-700">
+                  {commentMessage}
+                </p>
               </form>
             </Card>
             {internalUser && ticket.events?.length ? (

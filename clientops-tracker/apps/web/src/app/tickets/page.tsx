@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, SlidersHorizontal } from 'lucide-react';
 
 import { ProtectedPage } from '../../components/app-shell';
 import { PageHeader } from '../../components/page-header';
@@ -35,6 +35,16 @@ function TicketList() {
   const categoryFilter = params.get('category') ?? 'ALL';
   const searchParam = params.get('search') ?? '';
   const [search, setSearch] = useState(searchParam);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilters = [
+    statusFilter !== 'ALL' ? titleCase(statusFilter) : '',
+    priorityFilter !== 'ALL' ? titleCase(priorityFilter) : '',
+    categoryFilter !== 'ALL' ? titleCase(categoryFilter) : '',
+    params.get('assignment') ? titleCase(params.get('assignment')!) : '',
+    params.get('resolvedMonth') ? `Resolved in ${params.get('resolvedMonth')}` : '',
+    params.get('assignedToId') ? 'Selected developer' : '',
+    params.get('projectId') ? 'Selected project' : '',
+  ].filter(Boolean);
   useEffect(() => setSearch(searchParam), [searchParam]);
   useEffect(() => {
     if (search === searchParam) return;
@@ -74,76 +84,16 @@ function TicketList() {
         title="Tickets"
       />
 
-      <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Input
-          className="col-span-2"
-          aria-label="Search tickets"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search tickets"
-          value={search}
-        />
-        <Select
-          aria-label="Filter by status"
-          onChange={(event) => setFilter('status', event.target.value)}
-          value={statusFilter}
+      <div className="mb-3 flex items-center gap-3 md:hidden">
+        <Button
+          variant="secondary"
+          aria-expanded={filtersOpen}
+          aria-controls="ticket-filters"
+          onClick={() => setFiltersOpen((value) => !value)}
         >
-          <option value="ALL">All statuses</option>
-          <option value="UNRESOLVED">Unresolved</option>
-          {ticketStatuses.map((status) => (
-            <option key={status} value={status}>
-              {titleCase(status)}
-            </option>
-          ))}
-        </Select>
-        <Select
-          aria-label="Filter by priority"
-          onChange={(event) => setFilter('priority', event.target.value)}
-          value={priorityFilter}
-        >
-          <option value="ALL">All priorities</option>
-          {ticketPriorities.map((priority) => (
-            <option key={priority} value={priority}>
-              {titleCase(priority)}
-            </option>
-          ))}
-        </Select>
-        <Select
-          className="col-span-2 md:col-span-1"
-          aria-label="Filter by category"
-          onChange={(event) => setFilter('category', event.target.value)}
-          value={categoryFilter}
-        >
-          <option value="ALL">All categories</option>
-          {ticketCategories.map((category) => (
-            <option key={category} value={category}>
-              {titleCase(category)}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div className="mb-3 grid grid-cols-2 items-center gap-3 md:flex md:flex-wrap">
-        {user?.role !== 'CLIENT' ? (
-          <Select
-            className="max-w-48"
-            aria-label="Filter by assignment"
-            value={params.get('assignment') ?? 'ALL'}
-            onChange={(event) => setFilter('assignment', event.target.value)}
-          >
-            <option value="ALL">All assignments</option>
-            <option value="mine">Assigned to me</option>
-            <option value="unassigned">Unassigned</option>
-          </Select>
-        ) : null}
-        <Select
-          className="max-w-48"
-          aria-label="Ticket ordering"
-          value={params.get('order') ?? 'newest'}
-          onChange={(event) => setFilter('order', event.target.value)}
-        >
-          <option value="newest">Newest first</option>
-          <option value="attention">Priority, then oldest</option>
-        </Select>
+          <SlidersHorizontal aria-hidden="true" className="h-4 w-4" /> Filters
+          {activeFilters.length ? ` (${activeFilters.length})` : ''}
+        </Button>
         <Link
           href="/tickets"
           onClick={() => setSearch('')}
@@ -151,14 +101,99 @@ function TicketList() {
         >
           Reset filters
         </Link>
-        <span className="text-xs text-muted">
-          {user?.role === 'CLIENT' ? 'Your organisation' : 'All client organisations'}
-          {params.get('resolvedMonth')
-            ? ` · Resolution recorded in ${params.get('resolvedMonth')} (UTC)`
-            : ''}
-          {params.get('assignedToId') ? ' · Selected developer' : ''}
-          {params.get('projectId') ? ' · Selected project' : ''}
-        </span>
+      </div>
+      <p className="mb-3 text-xs text-muted md:hidden" aria-label="Active ticket filters">
+        {user?.role === 'CLIENT' ? 'Your organisation' : 'All client organisations'}
+        {activeFilters.length ? `: ${activeFilters.join(', ')}` : ': All tickets'}
+        {searchParam ? `; Search: ${searchParam}` : ''}
+      </p>
+      <div id="ticket-filters" className={`${filtersOpen ? 'block' : 'hidden'} md:block`}>
+        <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-5">
+          <Input
+            className="col-span-2"
+            aria-label="Search tickets"
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search tickets"
+            value={search}
+          />
+          <Select
+            aria-label="Filter by status"
+            onChange={(event) => setFilter('status', event.target.value)}
+            value={statusFilter}
+          >
+            <option value="ALL">All statuses</option>
+            <option value="UNRESOLVED">Unresolved</option>
+            {ticketStatuses.map((status) => (
+              <option key={status} value={status}>
+                {titleCase(status)}
+              </option>
+            ))}
+          </Select>
+          <Select
+            aria-label="Filter by priority"
+            onChange={(event) => setFilter('priority', event.target.value)}
+            value={priorityFilter}
+          >
+            <option value="ALL">All priorities</option>
+            {ticketPriorities.map((priority) => (
+              <option key={priority} value={priority}>
+                {titleCase(priority)}
+              </option>
+            ))}
+          </Select>
+          <Select
+            className="col-span-2 md:col-span-1"
+            aria-label="Filter by category"
+            onChange={(event) => setFilter('category', event.target.value)}
+            value={categoryFilter}
+          >
+            <option value="ALL">All categories</option>
+            {ticketCategories.map((category) => (
+              <option key={category} value={category}>
+                {titleCase(category)}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="mb-3 grid grid-cols-2 items-center gap-3 md:flex md:flex-wrap">
+          {user?.role !== 'CLIENT' ? (
+            <Select
+              className="max-w-48"
+              aria-label="Filter by assignment"
+              value={params.get('assignment') ?? 'ALL'}
+              onChange={(event) => setFilter('assignment', event.target.value)}
+            >
+              <option value="ALL">All assignments</option>
+              <option value="mine">Assigned to me</option>
+              <option value="unassigned">Unassigned</option>
+            </Select>
+          ) : null}
+          <Select
+            className="max-w-48"
+            aria-label="Ticket ordering"
+            value={params.get('order') ?? 'newest'}
+            onChange={(event) => setFilter('order', event.target.value)}
+          >
+            <option value="newest">Newest first</option>
+            <option value="attention">Priority, then oldest</option>
+          </Select>
+          <Link
+            href="/tickets"
+            onClick={() => setSearch('')}
+            className="hidden min-h-10 items-center text-sm font-medium text-brand-700 md:inline-flex"
+          >
+            Reset filters
+          </Link>
+          <span className="text-xs text-muted">
+            {user?.role === 'CLIENT' ? 'Your organisation' : 'All client organisations'}
+            {params.get('resolvedMonth')
+              ? ` · Resolution recorded in ${params.get('resolvedMonth')} (UTC)`
+              : ''}
+            {params.get('assignedToId') ? ' · Selected developer' : ''}
+            {params.get('projectId') ? ' · Selected project' : ''}
+          </span>
+        </div>
       </div>
 
       {ticketsState.loading ? <LoadingState /> : null}

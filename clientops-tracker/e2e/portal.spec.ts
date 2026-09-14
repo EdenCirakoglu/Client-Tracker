@@ -189,10 +189,11 @@ test('real administrator, developer and client workflows with persisted advisory
   ).toHaveLength(1);
   await capture(page, 'triage-applied');
   await page
-    .getByLabel('Add comment', { exact: true })
+    .getByLabel('Reply', { exact: true })
     .fill('Investigating the dispatch query plan with the delivery team.');
-  await page.getByLabel('Internal comment', { exact: true }).check();
-  await page.getByRole('button', { name: 'Add comment', exact: true }).click();
+  await page.getByLabel('Internal note', { exact: true }).check();
+  await page.getByRole('button', { name: 'Add internal note', exact: true }).click();
+  await expect(page.getByText('Internal note added.', { exact: true })).toBeVisible();
   await expect(
     page.getByText('Investigating the dispatch query plan with the delivery team.', {
       exact: true,
@@ -321,9 +322,10 @@ test('real administrator, developer and client workflows with persisted advisory
   ).toHaveCount(0);
   await expect(page.getByLabel('Status', { exact: true })).toHaveCount(0);
   await page
-    .getByLabel('Add comment', { exact: true })
+    .getByLabel('Reply', { exact: true })
     .fill('The handover is complete. We can share timings from tomorrow morning.');
-  await page.getByRole('button', { name: 'Add comment', exact: true }).click();
+  await expect(page.getByLabel('Internal note', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Send reply', exact: true }).click();
   await expect(
     page.getByText('The handover is complete. We can share timings from tomorrow morning.', {
       exact: true,

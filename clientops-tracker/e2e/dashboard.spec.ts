@@ -280,8 +280,8 @@ test('failed refresh is not an empty queue; long names and focused controls rema
     await clientPage.goto(`/tickets/${ticket.id}`);
     await expect(clientPage.getByRole('heading', { name: longTitle })).toBeVisible();
     await accessible(clientPage);
-    await clientPage.getByLabel('Add comment', { exact: true }).focus();
-    const focused = await clientPage.getByLabel('Add comment', { exact: true }).boundingBox();
+    await clientPage.getByLabel('Reply', { exact: true }).focus();
+    const focused = await clientPage.getByLabel('Reply', { exact: true }).boundingBox();
     const header = await clientPage.locator('header').boundingBox();
     expect(focused!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
     await capture(clientPage, 'long-record-mobile');
