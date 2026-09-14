@@ -15,6 +15,7 @@ import {
   users,
   webSessions,
   authRateLimits,
+  mailOutbox,
 } from './schema';
 
 export async function seedDatabase() {
@@ -32,6 +33,7 @@ export async function seedDatabase() {
   await db.transaction(async (tx) => {
     await tx.delete(webSessions);
     await tx.delete(authRateLimits);
+    await tx.delete(mailOutbox);
     await tx.delete(triageSuggestions);
     await tx.delete(ticketEvents);
     await tx.delete(ticketComments);

@@ -23,10 +23,20 @@ export async function sendAccountMail(
     throw new Error('Local capture only permits fictional recipients.');
   const invitation = kind === 'INVITATION';
   const url = `${env.APP_ORIGIN}/${invitation ? 'set-password' : 'reset-password'}#token=${token}`;
-  await transport.sendMail({
-    from: env.MAIL_FROM,
-    to: email,
-    subject: invitation ? 'Your ClientOps invitation' : 'Reset your ClientOps password',
-    text: `${invitation ? 'Set your password to accept your invitation' : 'Reset your password'}:\n\n${url}\n\nThis single-use link expires in ${invitation ? '24 hours' : '30 minutes'}. If you did not expect this email, ignore it.`,
-  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      transport.sendMail({
+        from: env.MAIL_FROM,
+        to: email,
+        subject: invitation ? 'Your ClientOps invitation' : 'Reset your ClientOps password',
+        text: `${invitation ? 'Set your password to accept your invitation' : 'Reset your password'}:\n\n${url}\n\nThis single-use link expires ${invitation ? '24 hours' : '30 minutes'} after the original request, not after delivery. If you did not expect this email, ignore it.`,
+      }),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error('Delivery deadline exceeded')), 30000);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }

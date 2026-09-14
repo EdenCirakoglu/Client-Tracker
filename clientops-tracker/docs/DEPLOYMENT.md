@@ -117,6 +117,7 @@ chmod 600 .env.production
 ```
 
 Use the two independently generated values for the database password and session secret.
+Generate a third independent `openssl rand -hex 32` value for `MAIL_ENCRYPTION_KEY`.
 Do not paste real secrets into issue reports, workflow logs or screenshots.
 Keep the PostgreSQL password in `DATABASE_URL` consistent with `POSTGRES_PASSWORD`;
 URL-encode non-hex passwords. Never source an env file as shell code.
@@ -130,6 +131,7 @@ URL-encode non-hex passwords. Never source an env file as shell code.
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Unique database identity; do not use a disposable suffix                    |
 | `DATABASE_URL`                                      | Connection URL using `postgres:5432`, not localhost                         |
 | `SESSION_SECRET`                                    | Independently generated signing secret, at least 32 characters              |
+| `MAIL_ENCRYPTION_KEY`                               | Independent 32-byte random hex key for encrypted account-delivery work      |
 | `APP_ORIGIN`                                        | Exact public HTTPS origin, no trailing slash                                |
 | `SESSION_IDLE_SECONDS`, `SESSION_ABSOLUTE_SECONDS`  | Server expiry defaults: 1800 and 28800                                      |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`             | Real mail transport; STARTTLS required when not using implicit TLS          |
@@ -191,9 +193,7 @@ Take a database backup first and verify the proposed migrations. Reuse the exact
 same Compose project name to retain the volume.
 
 ```bash
-umask 077
-mkdir -p "$HOME/clientops-backups"
-dc exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "$HOME/clientops-backups/$(date -u +%Y%m%dT%H%M%SZ).sql"
+# First take and verify the private, credential-excluding backup in OPERATIONS.md.
 # Check out the new reviewed SHA at the Git root as above and export IMAGE_TAG.
 dc pull
 dc run --rm --no-deps api node dist/migrate.js
@@ -206,6 +206,11 @@ The Nginx recreation resolves any new container addresses. Keep backups private 
 off the VPS; exercise a restore on a separate database. Rolling back images does not
 roll back migrations. Do not automatically undo a database migration on deployment
 failure; inspect logs and recover deliberately.
+
+Current Nginx also re-resolves Docker DNS. See [operations](OPERATIONS.md) for readiness,
+durable mail, offline restore sanitisation, pinned session-era rollback, certificate
+renewal, monitoring and the public-launch operator checklist. Do not restore live
+sessions or account links from a historical full database dump.
 
 ## GitHub Actions
 

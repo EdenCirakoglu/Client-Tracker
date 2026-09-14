@@ -14,7 +14,7 @@ import {
   passwordSchema,
 } from '../validators/accounts';
 import { publicUserColumns } from './user.service';
-import { sendAccountMail } from './mail.service';
+import { enqueueMail } from './mail-payload';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const invalidLink = () =>
@@ -94,50 +94,50 @@ export async function inviteAccount(actorId: string, input: z.infer<typeof invit
           .returning(publicUserColumns);
     if (!account) throw new Error('Account creation failed.');
     await revokeUser(tx, account.id);
-    await tx.insert(accountTokens).values({
-      userId: account.id,
-      tokenHash: hashToken(token),
-      kind: 'INVITATION',
-      expiresAt: new Date(Date.now() + 86400000),
-    });
+    const expiresAt = new Date(Date.now() + 86400000);
+    const [link] = await tx
+      .insert(accountTokens)
+      .values({
+        userId: account.id,
+        tokenHash: hashToken(token),
+        kind: 'INVITATION',
+        expiresAt,
+      })
+      .returning();
+    await enqueueMail(tx, { email: data.email, token, kind: 'INVITATION' }, expiresAt, link!.id);
     return account;
   });
-  try {
-    await sendAccountMail(data.email, token, 'INVITATION');
-  } catch {
-    throw new ApiError(
-      503,
-      'MAIL_UNAVAILABLE',
-      'Invitation saved, but email delivery failed. Retry the invitation to send a new link.',
-    );
-  }
   return user;
 }
 export async function requestPasswordReset(email: string) {
+  // Same durable write for known and unknown addresses; no mailbox lookup before 202.
+  await enqueueMail(db, { email, kind: 'RECOVERY_REQUEST' }, new Date(Date.now() + 1800000));
+}
+export async function preparePasswordReset(tx: Transaction, email: string, expiresAt: Date) {
   const token = randomBytes(32).toString('hex');
-  const eligible = await db.transaction(async (tx) => {
-    const [user] = await tx.select().from(users).where(eq(users.email, email)).for('update');
-    if (!user || user.accountStatus !== 'ACTIVE' || (user.isDemo && !env.DEMO_MODE)) return false;
-    // Do not revoke live sessions until proof of mailbox ownership is consumed.
-    await tx
-      .update(accountTokens)
-      .set({ consumedAt: sql`clock_timestamp()` })
-      .where(
-        and(
-          eq(accountTokens.userId, user.id),
-          eq(accountTokens.kind, 'PASSWORD_RESET'),
-          isNull(accountTokens.consumedAt),
-        ),
-      );
-    await tx.insert(accountTokens).values({
+  const [user] = await tx.select().from(users).where(eq(users.email, email)).for('update');
+  if (!user || user.accountStatus !== 'ACTIVE' || (user.isDemo && !env.DEMO_MODE)) return null;
+  // Do not revoke live sessions until proof of mailbox ownership is consumed.
+  await tx
+    .update(accountTokens)
+    .set({ consumedAt: sql`clock_timestamp()` })
+    .where(
+      and(
+        eq(accountTokens.userId, user.id),
+        eq(accountTokens.kind, 'PASSWORD_RESET'),
+        isNull(accountTokens.consumedAt),
+      ),
+    );
+  const [link] = await tx
+    .insert(accountTokens)
+    .values({
       userId: user.id,
       tokenHash: hashToken(token),
       kind: 'PASSWORD_RESET',
-      expiresAt: new Date(Date.now() + 1800000),
-    });
-    return true;
-  });
-  if (eligible) await sendAccountMail(email, token, 'PASSWORD_RESET');
+      expiresAt,
+    })
+    .returning();
+  return { token, tokenId: link!.id };
 }
 export async function consumeAccountToken(
   token: string,

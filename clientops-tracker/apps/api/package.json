@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "main": "dist/server.js",
+  "files": [
+    "dist",
+    "drizzle"
+  ],
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup --config tsup.config.ts",

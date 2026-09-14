@@ -1,7 +1,6 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 
 import { env } from './config/env';
@@ -17,6 +16,7 @@ import { releasesRouter } from './routes/releases';
 import { ticketsRouter } from './routes/tickets';
 import { usersRouter } from './routes/users';
 import { csrfProtection, sessionMiddleware } from './middleware/session';
+import { requestLog } from './middleware/request-log';
 
 export function createApp() {
   const app = express();
@@ -29,7 +29,7 @@ export function createApp() {
   app.use(express.json({ limit: '1mb' }));
 
   if (env.NODE_ENV !== 'test') {
-    app.use(morgan('combined'));
+    app.use(requestLog);
   }
 
   app.get('/', (_req, res) => {

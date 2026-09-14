@@ -180,6 +180,30 @@ export const openApiDocument = {
     },
   },
   paths: {
+    '/api/health/ready': {
+      get: {
+        summary: 'Bounded database readiness (also /health/ready)',
+        description:
+          'Independent probe with 750ms connection and 750ms query timeouts. /health remains process liveness.',
+        responses: {
+          '200': { description: 'Database reachable and users schema available' },
+          '503': { description: 'Database unavailable; no connection details disclosed' },
+        },
+      },
+    },
+    '/api/users/deliveries': {
+      get: {
+        summary: 'ADMIN only: email delivery status',
+        description:
+          'Full counts by status and latest 30 delivery records; never includes recipients, tokens or encrypted payloads. FAILED requires operator investigation and a new invitation/recovery request.',
+        security: [{ cookieAuth: [] }],
+        responses: {
+          '200': { description: 'data: { summary, recent }' },
+          '401': { description: 'Session required' },
+          '403': { description: 'Administrator required' },
+        },
+      },
+    },
     '/health': {
       get: {
         summary: 'Health check',
@@ -578,8 +602,13 @@ function accountOperation(summary: string, properties: Record<string, unknown>) 
     },
     responses: {
       '200': { description: 'Successful operation, data envelope' },
-      '201': { description: 'Invitation delivered' },
-      '202': { description: 'Generic recovery acknowledgement' },
+      '201': {
+        description: 'Invitation and encrypted email delivery committed; delivery is asynchronous',
+      },
+      '202': {
+        description:
+          'Generic recovery acknowledgement after durable enqueue, before account lookup',
+      },
       '400': { description: 'Invalid input or expired/used link' },
       '401': { description: 'Session ended' },
       '403': { description: 'Forbidden or CSRF invalid' },

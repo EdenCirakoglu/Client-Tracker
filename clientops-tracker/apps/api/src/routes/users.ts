@@ -6,9 +6,16 @@ import { accountUpdateSchema, invitationSchema } from '../validators/accounts';
 import { idParamsSchema } from '../validators/api';
 import { inviteAccount, listAccounts, updateAccount } from '../services/account.service';
 import { asyncHandler, requireUser, sendSuccess } from '../utils/http';
+import { mailDeliveryStatus } from '../services/mail-outbox.service';
 
 export const usersRouter = Router();
 usersRouter.use(authorizeRoles('ADMIN'));
+usersRouter.get(
+  '/deliveries',
+  asyncHandler(async (_req, res) => {
+    sendSuccess(res, await mailDeliveryStatus());
+  }),
+);
 usersRouter.get(
   '/',
   asyncHandler(async (_req, res) => {

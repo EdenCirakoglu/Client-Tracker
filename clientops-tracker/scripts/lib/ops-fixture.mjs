@@ -1,0 +1,94 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { request } from '@playwright/test';
+
+export const local = process.argv.includes('--ops');
+export const project = local ? 'clientops-ops' : 'clientops-hardening';
+export const database = local ? 'clientops_ops_demo' : 'clientops_hardening_demo';
+export const origin = `https://localhost:${local ? 8452 : 8443}`;
+export const mailbox = `http://localhost:${local ? 8032 : 8025}`;
+export const keys = JSON.parse(readFileSync(`test-results/tls/${project}-keys.json`, 'utf8'));
+export const environment = {
+  ...process.env,
+  HARDENING_DATABASE: database,
+  HTTPS_PORT: local ? '8452' : '8443',
+  MAIL_PORT: local ? '8032' : '8025',
+  HARDENING_API_IMAGE: `${project}-api:local`,
+  HARDENING_WEB_IMAGE: `${project}-web:local`,
+  SESSION_SECRET: keys.session,
+  MAIL_ENCRYPTION_KEY: keys.mail,
+  DEMO_MODE: 'true',
+};
+export function docker(args, options = {}) {
+  return execFileSync('docker', args, {
+    env: environment,
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 180000,
+    ...options,
+  })?.trim();
+}
+export const compose = (args, options) =>
+  docker(
+    [
+      'compose',
+      '-p',
+      project,
+      '--env-file',
+      '.env.hardening.example',
+      '-f',
+      'docker-compose.hardening.yml',
+      ...args,
+    ],
+    options,
+  );
+export const query = (sql) =>
+  compose([
+    'exec',
+    '-T',
+    'postgres',
+    'psql',
+    '-v',
+    'ON_ERROR_STOP=1',
+    '-U',
+    'hardening',
+    '-d',
+    database,
+    '-Atc',
+    sql,
+  ]);
+export async function context(baseURL = origin) {
+  return request.newContext({ baseURL, ignoreHTTPSErrors: true, timeout: 12000 });
+}
+export async function mutation(api, path, data, method = 'post') {
+  const csrf = (await (await api.get('/api/auth/csrf')).json()).data.csrfToken;
+  return api[method](path, { data, headers: { 'X-CSRF-Token': csrf } });
+}
+export async function waitFor(check, message, timeout = 120000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (await check()) return;
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  throw new Error(message);
+}
+export async function mailMessages(email) {
+  const inbox = await (await fetch(`${mailbox}/api/v1/messages`)).json();
+  return inbox.messages.filter((item) => item.To.some((recipient) => recipient.Address === email));
+}
+export async function mailToken(email, reset = false, exclude = '') {
+  let token;
+  await waitFor(async () => {
+    for (const message of await mailMessages(email)) {
+      if (!message.Subject.includes(reset ? 'Reset' : 'invitation')) continue;
+      const body = await (await fetch(`${mailbox}/api/v1/message/${message.ID}`)).json();
+      const candidate = body.Text.match(/#token=([a-f0-9]{64})/)?.[1];
+      if (candidate && candidate !== exclude) {
+        token = candidate;
+        return true;
+      }
+    }
+    return false;
+  }, 'Expected fictional account message was not delivered');
+  return token;
+}

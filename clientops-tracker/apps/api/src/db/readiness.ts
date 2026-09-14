@@ -26,7 +26,7 @@ export function databaseUnavailable(error: unknown, depth = 0): boolean {
   if (!error || typeof error !== 'object' || depth > 4) return false;
   const value = error as { code?: string; message?: string; cause?: unknown };
   return (
-    /^(08\w{3}|57P0[123]|53300|57014|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EPIPE|ENOTFOUND|EAI_AGAIN)$/.test(
+    /^(08\w{3}|25P03|57P0[123]|53300|57014|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EPIPE|ENOTFOUND|EAI_AGAIN)$/.test(
       value.code ?? '',
     ) ||
     /^(Connection terminated|Connection terminated unexpectedly|Connection terminated due to connection timeout|Query read timeout|timeout exceeded when trying to connect)$/.test(

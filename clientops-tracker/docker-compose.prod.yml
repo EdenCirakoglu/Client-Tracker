@@ -1,5 +1,11 @@
+x-logging: &bounded-logs
+  driver: local
+  options:
+    max-size: '10m'
+    max-file: '3'
 services:
   api:
+    logging: *bounded-logs
     image: ghcr.io/${GHCR_OWNER:-edencirakoglu}/${GHCR_REPOSITORY:-client-tracker}-api:${IMAGE_TAG:-latest}
     build:
       context: .
@@ -7,10 +13,12 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      DEPLOYMENT_MODE: production
       PORT: 8080
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL to the container database address}
       APP_ORIGIN: ${APP_ORIGIN:?Set the public HTTPS browser origin}
       SESSION_SECRET: ${SESSION_SECRET:?Set a unique production session secret}
+      MAIL_ENCRYPTION_KEY: ${MAIL_ENCRYPTION_KEY:?Set an independent 32-byte hex mail encryption key}
       SESSION_IDLE_SECONDS: ${SESSION_IDLE_SECONDS:-1800}
       SESSION_ABSOLUTE_SECONDS: ${SESSION_ABSOLUTE_SECONDS:-28800}
       TRUST_PROXY: '1'
@@ -40,6 +48,7 @@ services:
       retries: 5
 
   web:
+    logging: *bounded-logs
     image: ghcr.io/${GHCR_OWNER:-edencirakoglu}/${GHCR_REPOSITORY:-client-tracker}-web:${IMAGE_TAG:-latest}
     build:
       context: .
@@ -68,6 +77,7 @@ services:
       retries: 5
 
   nginx:
+    logging: *bounded-logs
     image: nginx:stable-alpine
     restart: unless-stopped
     depends_on:
@@ -93,6 +103,7 @@ services:
       retries: 5
 
   postgres:
+    logging: *bounded-logs
     image: postgres:16-alpine
     restart: unless-stopped
     environment:

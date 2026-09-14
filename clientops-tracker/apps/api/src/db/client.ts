@@ -13,5 +13,9 @@ export const pool = new Pool({
 
 // PostgreSQL outages must not terminate the process through an idle-client error.
 pool.on('error', () => console.error('Database connection unavailable.'));
+pool.on('connect', (client) => {
+  // Checked-out transaction clients are not covered by the pool's idle error handler.
+  client.on('error', () => console.error('Database client connection lost.'));
+});
 
 export const db = drizzle(pool);
