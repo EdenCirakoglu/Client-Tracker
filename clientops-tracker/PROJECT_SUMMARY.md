@@ -27,6 +27,15 @@ The web application calls Express with cookie sessions and synchronizer CSRF tok
 
 ## Testing and CI
 
+The [current draft follow-up PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5)
+passed [hosted CI at `cf6d0f4`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34858027875):
+75 API tests, 10 verification-helper tests and 10 browser/accessibility scenarios,
+plus native 200% zoom, restricted database roles, DB/SMTP outages, encrypted backup
+failure detection, populated restore and pinned legacy rollback. Its [evidence](docs/FOLLOWUP_READINESS.md)
+and [screenshots](docs/SCREENSHOTS.md) distinguish local operator fixtures from external
+services still awaiting configuration. The PR remains unmerged; its images have not
+been published. The published `7eba339` pair was separately verified without rebuilding.
+
 The merged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
 has [verified main CI at `bdc7494`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34767427740):
 60 API/configuration tests and nine real browser/accessibility scenarios, including

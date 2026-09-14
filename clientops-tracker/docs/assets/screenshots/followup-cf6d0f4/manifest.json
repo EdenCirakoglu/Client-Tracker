@@ -1,0 +1,219 @@
+{
+  "revision": "cf6d0f4518a66df9110e6b9891d21c07309631ca",
+  "ciRun": 34858027875,
+  "artifactId": 10354425992,
+  "artifactSha256": "9a611f4b95fde61abce760de2fbe1ab24865c4d575a39e64acb847999bf31f2c",
+  "browserRunStarted": "2026-09-14T14:52:45.438Z",
+  "screens": [
+    {
+      "file": "login.png",
+      "source": "screenshots/login.png",
+      "scenario": "Disposable demo login",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "6b3ff4c011ccf99dca4937fb4d24f12b224c77d8633b95580dc037bf8276bb00"
+    },
+    {
+      "file": "recovery-request.png",
+      "source": "attachment:recovery-request",
+      "scenario": "Generic recovery request outcome",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "29fdcf5fcb67931857e72761aae69b23d91cbf1f0c14409fa954604ebbe6297b"
+    },
+    {
+      "file": "recovery-complete.png",
+      "source": "attachment:recovery-complete",
+      "scenario": "Password updated and Sign in",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "9b9818d2d3fb58b02b2f59ee1293556324ae81173d75d64c86fcb44a42da6c5d"
+    },
+    {
+      "file": "invitation-setup.png",
+      "source": "attachment:invitation-setup",
+      "scenario": "Initial password setup",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "3dcbc61990c6ecd9041e63a9e49120b828024fbc04f3f0e411065c254eae94aa"
+    },
+    {
+      "file": "used-invitation.png",
+      "source": "attachment:used-invitation",
+      "scenario": "Used or expired invitation",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "4d10efc16b56bb3c9cf3217061aa39f29556dd2221517f3acb5c999f4d07549a"
+    },
+    {
+      "file": "invitation-delivered.png",
+      "source": "attachment:invitation-delivered",
+      "scenario": "Email delivery region, SMTP acceptance",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1120,
+        "height": 204
+      },
+      "sha256": "d3acde6ef7fed871a71fe23a624fb2b9d802aa6f4c8b57f855835837a6646935"
+    },
+    {
+      "file": "account-password.png",
+      "source": "attachment:account-password",
+      "scenario": "Authenticated password change and field feedback",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "f6cf278d7013c56a24f8017572a559a6c3611af21f4633bce530611f22cc899f"
+    },
+    {
+      "file": "comment-audiences.png",
+      "source": "attachment:ticket-scroll-700",
+      "scenario": "Internal note selected after submission, scroll position 700",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "c739de829d19305399717c1ed2f90b13549173e6dc13d774829d0ab07c92035e"
+    },
+    {
+      "file": "mobile-filters-collapsed.png",
+      "source": "attachment:mobile-filters-collapsed",
+      "scenario": "First useful ticket action with filters closed",
+      "viewport": {
+        "width": 390,
+        "height": 640
+      },
+      "pixels": {
+        "width": 390,
+        "height": 640
+      },
+      "sha256": "de880d4d50944c211267425d29c83e8cdb6fb08b059c227e96c5af533c58bc6b"
+    },
+    {
+      "file": "mobile-filters-expanded.png",
+      "source": "attachment:mobile-filters-expanded",
+      "scenario": "Filter disclosure and controls",
+      "viewport": {
+        "width": 390,
+        "height": 640
+      },
+      "pixels": {
+        "width": 390,
+        "height": 2132
+      },
+      "sha256": "38a5a76ff37c333e6212e964b2f48cbbc5f90c89b21c1b17f84ce19d1afdf9e3"
+    },
+    {
+      "file": "native-200-account.png",
+      "source": "ui-acceptance/native-200-account.png",
+      "scenario": "Native 200 percent password-change page",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 913
+      },
+      "sha256": "6dfbf1b6b41fa589ed9290669f65679f398bef11be9a9670304ab8b7e3229191"
+    },
+    {
+      "file": "native-200-keyboard-focus.png",
+      "source": "ui-acceptance/native-200-keyboard-focus.png",
+      "scenario": "Native 200 percent focused password visibility",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 913
+      },
+      "sha256": "e1746dadb59483572417321587a0c645a3b774b24841b57c66f251b724a53f4d"
+    },
+    {
+      "file": "native-200-login.png",
+      "source": "ui-acceptance/native-200-login.png",
+      "scenario": "Native 200 percent login",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 913
+      },
+      "sha256": "bb8a9a4eaebb789c3fdcac7de5c6ca204d46a432c2db5a16b9a833326700395f"
+    },
+    {
+      "file": "desktop-tickets.png",
+      "source": "ui-acceptance/desktop-tickets.png",
+      "scenario": "Existing desktop density and readable ticket records",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1258
+      },
+      "sha256": "0f68aaf3c4b3792e20651ce10614832ee3224889029210b48327f95b1df82746"
+    },
+    {
+      "file": "dark-account.png",
+      "source": "screenshots/ui-dark-account.png",
+      "scenario": "Dark theme password-change form",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "pixels": {
+        "width": 1440,
+        "height": 1000
+      },
+      "sha256": "b18a76de69b220e89da69d5932428180325224799bb8876d25a820a3aa780fce"
+    }
+  ]
+}

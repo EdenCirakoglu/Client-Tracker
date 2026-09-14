@@ -17,6 +17,7 @@ Manage client projects, support tickets, comments, releases, and advisory rule-b
 - [Role-based operations UI and verification](clientops-tracker/docs/UI_REFINEMENT.md)
 - [Deployment guide](clientops-tracker/docs/DEPLOYMENT.md)
 - [Release verification evidence](clientops-tracker/docs/RELEASE_READINESS.md)
+- [Usability and operator-control draft review](clientops-tracker/docs/FOLLOWUP_READINESS.md)
 - [Screenshots](clientops-tracker/docs/SCREENSHOTS.md)
 - [Contributing](clientops-tracker/CONTRIBUTING.md) and [security policy](clientops-tracker/SECURITY.md)
 

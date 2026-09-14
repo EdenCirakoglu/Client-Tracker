@@ -50,6 +50,8 @@ node scripts/verify-release-persistence.mjs --release=7eba339
 
 The helper uses the Compose hostname `postgres` internally, loopback HTTPS ports 8454/8455 and Mailpit ports 8034/8035. It generates random fixture secrets and expiry-aware self-signed certificates under ignored `test-results/tls/release-7eba339/`. Do not upload that private directory. Browser certificate exceptions are restricted to these disposable loopback fixtures.
 
+These are historical commands for the nine-scenario suite. To replay them, use the committed release-harness checkpoint `2ad262b8f924c899b05c77034e77616519dabe4c` in a separate worktree and install its frozen dependencies. The newer ten-scenario follow-up suite expects changed account labels and must not be presented as passing against the old published UI. The local release fixture ports must be available or deliberately reused; never reset a database to make a replay pass.
+
 Local reports: `test-results/release-7eba339/{start,operations-runtime,persistence,acceptance,browser-results}.json` and the preserved `playwright-report/index.html` under that directory. Fresh UI before-captures are in `ui-before/` and `ui-before-short/`; they are not screenshots of follow-up changes.
 
 Follow-up usability and operator controls belong to a new draft PR. Trusted external HTTPS, SMTP, off-host storage and alert destinations remain operator configuration, not claims made by this release check.
