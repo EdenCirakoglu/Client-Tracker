@@ -76,10 +76,11 @@ export async function mailMessages(email) {
   const inbox = await (await fetch(`${mailbox}/api/v1/messages`)).json();
   return inbox.messages.filter((item) => item.To.some((recipient) => recipient.Address === email));
 }
-export async function mailToken(email, reset = false, exclude = '') {
+export async function mailToken(email, reset = false, exclude = '', ignoredMessageIds = []) {
   let token;
   await waitFor(async () => {
     for (const message of await mailMessages(email)) {
+      if (ignoredMessageIds.includes(message.ID)) continue;
       if (!message.Subject.includes(reset ? 'Reset' : 'invitation')) continue;
       const body = await (await fetch(`${mailbox}/api/v1/message/${message.ID}`)).json();
       const candidate = body.Text.match(/#token=([a-f0-9]{64})/)?.[1];

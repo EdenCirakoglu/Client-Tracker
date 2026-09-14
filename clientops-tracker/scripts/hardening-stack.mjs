@@ -130,7 +130,8 @@ if (action !== 'start')
 const openssl =
   process.env.OPENSSL_PATH ??
   (process.platform === 'win32' ? 'C:\\Program Files\\Git\\usr\\bin\\openssl.exe' : 'openssl');
-let renewCertificate = !existsSync('test-results/tls/cert.pem');
+let renewCertificate =
+  !existsSync('test-results/tls/cert.pem') || !existsSync('test-results/tls/key.pem');
 if (!renewCertificate) {
   try {
     run(

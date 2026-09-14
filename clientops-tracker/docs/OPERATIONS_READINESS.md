@@ -8,7 +8,19 @@ Status: in review preparation on `review/production-operations`, based on merged
 - Database readiness now fails independently of process liveness. An actual checked-out connection termination initially crashed the process; a regression test and client error handling fixed it. The first SMTP drill also exposed cached proxy addresses; Docker DNS re-resolution and bounded proxy checks fixed that failure.
 - Initial working-tree drill (base checkout `827532e` plus then-uncommitted changes, **not a clean revision claim**), 2026-09-14: readiness 503 in 762ms, authenticated request 503 in 6016ms, process liveness 200 and subsequent recovery 200. Mailpit outage persisted retry state; API restart and concurrent worker delivered the same invitation once; stale reset rejected and password reset revoked the session.
 - Initial populated backup/restore under the same working-tree qualification: eight business tables and all foreign-key constraints verified; source unchanged; session/link replay rejected; login and two-organisation boundary passed. Dump took 589ms, restored startup 22603ms on this small local fixture. Pinned `bdc7494` API/web rollback preserved the restored comment and business hashes. These timings are not production RTO promises.
-- Browser/native-zoom and final clean-revision CI results are pending and must be recorded below after execution. Screen-reader acceptance remains manual.
+- Screen-reader acceptance remains manual; automated/browser results are recorded separately below.
+
+## Reviewed Local Revision
+
+Clean application/harness revision `77236fc6bfb31af3dafff0e7cbbee927776485f6` was rebuilt and run in the ops fixtures. The native-zoom/axe/keyboard acceptance passed on Chrome 153.0.8010.37: physical outer width stayed 1440, CSS width changed 1422 to 711 and device pixel ratio changed 1 to 2 through Chrome Settings, not CSS zoom. The original Playwright zoom capture clipped the browser surface; direct CDP surface capture corrected that evidence artifact without changing layout.
+
+The same clean revision's PostgreSQL/Mailpit runtime drill passed: readiness 503 in 761ms, authenticated request 503 in 2013ms, liveness 200 and recovery 200; persisted retry, restart, concurrent worker, stale link rejection and reset revocation passed. The bounded maintenance executable also ran successfully on the disposable database.
+
+All nine existing browser/axe scenarios passed locally in 1.4 minutes on the preceding UI build; the later clean-revision native script verifies the final age wording and capture path. Local lint, typecheck, 75 API/configuration tests, both builds, formatting and both Compose validations passed. CI separately repeats the entire suite from checkout; these are not claims that local runs used the CI-produced images.
+
+Inspected before/after evidence includes desktop tickets, admin/developer/client dashboards, 390px dashboards/tickets, ticket detail, full native 200% dashboard and keyboard-focused account form. Desktop descriptions are a one-line preview (full text remains in detail), dates retain the full date in a `time` title, status/priority remain inline on mobile, and the first Review/Open-and-reply action is checked in the mobile viewport. Age under a day is labelled `Opened under 24h ago`, not `0d` or an inaccurate calendar-day claim.
+
+Local runtime image IDs: API `sha256:fd0955507ba715428e83bc8bdacdb46e622914e97362d49e58830a729becb30d`; web `sha256:24eff003c48be9670777435220ea491a96a0c4ff9853646339361c1e533bd81d`. These are local images, **not new GHCR publication evidence**.
 
 ## Reproduce Without Touching Earlier Databases
 
@@ -62,4 +74,8 @@ Manual launch acceptance still required: real screen reader (NVDA/VoiceOver) log
 
 ## Draft PR and Hosted CI
 
-Pending creation and execution. Local runtime success must not be labelled hosted CI success. New branch image publication and public deployment are intentionally not performed.
+[Draft PR #4](https://github.com/EdenCirakoglu/Client-Tracker/pull/4) preserves separate privacy/release/readiness/backend/UI commits. It must remain unmerged.
+
+[First hosted attempt 34834958998](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34834958998), revision `9f94b2ff34128b21a11a59cad31942cce6d9fc41`, passed source gates, 75 tests, builds, Compose, nine browser scenarios, native zoom and the outage drill, but **failed restore preconditions**. Polling could select an older consumed reset message before the new one arrived. The harness now excludes all pre-existing message IDs and retains the assertion that the new token is live in PostgreSQL before backup. A local rerun with that harness correction passed (dump 301ms; restored startup 22322ms), without removing any check. That rerun used `77236fc` application images plus the then-uncommitted harness correction.
+
+The [PR checks](https://github.com/EdenCirakoglu/Client-Tracker/pull/4/checks) identify each subsequent tested head and its immutable report artifact. Final hosted results will be recorded after the corrected head completes. New branch image publication and public deployment are intentionally not performed.

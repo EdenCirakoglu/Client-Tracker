@@ -11,6 +11,7 @@ import {
   docker,
   environment,
   mailToken,
+  mailMessages,
   mutation,
   project,
   query,
@@ -104,9 +105,9 @@ try {
     200,
   );
   const liveCookie = await api.storageState();
-  const previousReset = await mailToken(email, true);
-  await mutation(anonymous, '/api/auth/forgot-password', { email });
-  const liveReset = await mailToken(email, true, previousReset);
+  const previousMessages = (await mailMessages(email)).map((message) => message.ID);
+  assert.equal((await mutation(anonymous, '/api/auth/forgot-password', { email })).status(), 202);
+  const liveReset = await mailToken(email, true, '', previousMessages);
   const liveResetHash = createHash('sha256').update(liveReset).digest('hex');
   assert.equal(
     query(
