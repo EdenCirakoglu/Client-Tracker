@@ -4,11 +4,25 @@ import { request } from '@playwright/test';
 import { readMailboxJson } from './mailbox-read.mjs';
 
 export const local = process.argv.includes('--ops');
-export const project = local ? 'clientops-ops' : 'clientops-hardening';
-export const database = local ? 'clientops_ops_demo' : 'clientops_hardening_demo';
-export const origin = `https://localhost:${local ? 8452 : 8443}`;
-export const mailbox = `http://localhost:${local ? 8032 : 8025}`;
-export const keys = JSON.parse(readFileSync(`test-results/tls/${project}-keys.json`, 'utf8'));
+export const published = process.argv.includes('--published=7eba339');
+export const project = published
+  ? 'clientops-release-7eba339'
+  : local
+    ? 'clientops-ops'
+    : 'clientops-hardening';
+export const database = published
+  ? 'clientops_release_7eba339_demo'
+  : local
+    ? 'clientops_ops_demo'
+    : 'clientops_hardening_demo';
+export const origin = `https://localhost:${published ? 8454 : local ? 8452 : 8443}`;
+export const mailbox = `http://localhost:${published ? 8034 : local ? 8032 : 8025}`;
+export const keys = published
+  ? {
+      session: readFileSync('test-results/tls/release-7eba339/session-secret', 'utf8'),
+      mail: readFileSync('test-results/tls/release-7eba339/mail-key', 'utf8'),
+    }
+  : JSON.parse(readFileSync(`test-results/tls/${project}-keys.json`, 'utf8'));
 export const environment = {
   ...process.env,
   HARDENING_DATABASE: database,
@@ -31,16 +45,25 @@ export function docker(args, options = {}) {
 }
 export const compose = (args, options) =>
   docker(
-    [
-      'compose',
-      '-p',
-      project,
-      '--env-file',
-      '.env.hardening.example',
-      '-f',
-      'docker-compose.hardening.yml',
-      ...args,
-    ],
+    published
+      ? [
+          'compose',
+          '-p',
+          project,
+          '-f',
+          `test-results/tls/release-7eba339/${project}.json`,
+          ...args,
+        ]
+      : [
+          'compose',
+          '-p',
+          project,
+          '--env-file',
+          '.env.hardening.example',
+          '-f',
+          'docker-compose.hardening.yml',
+          ...args,
+        ],
     options,
   );
 export const query = (sql) =>

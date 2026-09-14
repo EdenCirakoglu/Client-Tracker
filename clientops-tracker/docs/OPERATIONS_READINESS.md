@@ -1,6 +1,6 @@
 # Operations Review Evidence
 
-Status: draft [PR #4](https://github.com/EdenCirakoglu/Client-Tracker/pull/4) on `review/production-operations`, based on merged `bdc749421187c017f4cc3ba36b2b9ef1d09fda80`. Implementation revision `1a651224be7f2f1095ec164e0e255096332c3b08` passed hosted CI. No merge, history rewrite, public deployment, DigitalOcean trigger or real email is authorised/performed in this phase. The [published-release verification](RELEASE_BDC749.md) remains attributed only to `bdc7494`; older `3fa8d7f` evidence is unchanged.
+Current status: [PR #4](https://github.com/EdenCirakoglu/Client-Tracker/pull/4) was merged by its owner as `7eba339b37a2aa948ef4f6ed019d268816d4ec99`. See [the merged release verification](RELEASE_7EBA339.md). The sections below record its historical draft checkpoints and original review restrictions, not a currently open PR. The [earlier published-release verification](RELEASE_BDC749.md) remains attributed only to `bdc7494`; older `3fa8d7f` evidence is unchanged.
 
 ## Scope and Initial Local Results
 

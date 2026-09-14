@@ -3,7 +3,8 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { request } from '@playwright/test';
 
-const baseURL = 'https://localhost:8450';
+const operationsRelease = process.argv.includes('--release=7eba339');
+const baseURL = `https://localhost:${operationsRelease ? 8454 : 8450}`;
 const sessions = [];
 async function login(email) {
   const api = await request.newContext({ baseURL, ignoreHTTPSErrors: true });
@@ -38,9 +39,17 @@ try {
   const metrics = (await (await northstar.get('/api/dashboard/metrics')).json()).data;
   assert(!metrics.developerWorkload?.length);
   const before = await (await admin.get(`/api/tickets/${ticket.id}`)).json();
-  execFileSync(process.execPath, ['scripts/verify-published.mjs', 'persistence'], {
-    stdio: 'inherit',
-  });
+  execFileSync(
+    process.execPath,
+    [
+      'scripts/verify-published.mjs',
+      'persistence',
+      ...(operationsRelease ? ['--release=7eba339'] : []),
+    ],
+    {
+      stdio: 'inherit',
+    },
+  );
   assert.equal((await admin.get('/api/auth/me')).status(), 200);
   assert.deepEqual(await (await admin.get(`/api/tickets/${ticket.id}`)).json(), before);
   const state = await admin.storageState();
@@ -57,10 +66,12 @@ try {
   );
   assert.equal((await replay.get('/api/auth/me')).status(), 401);
   writeFileSync(
-    'test-results/release-bdc749/acceptance.json',
+    `test-results/release-${operationsRelease ? '7eba339' : 'bdc749'}/acceptance.json`,
     JSON.stringify(
       {
-        revision: 'bdc749421187c017f4cc3ba36b2b9ef1d09fda80',
+        revision: operationsRelease
+          ? '7eba339b37a2aa948ef4f6ed019d268816d4ec99'
+          : 'bdc749421187c017f4cc3ba36b2b9ef1d09fda80',
         checkedAt: new Date().toISOString(),
         result: 'passed',
         checks: [

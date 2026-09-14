@@ -4,13 +4,24 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // Immutable baseline fixture. No local builds, development volumes or public listeners.
-const revision = 'bdc749421187c017f4cc3ba36b2b9ef1d09fda80';
-const images = {
-  api: 'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83',
-  web: 'ghcr.io/edencirakoglu/client-tracker-web@sha256:1d81853b12c29c73ac402160d6fff05d76a4fd71fbb84434730587a178059f79',
-};
-const dir = resolve('test-results/release-bdc749');
+const operationsRelease = process.argv.includes('--release=7eba339');
+const releaseName = operationsRelease ? '7eba339' : 'bdc749';
+const revision = operationsRelease
+  ? '7eba339b37a2aa948ef4f6ed019d268816d4ec99'
+  : 'bdc749421187c017f4cc3ba36b2b9ef1d09fda80';
+const images = operationsRelease
+  ? {
+      api: 'ghcr.io/edencirakoglu/client-tracker-api@sha256:f89b550bd3c3166ee4be56a9a8d6a64950f53b7482edc65394a313ca66e512df',
+      web: 'ghcr.io/edencirakoglu/client-tracker-web@sha256:780012866bcf3ac9a3155290ff3d3ad7ab14019c7b22d851629f90eddaf2cb39',
+    }
+  : {
+      api: 'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83',
+      web: 'ghcr.io/edencirakoglu/client-tracker-web@sha256:1d81853b12c29c73ac402160d6fff05d76a4fd71fbb84434730587a178059f79',
+    };
+const dir = resolve(`test-results/release-${releaseName}`);
+const privateDir = operationsRelease ? resolve(`test-results/tls/release-${releaseName}`) : dir;
 mkdirSync(dir, { recursive: true });
+mkdirSync(privateDir, { recursive: true });
 const command = (exe, args, capture = false) =>
   execFileSync(exe, args, {
     encoding: 'utf8',
@@ -19,9 +30,9 @@ const command = (exe, args, capture = false) =>
 const openssl =
   process.env.OPENSSL_PATH ??
   (process.platform === 'win32' ? 'C:/Program Files/Git/usr/bin/openssl.exe' : 'openssl');
-const cert = resolve(dir, 'tls/cert.pem');
-mkdirSync(resolve(dir, 'tls'), { recursive: true });
-let renew = !existsSync(cert);
+const cert = resolve(privateDir, 'tls/cert.pem');
+mkdirSync(resolve(privateDir, 'tls'), { recursive: true });
+let renew = !existsSync(cert) || !existsSync(resolve(privateDir, 'tls/key.pem'));
 if (!renew) {
   try {
     command(openssl, ['x509', '-checkend', '86400', '-noout', '-in', cert], true);
@@ -39,7 +50,7 @@ if (renew)
     '-days',
     '7',
     '-keyout',
-    resolve(dir, 'tls/key.pem'),
+    resolve(privateDir, 'tls/key.pem'),
     '-out',
     cert,
     '-subj',
@@ -47,9 +58,12 @@ if (renew)
     '-addext',
     'subjectAltName=DNS:localhost,IP:127.0.0.1',
   ]);
-const secretFile = resolve(dir, 'session-secret');
+const secretFile = resolve(privateDir, 'session-secret');
 if (!existsSync(secretFile))
   writeFileSync(secretFile, randomBytes(48).toString('hex'), { mode: 0o600 });
+const mailKeyFile = resolve(privateDir, 'mail-key');
+if (operationsRelease && !existsSync(mailKeyFile))
+  writeFileSync(mailKeyFile, randomBytes(32).toString('hex'), { mode: 0o600 });
 const probe = (url) => ({
   test: [
     'CMD',
@@ -72,14 +86,20 @@ const tables = [
   'triage_suggestions',
 ];
 const action = process.argv[2] ?? 'start';
-const evidence = { revision, images, action, timestamp: new Date().toISOString(), fixtures: [] };
+const evidence = {
+  revision,
+  images,
+  action,
+  harnessRevision: command('git', ['rev-parse', 'HEAD'], true),
+  workingTreeDirty: !!command('git', ['status', '--porcelain'], true),
+  timestamp: new Date().toISOString(),
+  fixtures: [],
+};
 for (const accounts of [false, true]) {
-  const project = accounts ? 'clientops-release-bdc749-accounts' : 'clientops-release-bdc749';
-  const database = accounts
-    ? 'clientops_release_bdc749_accounts_demo'
-    : 'clientops_release_bdc749_demo';
-  const port = accounts ? 8451 : 8450;
-  const config = resolve(dir, `${project}.json`);
+  const project = `clientops-release-${releaseName}${accounts ? '-accounts' : ''}`;
+  const database = `clientops_release_${releaseName}${accounts ? '_accounts' : ''}_demo`;
+  const port = (operationsRelease ? 8454 : 8450) + Number(accounts);
+  const config = resolve(privateDir, `${project}.json`);
   const environment = {
     NODE_ENV: 'production',
     DATABASE_URL: `postgresql://hardening:local_disposable_database_password@postgres:5432/${database}`,
@@ -91,6 +111,9 @@ for (const accounts of [false, true]) {
     SMTP_MODE: 'capture',
     SMTP_HOST: 'mailpit',
     SMTP_PORT: '1025',
+    ...(operationsRelease
+      ? { DEPLOYMENT_MODE: 'disposable', MAIL_ENCRYPTION_KEY: readFileSync(mailKeyFile, 'utf8') }
+      : {}),
   };
   writeFileSync(
     config,
@@ -113,12 +136,12 @@ for (const accounts of [false, true]) {
         },
         mailpit: {
           image: 'axllent/mailpit:v1.27.4',
-          ports: [`127.0.0.1:${accounts ? 8031 : 8030}:8025`],
+          ports: [`127.0.0.1:${(operationsRelease ? 8034 : 8030) + Number(accounts)}:8025`],
         },
         api: {
           image: images.api,
           environment,
-          healthcheck: probe('http://127.0.0.1:8080/health'),
+          healthcheck: probe(`http://127.0.0.1:8080/health${operationsRelease ? '/ready' : ''}`),
           depends_on: {
             postgres: { condition: 'service_healthy' },
             mailpit: { condition: 'service_started' },
@@ -135,7 +158,7 @@ for (const accounts of [false, true]) {
           ports: [`127.0.0.1:${port}:443`],
           volumes: [
             `${resolve('nginx/hardening.conf')}:/etc/nginx/conf.d/default.conf:ro`,
-            `${resolve(dir, 'tls')}:/etc/nginx/tls:ro`,
+            `${resolve(privateDir, 'tls')}:/etc/nginx/tls:ro`,
           ],
           depends_on: {
             api: { condition: 'service_healthy' },
@@ -224,5 +247,5 @@ for (const accounts of [false, true]) {
 }
 writeFileSync(resolve(dir, `${action}.json`), JSON.stringify(evidence, null, 2));
 console.log(
-  `Published release ${revision}: ${action} passed; evidence in test-results/release-bdc749/${action}.json`,
+  `Published release ${revision}: ${action} passed; evidence in test-results/release-${releaseName}/${action}.json`,
 );

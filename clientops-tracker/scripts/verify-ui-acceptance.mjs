@@ -9,8 +9,12 @@ const expect = baseExpect.configure({ timeout: 15000 });
 const origin = process.env.VERIFY_URL ?? 'https://localhost:8452';
 if (!/^https:\/\/localhost:\d+$/.test(origin) || process.env.E2E_ALLOW_DISPOSABLE_DEMO !== 'true')
   throw new Error('Explicit disposable loopback HTTPS verification is required.');
-const directory = resolve(`test-results/ui-${before ? 'before' : 'acceptance'}`);
-const fixture = new URL(origin).port === '8452' ? 'clientops-ops' : 'clientops-hardening';
+const directory = resolve(
+  process.env.UI_EVIDENCE_DIR ?? `test-results/ui-${before ? 'before' : 'acceptance'}`,
+);
+const fixture =
+  process.env.VERIFY_PROJECT ??
+  (new URL(origin).port === '8452' ? 'clientops-ops' : 'clientops-hardening');
 mkdirSync(directory, { recursive: true });
 const revision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || undefined });
@@ -80,6 +84,11 @@ try {
     await page.goto(`${origin}/tickets`);
     await expect(page.getByRole('table')).toBeVisible();
     await screenshot(page, `${role.toLowerCase()}-mobile-tickets`, false);
+    if (before && role === 'Admin') {
+      await page.setViewportSize({ width: 390, height: 640 });
+      await screenshot(page, 'short-mobile-tickets', false);
+      await page.setViewportSize({ width: 390, height: 844 });
+    }
     if (!before) {
       await expect(page.locator('tbody a').first()).toBeInViewport();
       const results = await new AxeBuilder({ page })

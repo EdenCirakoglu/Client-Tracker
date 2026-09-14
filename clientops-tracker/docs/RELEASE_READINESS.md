@@ -2,11 +2,11 @@
 
 ## Current Published Release
 
-PR #3 is merged as `bdc749421187c017f4cc3ba36b2b9ef1d09fda80`. Main CI and image publication passed. Both published digest-pinned images also passed separate local verification without rebuilding: nine browser scenarios, account flows, tenant isolation, logout replay rejection and persistence. See [exact release evidence and commands](RELEASE_BDC749.md). Public deployment has not occurred. Operational follow-up remains review work, not a merged release.
+PR #4 is merged as `7eba339b37a2aa948ef4f6ed019d268816d4ec99`. Main CI and image publication passed. Both published digest-pinned images passed separate local verification without rebuilding, including nine browser scenarios, database outage recovery, durable email retry and persistence. See [exact release evidence and commands](RELEASE_7EBA339.md). Public deployment has not occurred. New usability and operator-control work remains on a separate review branch.
 
 ## Operations UI and Account Hardening: Historical PR Evidence
 
-For the subsequent unmerged operations work, see [operations review evidence](OPERATIONS_READINESS.md). The dated sections below are retained historical checkpoints, not the current branch or release status.
+For historical PR #4 checkpoints, see [operations review evidence](OPERATIONS_READINESS.md). The dated sections below are retained historical checkpoints, not the current branch or release status. The [bdc7494 verification](RELEASE_BDC749.md) remains evidence for that earlier release only.
 
 [PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3) was draft and unmerged at this historical checkpoint. Tested application revision:
 `4614642887c69bf112efb32dd59c6dff3d583b9e`. The evidence-only commit that records

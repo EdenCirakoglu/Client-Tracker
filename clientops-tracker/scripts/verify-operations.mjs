@@ -11,6 +11,7 @@ import {
   mailToken,
   mutation,
   project,
+  published,
   query,
   waitFor,
 } from './lib/ops-fixture.mjs';
@@ -181,7 +182,12 @@ try {
     logRedaction: true,
     fictionalAccount: email,
   };
-  writeFileSync('test-results/operations-runtime.json', JSON.stringify(evidence, null, 2));
+  writeFileSync(
+    published
+      ? 'test-results/release-7eba339/operations-runtime.json'
+      : 'test-results/operations-runtime.json',
+    JSON.stringify(evidence, null, 2),
+  );
   console.log(
     'Database outage/recovery, real SMTP outage/retry, restart, concurrent workers and stale-link checks passed.',
   );
