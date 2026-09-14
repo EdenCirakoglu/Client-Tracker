@@ -15,6 +15,20 @@ writeFileSync(resolve(privateDir, 'alert-curl.conf'), 'url = "http://alerts:8099
 const config = JSON.parse(compose(['config', '--format', 'json']));
 config.volumes.operations_state = { name: `${project}_operations_state` };
 config.volumes.encrypted_backup = { name: `${project}_encrypted_backup` };
+config.volumes.backup_secrets = { name: `${project}_backup_secrets` };
+// Linux CI files belong to the runner UID. The restricted operator has no DAC override.
+// A networkless fixture initializer copies only these two files to a root-owned private volume.
+config.services['prepare-backup'] = {
+  image: config.services.postgres.image,
+  user: '0:0',
+  network_mode: 'none',
+  read_only: true,
+  entrypoint: ['sh', '-eu', '-c'],
+  command: [
+    'cp /input/restic-password /secrets/restic-password; cp /input/alert-curl.conf /secrets/alert-curl.conf; chown 0:0 /secrets /secrets/restic-password /secrets/alert-curl.conf; chmod 700 /secrets; chmod 600 /secrets/restic-password /secrets/alert-curl.conf',
+  ],
+  volumes: [`${privateDir}:/input:ro`, 'backup_secrets:/secrets'],
+};
 config.services.operations = {
   image: 'clientops-operations:local',
   read_only: true,
@@ -33,7 +47,7 @@ config.services.operations = {
   volumes: [
     'operations_state:/state',
     'encrypted_backup:/repository',
-    `${privateDir}:/run/secrets:ro`,
+    'backup_secrets:/run/secrets:ro',
     `${resolve('test-results/tls')}:/certs:ro`,
   ],
 };

@@ -10,9 +10,12 @@ const build = ['build', '-f', 'ops/Dockerfile', '-t', 'clientops-operations:loca
 if (process.env.BUILD_CA_FILE)
   build.push('--secret', `id=build_ca,src=${resolve(process.env.BUILD_CA_FILE)}`);
 execFileSync('docker', [...build, '.'], { stdio: 'inherit' });
+ops(['run', '--rm', '--no-deps', 'prepare-backup']);
 ops(['up', '-d', '--no-deps', 'alerts']);
 const shell = (script) =>
   ops(['run', '--rm', '--no-deps', '--entrypoint', 'sh', 'operations', '-c', script]);
+assert.equal(shell('stat -c %u:%g:%a /run/secrets/restic-password'), '0:0:600');
+assert.equal(shell('wc -c < /run/secrets/restic-password'), '64');
 try {
   shell('test -f /repository/config');
 } catch {
@@ -90,6 +93,7 @@ try {
         checkedAt: new Date().toISOString(),
         elapsedMs: Date.now() - started,
         encryptedBackupAndReadback: true,
+        privateSecretsReadableWithDroppedCapabilities: true,
         wrongPasswordRejected: true,
         readOnlyBackupRole: true,
         readinessFailure: true,

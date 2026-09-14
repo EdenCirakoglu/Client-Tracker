@@ -47,6 +47,8 @@ Bootstrap is one-time and refuses an existing administrator. Do not overwrite ac
 
 Configure a **separate private off-host S3-compatible bucket**, HTTPS endpoint, bucket-scoped access keys, and `OPS_SECRETS_DIR` containing mode-600 `restic-password` and `alert-curl.conf`. Escrow the restic password separately; losing it makes the backup unrecoverable. Do not put these files in Git or CI artifacts. Production mode rejects a local repository path. A local Docker volume repository is used only for explicit disposable fixtures, so those tests do not prove cloud availability, bucket policy or disaster independence.
 
+The production secret directory and files must be **root-owned** (directory mode 700, files mode 600), matching the operator container's UID 0. All capabilities remain dropped, so it cannot bypass another owner's permissions. Linux CI uses a networkless fixture initializer to copy only its generated password and capture-alert configuration into a root-owned private volume; it does not loosen production permissions or upload these files.
+
 Backups stream `pg_dump` into restic with `--stdin-from-command`; a failed dump fails the backup rather than committing a silently truncated stream. The backup excludes session, recovery-token, outbox and rate-limit rows; user/business data and schema remain. Restore sanitisation is still mandatory. [Restic's command-stream guidance](https://restic.readthedocs.io/en/stable/040_backup.html#reading-data-from-a-command) explains this failure handling.
 
 ```bash
