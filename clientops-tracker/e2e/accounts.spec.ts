@@ -103,6 +103,17 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   ).toBe(true);
   await accessible(page, 'admin-invitations');
   const invitation = await emailLink(page, address);
+  await page.getByRole('button', { name: 'Refresh email delivery', exact: true }).click();
+  const delivery = page.getByRole('region', { name: 'Email delivery', exact: true });
+  await expect(
+    delivery.getByRole('cell', { name: 'Accepted by mail server', exact: true }).first(),
+  ).toBeVisible();
+  await test
+    .info()
+    .attach('invitation-delivered', {
+      body: await delivery.screenshot(),
+      contentType: 'image/png',
+    });
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto(invitation);

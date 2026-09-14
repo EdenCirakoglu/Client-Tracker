@@ -33,17 +33,13 @@ test('compact mobile filters retain URL, history and access to ticket actions', 
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,
   ).toEqual([]);
-  await test
-    .info()
-    .attach('mobile-filters-collapsed', {
-      body: await page.screenshot(),
-      contentType: 'image/png',
-    });
+  await test.info().attach('mobile-filters-collapsed', {
+    body: await page.screenshot(),
+    contentType: 'image/png',
+  });
   await disclosure.click();
-  await test
-    .info()
-    .attach('mobile-filters-expanded', {
-      body: await page.screenshot({ fullPage: true }),
-      contentType: 'image/png',
-    });
+  await test.info().attach('mobile-filters-expanded', {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: 'image/png',
+  });
 });

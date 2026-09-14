@@ -170,6 +170,22 @@ if (!before) {
       page.getByRole('button', { name: 'Show current password', exact: true }),
     ).toBeFocused();
     await nativeCapture('native-200-keyboard-focus');
+    await page.getByRole('button', { name: 'Logout', exact: true }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    for (const route of ['login', 'forgot-password', 'reset-password', 'set-password']) {
+      await page.goto(`${origin}/${route}`);
+      await expect(page.locator('main h1')).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+        ),
+      ).toBe(true);
+      expect(
+        (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
+          .violations,
+      ).toEqual([]);
+      await nativeCapture(`native-200-${route}`);
+    }
     evidence.nativeZoom = {
       normal,
       zoom,
