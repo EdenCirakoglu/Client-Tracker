@@ -4,19 +4,24 @@ import { request } from '@playwright/test';
 import { readMailboxJson } from './mailbox-read.mjs';
 
 export const local = process.argv.includes('--ops');
+export const followup = process.argv.includes('--followup');
 export const published = process.argv.includes('--published=7eba339');
 export const project = published
   ? 'clientops-release-7eba339'
-  : local
-    ? 'clientops-ops'
-    : 'clientops-hardening';
+  : followup
+    ? 'clientops-followup'
+    : local
+      ? 'clientops-ops'
+      : 'clientops-hardening';
 export const database = published
   ? 'clientops_release_7eba339_demo'
-  : local
-    ? 'clientops_ops_demo'
-    : 'clientops_hardening_demo';
-export const origin = `https://localhost:${published ? 8454 : local ? 8452 : 8443}`;
-export const mailbox = `http://localhost:${published ? 8034 : local ? 8032 : 8025}`;
+  : followup
+    ? 'clientops_followup_demo'
+    : local
+      ? 'clientops_ops_demo'
+      : 'clientops_hardening_demo';
+export const origin = `https://localhost:${published ? 8454 : followup ? 8456 : local ? 8452 : 8443}`;
+export const mailbox = `http://localhost:${published ? 8034 : followup ? 8036 : local ? 8032 : 8025}`;
 export const keys = published
   ? {
       session: readFileSync('test-results/tls/release-7eba339/session-secret', 'utf8'),
@@ -26,8 +31,13 @@ export const keys = published
 export const environment = {
   ...process.env,
   HARDENING_DATABASE: database,
-  HTTPS_PORT: local ? '8452' : '8443',
-  MAIL_PORT: local ? '8032' : '8025',
+  HTTPS_PORT: followup ? '8456' : local ? '8452' : '8443',
+  MAIL_PORT: followup ? '8036' : local ? '8032' : '8025',
+  ...(keys.runtime
+    ? {
+        RUNTIME_DATABASE_URL: `postgresql://clientops_runtime:${keys.runtime}@postgres:5432/${database}`,
+      }
+    : {}),
   HARDENING_API_IMAGE: `${project}-api:local`,
   HARDENING_WEB_IMAGE: `${project}-web:local`,
   SESSION_SECRET: keys.session,

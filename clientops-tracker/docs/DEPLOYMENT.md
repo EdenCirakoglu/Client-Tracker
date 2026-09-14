@@ -164,7 +164,9 @@ dc() { docker compose -p clientops-production --env-file .env.production -f dock
 dc config --quiet
 dc pull
 dc up -d --wait postgres
-dc run --rm --no-deps api node dist/migrate.js
+# First setup / reviewed role conversion only, before app startup.
+dc run --rm --no-deps provision
+dc run --rm --no-deps migrate
 dc up -d --no-build --wait
 dc ps
 curl --fail https://YOUR_CONFIGURED_DOMAIN/api/health
@@ -179,7 +181,7 @@ verification and trusted certificates **before** starting the public stack.
 certificates from `TLS_CERTS_DIR`. It overwrites forwarding headers; the API trusts
 one private proxy hop and publishes no port. Default listeners remain loopback;
 set HTTP_BIND to the intended interface only after firewall/TLS review. Certificate
-issuance and renewal automation are not provisioned here. If adding another proxy,
+issuance remains operator work; [renewal hooks and scheduled monitoring](OPERATOR_CONTROLS.md#trusted-https-and-smtp) are provided for reviewed installation. If adding another proxy,
 review the trust boundary instead of blindly forwarding client-supplied headers.
 The local self-signed harness does not verify production TLS or SMTP delivery.
 
@@ -196,7 +198,8 @@ same Compose project name to retain the volume.
 # First take and verify the private, credential-excluding backup in OPERATIONS.md.
 # Check out the new reviewed SHA at the Git root as above and export IMAGE_TAG.
 dc pull
-dc run --rm --no-deps api node dist/migrate.js
+dc stop api
+dc run --rm --no-deps migrate
 dc up -d --no-build --wait
 dc up -d --no-deps --force-recreate --wait nginx
 dc ps
@@ -260,7 +263,7 @@ GitHub supplies the publishing workflow's `GITHUB_TOKEN`; do not create your own
 | GHCR manifest unknown                   | Wait for both image jobs for that SHA; verify lowercase image coordinates                                        |
 | Permission denied pulling               | Authenticate with a read-packages token and check package visibility                                             |
 | Database connection refused             | Use host address for local Node, `postgres` only inside Compose                                                  |
-| Relation does not exist                 | Run `dc run --rm --no-deps api node dist/migrate.js`                                                             |
+| Relation does not exist                 | Run `dc run --rm --no-deps migrate` using the separate migration credentials                                     |
 | Database auth fails after env edit      | Existing volumes retain original credentials; env edits do not rotate them                                       |
 | Browser calls localhost:8080 from VPS   | Rebuild web with `NEXT_PUBLIC_API_URL=/`; a runtime edit is insufficient                                         |
 | CORS failure                            | Match exact origin; same-origin Nginx needs no cross-origin browser exception                                    |

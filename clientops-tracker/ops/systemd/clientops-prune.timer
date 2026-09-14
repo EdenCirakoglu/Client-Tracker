@@ -1,0 +1,8 @@
+[Unit]
+Description=Weekly ClientOps backup retention
+[Timer]
+OnCalendar=Sun *-*-* 06:00:00 UTC
+Persistent=true
+Unit=clientops-ops@prune.service
+[Install]
+WantedBy=timers.target

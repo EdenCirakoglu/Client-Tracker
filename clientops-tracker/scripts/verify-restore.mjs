@@ -4,12 +4,13 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createServer } from 'node:net';
+import { backupDump } from './lib/backup-fixture.mjs';
 import {
   compose,
   context,
-  database,
   docker,
   environment,
+  keys,
   mailToken,
   mailMessages,
   mutation,
@@ -117,36 +118,7 @@ try {
   );
   const before = query(fingerprintSql);
   const dumpStarted = Date.now();
-  const args = [
-    'exec',
-    '-T',
-    'postgres',
-    'pg_dump',
-    '-U',
-    'hardening',
-    '-d',
-    database,
-    '--format=custom',
-    '--no-owner',
-    '--no-acl',
-    ...['web_sessions', 'auth_sessions', 'account_tokens', 'mail_outbox', 'auth_rate_limits'].map(
-      (t) => `--exclude-table-data=public.${t}`,
-    ),
-  ];
-  const dump = execFileSync(
-    'docker',
-    [
-      'compose',
-      '-p',
-      project,
-      '--env-file',
-      '.env.hardening.example',
-      '-f',
-      'docker-compose.hardening.yml',
-      ...args,
-    ],
-    { env: environment, maxBuffer: 64 * 1024 * 1024, timeout: 120000 },
-  );
+  const dump = backupDump();
   const dumpMs = Date.now() - dumpStarted;
   writeFileSync(resolve(privateDirectory, `${restoreProject}.dump`), dump, { mode: 0o600 });
   const restoreStarted = Date.now();
@@ -195,7 +167,42 @@ try {
     restoredQuery("SELECT count(*) FROM pg_constraint WHERE contype='f' AND NOT convalidated"),
     '0',
   );
+  restored(
+    [
+      'run',
+      '--rm',
+      '-T',
+      '--no-deps',
+      '-e',
+      'ADMIN_DATABASE_URL',
+      '-e',
+      'DATABASE_ADMIN_CONFIRM',
+      '-e',
+      'MIGRATION_PASSWORD',
+      '-e',
+      'RUNTIME_PASSWORD',
+      '-e',
+      'BACKUP_PASSWORD',
+      'api',
+      'node',
+      'dist/provision-roles.js',
+    ],
+    {
+      env: {
+        ...environment,
+        ADMIN_DATABASE_URL: config.services.api.environment.DATABASE_URL,
+        DATABASE_ADMIN_CONFIRM: restoreDatabase,
+        MIGRATION_PASSWORD: keys.migrator,
+        RUNTIME_PASSWORD: keys.runtime,
+        BACKUP_PASSWORD: keys.backup,
+      },
+    },
+  );
+  config.services.api.environment.DATABASE_URL = `postgresql://clientops_migrator:${keys.migrator}@postgres:5432/${restoreDatabase}`;
+  saveConfig();
   restored(['run', '--rm', '-T', '--no-deps', 'api', 'node', 'dist/migrate.js']);
+  config.services.api.environment.DATABASE_URL = `postgresql://clientops_runtime:${keys.runtime}@postgres:5432/${restoreDatabase}`;
+  saveConfig();
   restored(['up', '-d', '--wait', '--no-build']);
   const recoveryMs = Date.now() - restoreStarted;
   const { request } = await import('@playwright/test');
@@ -277,16 +284,28 @@ try {
   docker(['pull', rollbackApi]);
   docker(['pull', rollbackWeb]);
   const beforeRollback = restoredQuery(fingerprintSql);
-  config.services.api.image = rollbackApi;
-  config.services.web.image = rollbackWeb;
-  config.services.api.healthcheck.test = [
-    'CMD',
-    'node',
-    '-e',
-    "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
-  ];
-  saveConfig();
-  restored(['up', '-d', '--wait', '--no-build']);
+  execFileSync(
+    process.execPath,
+    [
+      'scripts/rollback.mjs',
+      `--config=${configPath}`,
+      `--confirm-project=${restoreProject}`,
+      '--target=bdc749',
+      '--acknowledge-account-pause=true',
+    ],
+    { stdio: 'inherit' },
+  );
+  assert.equal((await restoredAdmin.get('/api/health/ready')).status(), 503);
+  assert.equal(
+    (await mutation(restoredAdmin, '/api/auth/forgot-password', { email })).status(),
+    503,
+  );
+  assert.equal((await restoredAdmin.get('/api/users')).status(), 503);
+  assert.equal((await restoredAdmin.get('/api/USERS')).status(), 503);
+  assert.equal(
+    (await mutation(restoredAdmin, '/api/auth/FORGOT-PASSWORD', { email })).status(),
+    503,
+  );
   assert.equal(
     (
       await mutation(restoredAdmin, '/api/auth/login', {
@@ -309,6 +328,7 @@ try {
     restoreProject,
     restoreDatabase,
     dumpSha256: createHash('sha256').update(dump).digest('hex'),
+    backupTransport: 'Encrypted restic repository; decrypted only into private disposable restore',
     dumpMs,
     recoveryMs,
     businessTables: tables.length,
@@ -323,6 +343,9 @@ try {
       api: rollbackApi,
       web: rollbackWeb,
       recordsAndCommentPreserved: true,
+      accountChangesBlockedAtGateway: true,
+      legacyReadinessExplicitlyUnavailable: true,
+      executable: 'scripts/rollback.mjs',
     },
     rpo: 'Snapshot at dump start; subsequent writes are outside this backup. No WAL/PITR configured.',
     limitations:
@@ -332,6 +355,11 @@ try {
   console.log(
     'Populated restore, offline safeguards, session/link invalidation, authorisation and pinned session-era rollback passed.',
   );
+} catch {
+  console.error(
+    'Restore/rollback acceptance failed. Request headers and private configuration are intentionally omitted.',
+  );
+  process.exitCode = 1;
 } finally {
   await api.dispose();
   await anonymous.dispose();

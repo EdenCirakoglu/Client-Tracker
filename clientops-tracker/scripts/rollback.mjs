@@ -1,0 +1,115 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { planRollback } from './lib/rollback-plan.mjs';
+
+// No migration reversal, database reset, automatic fallback, or unpinned image selection.
+const options = Object.fromEntries(
+  process.argv.slice(2).map((arg) => arg.replace(/^--/, '').split('=')),
+);
+if (!options.config || !options.target || !options['confirm-project'])
+  throw new Error(
+    'Supply --config=<private-json> --target=7eba339|bdc749 --confirm-project=<name>; older releases also need --acknowledge-account-pause=true.',
+  );
+const original = JSON.parse(readFileSync(options.config, 'utf8'));
+if (original.name !== options['confirm-project'])
+  throw new Error('Compose project confirmation mismatch.');
+const mount = original.services.nginx.volumes.find(
+  (item) => item.target === '/etc/nginx/conf.d/default.conf',
+);
+const result = planRollback(
+  original,
+  options.target,
+  readFileSync(mount.source, 'utf8'),
+  options['acknowledge-account-pause'] === 'true',
+);
+const directory = dirname(resolve(options.config));
+const nginxPath = resolve(directory, 'rollback-nginx.conf');
+const configPath = resolve(directory, 'rollback-compose.json');
+writeFileSync(nginxPath, result.nginx, { mode: 0o600 });
+result.config.services.nginx.volumes.find((item) => item.target === mount.target).source =
+  nginxPath;
+writeFileSync(configPath, JSON.stringify(result.config), { mode: 0o600 });
+try {
+  for (const image of [result.release.api, result.release.web])
+    execFileSync('docker', ['pull', image], { stdio: 'inherit' });
+  const workers = ['mail-worker', 'worker'].filter((name) => original.services[name]);
+  if (workers.length)
+    execFileSync('docker', ['compose', '-p', original.name, '-f', configPath, 'stop', ...workers], {
+      stdio: 'inherit',
+    });
+  // Install the account-maintenance gate before starting an older API without an outbox.
+  execFileSync(
+    'docker',
+    [
+      'compose',
+      '-p',
+      original.name,
+      '-f',
+      configPath,
+      'up',
+      '-d',
+      '--no-build',
+      '--no-deps',
+      '--force-recreate',
+      '--wait',
+      'nginx',
+    ],
+    { stdio: 'inherit' },
+  );
+  execFileSync(
+    'docker',
+    [
+      'compose',
+      '-p',
+      original.name,
+      '-f',
+      configPath,
+      'up',
+      '-d',
+      '--no-build',
+      '--wait',
+      'api',
+      'web',
+    ],
+    { stdio: 'inherit' },
+  );
+  // Docker DNS may still cache the replaced API address. Retry only this read-only probe.
+  const deadline = Date.now() + 30_000;
+  for (;;) {
+    try {
+      execFileSync(
+        'docker',
+        [
+          'compose',
+          '-p',
+          original.name,
+          '-f',
+          configPath,
+          'exec',
+          '-T',
+          'nginx',
+          'wget',
+          '--no-check-certificate',
+          '-T',
+          '2',
+          '-qO-',
+          'https://127.0.0.1/api/health',
+        ],
+        { stdio: 'ignore', timeout: 5000 },
+      );
+      break;
+    } catch {
+      if (Date.now() >= deadline) throw new Error('Gateway liveness did not recover.');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  console.log(
+    `Pinned rollback ${result.release.revision} started. Verify login, business workflow and organisation boundaries before reopening traffic. Account pause: ${result.release.accountPause}.`,
+  );
+} catch {
+  console.error(
+    'Rollback failed; leave traffic restricted and inspect the selected Compose project. No automatic alternative attempted.',
+  );
+  process.exitCode = 1;
+}

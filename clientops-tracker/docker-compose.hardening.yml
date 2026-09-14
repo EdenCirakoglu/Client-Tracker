@@ -22,7 +22,7 @@ services:
     environment:
       NODE_ENV: production
       DEPLOYMENT_MODE: disposable
-      DATABASE_URL: postgresql://hardening:local_disposable_database_password@postgres:5432/${HARDENING_DATABASE}
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:-postgresql://hardening:local_disposable_database_password@postgres:5432/${HARDENING_DATABASE}}
       SESSION_SECRET: ${SESSION_SECRET:?Set session secret}
       MAIL_ENCRYPTION_KEY: ${MAIL_ENCRYPTION_KEY:?Set a local mail encryption key}
       APP_ORIGIN: https://localhost:${HTTPS_PORT:-8443}

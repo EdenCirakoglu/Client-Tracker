@@ -14,3 +14,9 @@ description = "Public image revision, not a credential; retained historical evid
 condition = "AND"
 paths = ['''^clientops-tracker/docs/REGISTRY_VERIFICATION\.md$''']
 regexes = ['''^3fa8d7f51a3dc9bfc9225697085131d75d9ec197$''']
+
+[[allowlists]]
+description = "Exact public merge-SHA image tag in the 7eba339 release runbook, not a credential"
+condition = "AND"
+paths = ['''^clientops-tracker/docs/RELEASE_7EBA339\.md$''']
+regexes = ['''^7eba339b37a2aa948ef4f6ed019d268816d4ec99$''']

@@ -1,0 +1,12 @@
+[Unit]
+Description=ClientOps %i
+After=docker.service network-online.target
+Requires=docker.service
+OnFailure=clientops-alert.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/clientops/operations.env
+ExecStart=/usr/local/lib/clientops/scheduled.sh %i
+TimeoutStartSec=1h
+UMask=0077

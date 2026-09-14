@@ -10,6 +10,10 @@ coverage/
 test-results/
 playwright-report/
 certs/
+certbot-webroot/
+ops/*.env
+*.dump
+*.pem
 *.tsbuildinfo
 
 # Environment

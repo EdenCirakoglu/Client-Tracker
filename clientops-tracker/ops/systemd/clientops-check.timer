@@ -1,0 +1,8 @@
+[Unit]
+Description=Weekly complete backup integrity check
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00 UTC
+Persistent=true
+Unit=clientops-ops@check.service
+[Install]
+WantedBy=timers.target

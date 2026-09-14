@@ -71,7 +71,7 @@ jobs:
             docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml config --quiet
             docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml pull
             docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --wait postgres
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml run --rm --no-deps api node dist/migrate.js
+            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml run --rm --no-deps migrate
             docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --no-build --wait
             docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --no-deps --force-recreate --wait nginx
             docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml ps

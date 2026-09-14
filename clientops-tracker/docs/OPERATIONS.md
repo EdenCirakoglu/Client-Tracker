@@ -1,6 +1,6 @@
 # Production Operations Runbook
 
-This is preparation, not a public deployment claim. The operations review branch remains unmerged. Production domain, hosting access, trusted certificate issuance, SMTP credentials, alert destination and backup storage are operator inputs, not repository secrets. See [revision-specific evidence](OPERATIONS_READINESS.md).
+This is preparation, not a public deployment claim. PR #4 is merged as `7eba339`; its [revision-specific evidence](RELEASE_7EBA339.md) is preserved. The new [operator controls](OPERATOR_CONTROLS.md) provide restricted database roles, encrypted backup jobs, timers, monitoring and executable rollback on a separate draft branch. Production domain, hosting access, trusted certificate issuance, SMTP credentials, alert destination and backup storage remain operator inputs, not repository secrets.
 
 ## Health and Failure Behaviour
 
@@ -38,7 +38,7 @@ Normal production rejects demo login, disposable database configuration, capture
 
 Bootstrap a real administrator once using the private command in [session setup](SESSION_HARDENING.md), then use administrator invitations. Production mail requires authenticated SMTP with certificate-verified implicit TLS or STARTTLS, verified sender ownership and SPF/DKIM/DMARC. Configure bounces and quota monitoring with the mail provider. Local verification sends fictional addresses only to Mailpit. See [durable delivery](MAIL_DELIVERY.md) for retry, encryption and duplicate-delivery semantics.
 
-The supplied PostgreSQL container owner is a privileged initialisation identity. Before public launch, provision a separate least-privilege runtime role and a restricted migration role; do not expose the bootstrap superuser credentials to the long-running API. Validate grants in staging, including session, rate-limit and outbox tables. This separation remains operator acceptance work.
+The PostgreSQL owner is a privileged initialisation identity. Use the [provisioning command](OPERATOR_CONTROLS.md#database-identities) to establish separate runtime, migration and backup roles. Runtime privilege denials are tested in the new disposable fixture; staging conversion still requires the operator's private credentials and exact database confirmation. Never expose the initialisation owner URL to the long-running API.
 
 ## Monitoring, Alerts and Retention
 
@@ -75,7 +75,7 @@ Restore into a **new, empty database/volume**, with no API, workers or Studio co
 
 ```bash
 # Restore Compose/environment must point ONLY to the new database.
-dc run --rm --no-deps api node dist/migrate.js
+dc run --rm --no-deps migrate
 dc run --rm --no-deps -e RESTORE_CONFIRM_DATABASE="$RESTORED_DATABASE" -e RESTORE_OFFLINE=true api node dist/restore-sanitize.js
 ```
 

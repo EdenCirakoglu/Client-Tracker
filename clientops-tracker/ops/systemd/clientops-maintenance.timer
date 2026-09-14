@@ -1,0 +1,8 @@
+[Unit]
+Description=Hourly bounded ClientOps retention
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=clientops-ops@maintenance.service
+[Install]
+WantedBy=timers.target

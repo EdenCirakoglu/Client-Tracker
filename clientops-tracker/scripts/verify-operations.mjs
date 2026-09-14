@@ -191,6 +191,11 @@ try {
   console.log(
     'Database outage/recovery, real SMTP outage/retry, restart, concurrent workers and stale-link checks passed.',
   );
+} catch {
+  console.error(
+    'Outage/retry acceptance failed. Request headers and private configuration are intentionally omitted.',
+  );
+  process.exitCode = 1;
 } finally {
   if (paused) compose(['unpause', 'postgres']);
   if (mailStopped) compose(['start', 'mailpit']);

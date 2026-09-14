@@ -12,6 +12,11 @@ if (process.env.CI && /[A-Z]:[\\/]Users[\\/]/i.test(text)) {
 if (!/^[a-f0-9]{40}$/.test(report.config.metadata.revision)) {
   throw new Error('Browser evidence must retain the explicit tested revision.');
 }
+if (/clientops\.sid=s(?:%3A|:)|#token=[a-f0-9]{64}/i.test(text)) {
+  throw new Error(
+    'Browser evidence includes a session cookie or account-link token. Do not upload.',
+  );
+}
 console.log(
   'Browser evidence retains revision provenance without automatic Git identity metadata.',
 );

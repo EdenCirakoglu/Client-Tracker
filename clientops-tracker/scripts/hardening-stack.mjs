@@ -36,6 +36,15 @@ if (!existsSync(keysFile))
     { mode: 0o600 },
   );
 const keys = JSON.parse(readFileSync(keysFile, 'utf8'));
+if (!keys.runtime || !keys.migrator) {
+  keys.runtime = randomBytes(32).toString('hex');
+  keys.migrator = randomBytes(32).toString('hex');
+  writeFileSync(keysFile, JSON.stringify(keys), { mode: 0o600 });
+}
+if (!keys.backup) {
+  keys.backup = randomBytes(32).toString('hex');
+  writeFileSync(keysFile, JSON.stringify(keys), { mode: 0o600 });
+}
 const baseEnv = {
   ...process.env,
   HARDENING_DATABASE: followup
@@ -66,6 +75,9 @@ const accountsEnv = {
   MAIL_PORT: followup ? '8037' : opsFixture ? '8033' : uiFixture ? '8028' : '8026',
   DEMO_MODE: 'false',
 };
+for (const env of [baseEnv, accountsEnv]) {
+  env.RUNTIME_DATABASE_URL = `postgresql://clientops_runtime:${keys.runtime}@postgres:5432/${env.HARDENING_DATABASE}`;
+}
 function run(command, args, env = baseEnv, capture = false) {
   return execFileSync(command, args, {
     cwd: root,
@@ -74,7 +86,7 @@ function run(command, args, env = baseEnv, capture = false) {
     encoding: 'utf8',
   })?.trim();
 }
-function compose(accounts, args, capture = false) {
+function compose(accounts, args, capture = false, extraEnv = {}) {
   return run(
     'docker',
     [
@@ -87,8 +99,61 @@ function compose(accounts, args, capture = false) {
       'docker-compose.hardening.yml',
       ...args,
     ],
-    accounts ? accountsEnv : baseEnv,
+    { ...(accounts ? accountsEnv : baseEnv), ...extraEnv },
     capture,
+  );
+}
+function provision(accounts) {
+  const database = (accounts ? accountsEnv : baseEnv).HARDENING_DATABASE;
+  compose(
+    accounts,
+    [
+      'run',
+      '--rm',
+      '--no-deps',
+      '-e',
+      'ADMIN_DATABASE_URL',
+      '-e',
+      'DATABASE_ADMIN_CONFIRM',
+      '-e',
+      'RUNTIME_PASSWORD',
+      '-e',
+      'MIGRATION_PASSWORD',
+      '-e',
+      'BACKUP_PASSWORD',
+      'api',
+      'node',
+      'dist/provision-roles.js',
+    ],
+    false,
+    {
+      ADMIN_DATABASE_URL: `postgresql://hardening:local_disposable_database_password@postgres:5432/${database}`,
+      DATABASE_ADMIN_CONFIRM: database,
+      RUNTIME_PASSWORD: keys.runtime,
+      MIGRATION_PASSWORD: keys.migrator,
+      BACKUP_PASSWORD: keys.backup,
+    },
+  );
+}
+function migrate(accounts, command = 'migrate', extras = []) {
+  const env = accounts ? accountsEnv : baseEnv;
+  compose(
+    accounts,
+    [
+      'run',
+      '--rm',
+      '--no-deps',
+      '-e',
+      'DATABASE_URL',
+      ...extras,
+      'api',
+      'node',
+      `dist/${command}.js`,
+    ],
+    false,
+    {
+      DATABASE_URL: `postgresql://clientops_migrator:${keys.migrator}@postgres:5432/${env.HARDENING_DATABASE}`,
+    },
   );
 }
 function snapshot() {
@@ -217,7 +282,8 @@ if (hasTables === '0') {
     ]);
 }
 const before = snapshot();
-compose(false, ['run', '--rm', '--no-deps', 'api', 'node', 'dist/migrate.js']);
+provision(false);
+migrate(false);
 const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
@@ -240,7 +306,8 @@ writeFileSync(
 compose(false, ['up', '-d', '--no-build', '--wait']);
 compose(false, ['up', '-d', '--no-deps', '--force-recreate', '--wait', 'nginx']);
 compose(true, ['up', '-d', '--wait', 'postgres', 'mailpit']);
-compose(true, ['run', '--rm', '--no-deps', 'api', 'node', 'dist/migrate.js']);
+provision(true);
+migrate(true);
 const hasAdmin = compose(
   true,
   [
@@ -258,19 +325,13 @@ const hasAdmin = compose(
   true,
 );
 if (hasAdmin === '0')
-  compose(true, [
-    'run',
-    '--rm',
-    '--no-deps',
+  migrate(true, 'bootstrap', [
     '-e',
     'BOOTSTRAP_NAME=Fictional Workspace Owner',
     '-e',
     'BOOTSTRAP_EMAIL=owner@accounts.example',
     '-e',
     'BOOTSTRAP_PASSWORD=Local-owner-passphrase-42',
-    'api',
-    'node',
-    'dist/bootstrap.js',
   ]);
 compose(true, ['up', '-d', '--no-build', '--wait']);
 compose(true, ['up', '-d', '--no-deps', '--force-recreate', '--wait', 'nginx']);
