@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { request } from '@playwright/test';
+import { readMailboxJson } from './mailbox-read.mjs';
 
 export const local = process.argv.includes('--ops');
 export const project = local ? 'clientops-ops' : 'clientops-hardening';
@@ -73,7 +74,7 @@ export async function waitFor(check, message, timeout = 120000) {
   throw new Error(message);
 }
 export async function mailMessages(email) {
-  const inbox = await (await fetch(`${mailbox}/api/v1/messages`)).json();
+  const inbox = await readMailboxJson(`${mailbox}/api/v1/messages`);
   return inbox.messages.filter((item) => item.To.some((recipient) => recipient.Address === email));
 }
 export async function mailToken(email, reset = false, exclude = '', ignoredMessageIds = []) {
@@ -82,7 +83,7 @@ export async function mailToken(email, reset = false, exclude = '', ignoredMessa
     for (const message of await mailMessages(email)) {
       if (ignoredMessageIds.includes(message.ID)) continue;
       if (!message.Subject.includes(reset ? 'Reset' : 'invitation')) continue;
-      const body = await (await fetch(`${mailbox}/api/v1/message/${message.ID}`)).json();
+      const body = await readMailboxJson(`${mailbox}/api/v1/message/${message.ID}`);
       const candidate = body.Text.match(/#token=([a-f0-9]{64})/)?.[1];
       if (candidate && candidate !== exclude) {
         token = candidate;

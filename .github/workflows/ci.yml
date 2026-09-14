@@ -89,6 +89,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Verification helper regressions
+        run: pnpm test:verification
+
       - name: Build
         run: pnpm build
 

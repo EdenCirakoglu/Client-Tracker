@@ -41,6 +41,7 @@ $env:MAILPIT_URL='http://localhost:18026'
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:verification
 pnpm build
 pnpm format:check
 $env:BROWSER_CHANNEL='chrome'
@@ -75,6 +76,14 @@ Manual launch acceptance still required: real screen reader (NVDA/VoiceOver) log
 ## Draft PR and Hosted CI
 
 [Draft PR #4](https://github.com/EdenCirakoglu/Client-Tracker/pull/4) preserves separate privacy/release/readiness/backend/UI commits. It must remain unmerged.
+
+### Intermittent Mailbox Read Follow-up
+
+Run [34835318255](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34835318255), revision `77236fc`, failed during the SMTP recovery drill with `UND_ERR_SOCKET`; the later rerun reproduced it. Raw Node `fetch()` in that drill reads the restarted Mailpit HTTP service, not the API's container-only port 8080. The log does not identify an API crash. A controlled loopback server reproduced the same socket-closure failure with the old one-shot read. Later passing runs below did not eliminate this intermittent harness gap.
+
+Mailbox list/message reads now retry only connection resets/refusals/timeouts and HTTP 502/503/504, with a ten-second overall deadline, two-second per-attempt/body timeout and 250ms delay. Invalid JSON and other HTTP errors fail immediately with redacted diagnostics. Permanent unavailability still fails the check. No mutation is replayed, no port is newly exposed, and exact liveness/readiness/outage assertions remain unchanged. Existing Compose startup already waits for container health; adding unrelated host-port probes is not the fix.
+
+`pnpm test:verification` uses Node's built-in test runner and ephemeral loopback HTTP servers, with no database or Docker dependency. Eight regression cases cover first-connection closure, temporary 503, interrupted JSON, stalled body recovery, persistent reset, a hanging server, HTTP 401 and malformed JSON. CI runs this extra gate without replacing any existing check. The PR's latest checks identify the tested follow-up revision; earlier results below remain attributed to their original heads.
 
 [First hosted attempt 34834958998](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34834958998), revision `9f94b2ff34128b21a11a59cad31942cce6d9fc41`, passed source gates, 75 tests, builds, Compose, nine browser scenarios, native zoom and the outage drill, but **failed restore preconditions**. Polling could select an older consumed reset message before the new one arrived. The harness now excludes all pre-existing message IDs and retains the assertion that the new token is live in PostgreSQL before backup. A local rerun with that harness correction passed (dump 301ms; restored startup 22322ms), without removing any check. That rerun used `77236fc` application images plus the then-uncommitted harness correction.
 
