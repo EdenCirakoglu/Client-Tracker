@@ -6,6 +6,8 @@ PR #3 is merged as `bdc749421187c017f4cc3ba36b2b9ef1d09fda80`. Main CI and image
 
 ## Operations UI and Account Hardening: Historical PR Evidence
 
+For the subsequent unmerged operations work, see [operations review evidence](OPERATIONS_READINESS.md). The dated sections below are retained historical checkpoints, not the current branch or release status.
+
 [PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3) was draft and unmerged at this historical checkpoint. Tested application revision:
 `4614642887c69bf112efb32dd59c6dff3d583b9e`. The evidence-only commit that records
 these results follows it; later head checks are linked from the PR, not assigned

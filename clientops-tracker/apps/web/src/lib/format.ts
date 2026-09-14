@@ -40,5 +40,9 @@ export function ticketReference(id: string) {
 
 export function openedAge(value: string, now = Date.now()) {
   const days = Math.max(0, Math.floor((now - new Date(value).getTime()) / 86400000));
-  return days === 0 ? 'Opened today' : days === 1 ? 'Opened 1 day ago' : `Opened ${days} days ago`;
+  return days === 0
+    ? 'Opened under 24h ago'
+    : days === 1
+      ? 'Opened 1 day ago'
+      : `Opened ${days} days ago`;
 }

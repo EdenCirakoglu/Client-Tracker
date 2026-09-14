@@ -113,6 +113,18 @@ jobs:
           ACCOUNT_MAIL_URL: http://localhost:8026
         run: pnpm test:e2e
 
+      - name: Native zoom and focused UI acceptance
+        env:
+          E2E_ALLOW_DISPOSABLE_DEMO: "true"
+          VERIFY_URL: https://localhost:8443
+        run: node scripts/verify-ui-acceptance.mjs
+
+      - name: Database and SMTP outage recovery
+        run: node scripts/verify-operations.mjs
+
+      - name: Populated restore and pinned rollback
+        run: node scripts/verify-restore.mjs
+
       - name: Check browser artifact privacy
         id: artifact-privacy
         if: always()

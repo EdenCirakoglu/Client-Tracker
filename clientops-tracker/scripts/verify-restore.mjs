@@ -104,8 +104,16 @@ try {
     200,
   );
   const liveCookie = await api.storageState();
+  const previousReset = await mailToken(email, true);
   await mutation(anonymous, '/api/auth/forgot-password', { email });
-  const liveReset = await mailToken(email, true);
+  const liveReset = await mailToken(email, true, previousReset);
+  const liveResetHash = createHash('sha256').update(liveReset).digest('hex');
+  assert.equal(
+    query(
+      `SELECT count(*) FROM account_tokens WHERE token_hash='${liveResetHash}' AND consumed_at IS NULL AND expires_at > now()`,
+    ),
+    '1',
+  );
   const before = query(fingerprintSql);
   const dumpStarted = Date.now();
   const args = [
