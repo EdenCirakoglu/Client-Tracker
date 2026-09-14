@@ -51,6 +51,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
 
       - name: Record tested revision
         run: git rev-parse HEAD
@@ -70,6 +71,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Public information and secret scan
+        run: node scripts/secret-scan.mjs
+
       - name: Lint
         run: pnpm lint
 
@@ -84,6 +88,9 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Verification helper regressions
+        run: pnpm test:verification
 
       - name: Build
         run: pnpm build
@@ -109,8 +116,25 @@ jobs:
           ACCOUNT_MAIL_URL: http://localhost:8026
         run: pnpm test:e2e
 
-      - name: Preserve browser reports and screenshots
+      - name: Native zoom and focused UI acceptance
+        env:
+          E2E_ALLOW_DISPOSABLE_DEMO: "true"
+          VERIFY_URL: https://localhost:8443
+        run: node scripts/verify-ui-acceptance.mjs
+
+      - name: Database and SMTP outage recovery
+        run: node scripts/verify-operations.mjs
+
+      - name: Populated restore and pinned rollback
+        run: node scripts/verify-restore.mjs
+
+      - name: Check browser artifact privacy
+        id: artifact-privacy
         if: always()
+        run: node scripts/check-browser-evidence.mjs
+
+      - name: Preserve browser reports and screenshots
+        if: always() && steps.artifact-privacy.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: browser-evidence-${{ github.event.pull_request.head.sha || github.sha }}

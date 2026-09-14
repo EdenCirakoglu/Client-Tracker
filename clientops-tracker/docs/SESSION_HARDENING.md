@@ -43,7 +43,8 @@ databases. It has tmpfs storage and may be destroyed/recreated. Tests require an
 explicit URL/name and never fall back to `DATABASE_URL` or a production env file.
 
 ```powershell
-cd "C:\Users\PnP\Desktop\Client Tracker\clientops-tracker"
+# From the Git repository root:
+cd clientops-tracker
 pnpm.cmd install --frozen-lockfile
 pnpm.cmd db:test:up
 $env:TEST_DATABASE_URL='postgresql://clientops_test:disposable_test_password@localhost:55434/clientops_hardening_test'

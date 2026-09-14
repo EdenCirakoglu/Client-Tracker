@@ -89,7 +89,7 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await page.getByLabel('Organisation', { exact: true }).selectOption({ label: organisation });
   await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Fictional Client Contact');
   await page.getByRole('button', { name: 'Send invitation', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Invitation sent.');
+  await expect(page.getByText('Invitation queued.', { exact: true })).toBeVisible();
   const resend = page.getByRole('button', { name: 'Resend', exact: true }).first();
   await expect(resend).toBeVisible();
   expect(
@@ -163,7 +163,7 @@ test('password change requires confirmation and ends existing sessions', async (
   await page.getByLabel('Name', { exact: true }).fill('Fictional Developer');
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByRole('button', { name: 'Send invitation', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Invitation sent.');
+  await expect(page.getByText('Invitation queued.', { exact: true })).toBeVisible();
   const invitation = await emailLink(page, email);
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);

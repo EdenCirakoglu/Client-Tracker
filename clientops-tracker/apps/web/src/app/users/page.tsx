@@ -8,6 +8,7 @@ import { api, type Account } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import type { Client, UserRole } from '../../lib/types';
 import Link from 'next/link';
+import { MailDeliveryStatus } from '../../components/mail-delivery-status';
 
 function Accounts() {
   const { user } = useAuth();
@@ -57,7 +58,7 @@ function Accounts() {
         setMessage('Account updated. Previous sessions have ended.');
       } else {
         await api.invite({ name, email, ...assignment });
-        setMessage('Invitation sent.');
+        setMessage('Invitation queued.');
       }
       reset();
       await load();
@@ -243,6 +244,7 @@ function Accounts() {
           </form>
         </section>
       </div>
+      <MailDeliveryStatus refresh={message ?? ''} />
     </>
   );
 }

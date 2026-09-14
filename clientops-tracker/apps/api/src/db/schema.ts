@@ -131,6 +131,37 @@ export const accountTokens = pgTable(
   }),
 );
 
+export const mailOutbox = pgTable(
+  'mail_outbox',
+  {
+    id: uuid('id').primaryKey(),
+    tokenId: uuid('token_id').references(() => accountTokens.id, { onDelete: 'cascade' }),
+    kind: varchar('kind', { length: 24 }).notNull(),
+    payload: text('payload'),
+    status: varchar('status', { length: 16 }).notNull().default('PENDING'),
+    attempts: integer('attempts').notNull().default(0),
+    availableAt: timestamp('available_at', { withTimezone: true }).notNull().defaultNow(),
+    leaseId: uuid('lease_id'),
+    leaseUntil: timestamp('lease_until', { withTimezone: true }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    lastError: varchar('last_error', { length: 32 }),
+  },
+  (table) => ({
+    queueIdx: index('mail_outbox_queue_idx').on(table.status, table.availableAt),
+    statusCheck: check(
+      'mail_outbox_status_check',
+      sql`${table.status} IN ('PENDING', 'SENDING', 'DELIVERED', 'EXPIRED', 'FAILED')`,
+    ),
+    kindCheck: check(
+      'mail_outbox_kind_check',
+      sql`${table.kind} IN ('INVITATION', 'PASSWORD_RESET', 'RECOVERY_REQUEST')`,
+    ),
+    attemptsCheck: check('mail_outbox_attempts_check', sql`${table.attempts} BETWEEN 0 AND 8`),
+  }),
+);
+
 export const bootstrapState = pgTable(
   'bootstrap_state',
   {

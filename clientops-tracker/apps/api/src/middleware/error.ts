@@ -4,6 +4,7 @@ import { ZodError } from 'zod';
 import { env } from '../config/env';
 import { ApiError } from '../utils/http';
 import { invalidCsrfTokenError } from './session';
+import { databaseUnavailable } from '../db/readiness';
 
 export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({
@@ -15,6 +16,18 @@ export const notFoundHandler: RequestHandler = (req, res) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (databaseUnavailable(error)) {
+    res
+      .set('Retry-After', '5')
+      .status(503)
+      .json({
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Service temporarily unavailable. Please retry.',
+        },
+      });
+    return;
+  }
   if (error === invalidCsrfTokenError) {
     res.status(403).json({
       error: {
@@ -57,13 +70,13 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   }
 
   if (env.NODE_ENV !== 'test') {
-    console.error(error);
+    console.error('Unexpected API request failure.');
   }
 
   res.status(500).json({
     error: {
       code: 'INTERNAL_SERVER_ERROR',
-      message: env.NODE_ENV === 'production' ? 'Unexpected server error.' : error.message,
+      message: 'Unexpected server error.',
     },
   });
 };

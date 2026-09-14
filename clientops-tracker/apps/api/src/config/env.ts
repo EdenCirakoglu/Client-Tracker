@@ -16,6 +16,7 @@ const origin = z
   );
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  DEPLOYMENT_MODE: z.enum(['production', 'disposable']).default('production'),
   PORT: z.coerce.number().int().positive().default(8080),
   DATABASE_URL: z.string().url(),
   APP_ORIGIN: origin.default('http://localhost:3000'),
@@ -32,6 +33,10 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   MAIL_FROM: z.string().email().default('clientops@example.com'),
+  MAIL_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/i)
+    .optional(),
 });
 
 export const env = envSchema.parse(process.env);
@@ -56,3 +61,27 @@ if (env.SMTP_MODE === 'capture' && !['localhost', '127.0.0.1', 'mailpit'].includ
   throw new Error('Capture mail must use the local mail service.');
 if (env.SMTP_MODE === 'smtp' && (!env.SMTP_USER || !env.SMTP_PASSWORD))
   throw new Error('Production SMTP requires credentials.');
+if (env.NODE_ENV === 'production' && !env.MAIL_ENCRYPTION_KEY)
+  throw new Error('Production requires a separate random MAIL_ENCRYPTION_KEY (32 bytes, hex).');
+
+if (env.NODE_ENV === 'production') {
+  if (env.DEPLOYMENT_MODE === 'disposable') {
+    assertDisposableDatabase(env.DATABASE_URL, process.env.DISPOSABLE_DATABASE_NAME, 'seed');
+    if (
+      !['localhost', '127.0.0.1', '[::1]'].includes(new URL(env.APP_ORIGIN).hostname) ||
+      env.SMTP_MODE !== 'capture'
+    )
+      throw new Error(
+        'Disposable production-style fixtures require loopback HTTPS and capture mail.',
+      );
+  } else if (
+    env.DEMO_MODE ||
+    env.SMTP_MODE !== 'smtp' ||
+    process.env.DISPOSABLE_DATABASE_NAME ||
+    /(?:demo|test)$/.test(new URL(env.DATABASE_URL).pathname)
+  ) {
+    throw new Error('Production forbids demo/test databases, demo login and capture SMTP.');
+  }
+  if (new Set(env.MAIL_ENCRYPTION_KEY).size < 8 || new Set(env.SESSION_SECRET).size < 8)
+    throw new Error('Production keys must be independently generated random values.');
+}

@@ -80,7 +80,7 @@ export default function DashboardPage() {
               </time>
             </span>
           </div>
-          <div className="mb-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="mb-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
             {[
               {
                 label: client ? 'Active requests' : 'Unresolved',
@@ -111,13 +111,15 @@ export default function DashboardPage() {
                 key={label}
                 href={`/tickets?${query}`}
                 aria-label={`${label}: ${value}`}
-                className="rounded-lg border border-border bg-panel p-4 hover:border-brand-600 lg:p-5"
+                className="rounded-lg border border-border bg-panel p-3 hover:border-brand-600 sm:p-4 lg:p-5"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm text-muted">{label}</span>
-                  <Icon className="h-4 w-4 text-muted" />
+                  <span className="text-xs text-muted sm:text-sm">{label}</span>
+                  <Icon className="hidden h-4 w-4 shrink-0 text-muted sm:block" />
                 </div>
-                <span className="mt-3 block text-3xl font-semibold tabular-nums">{value}</span>
+                <span className="mt-1 block text-2xl font-semibold tabular-nums sm:mt-3 sm:text-3xl">
+                  {value}
+                </span>
               </Link>
             ))}
           </div>

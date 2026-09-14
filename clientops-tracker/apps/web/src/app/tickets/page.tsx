@@ -74,9 +74,9 @@ function TicketList() {
         title="Tickets"
       />
 
-      <div className="mb-4 grid gap-3 md:grid-cols-5">
+      <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-5">
         <Input
-          className="md:col-span-2"
+          className="col-span-2"
           aria-label="Search tickets"
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search tickets"
@@ -108,6 +108,7 @@ function TicketList() {
           ))}
         </Select>
         <Select
+          className="col-span-2 md:col-span-1"
           aria-label="Filter by category"
           onChange={(event) => setFilter('category', event.target.value)}
           value={categoryFilter}
@@ -121,7 +122,7 @@ function TicketList() {
         </Select>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-3 grid grid-cols-2 items-center gap-3 md:flex md:flex-wrap">
         {user?.role !== 'CLIENT' ? (
           <Select
             className="max-w-48"
@@ -169,7 +170,7 @@ function TicketList() {
           <p role="status" className="mb-3 text-sm text-muted">
             {ticketsState.data.total} tickets found
           </p>
-          <DataTable>
+          <DataTable className="lg:[&_td]:px-3 lg:[&_td]:py-2">
             <thead>
               <tr>
                 <Th>Ticket</Th>
@@ -185,7 +186,7 @@ function TicketList() {
             <tbody className="divide-y divide-border">
               {filteredTickets.map((ticket) => (
                 <tr key={ticket.id}>
-                  <Td className="min-w-72">
+                  <Td className="min-w-64">
                     <Link
                       className="font-semibold text-ink hover:text-brand-700"
                       href={`/tickets/${ticket.id}`}
@@ -202,7 +203,9 @@ function TicketList() {
                       <Badge value={ticket.status} />
                       <Badge value={ticket.priority} />
                     </div>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted">{ticket.description}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted lg:line-clamp-1">
+                      {ticket.description}
+                    </p>
                   </Td>
                   <Td>{ticket.project?.name ?? 'Not available'}</Td>
                   <Td>{ticket.client.name}</Td>
@@ -216,7 +219,13 @@ function TicketList() {
                     <Badge value={ticket.category} />
                   </Td>
                   <Td>{ticket.assignee?.name ?? 'Unassigned'}</Td>
-                  <Td>{formatDate(ticket.createdAt)}</Td>
+                  <Td className="whitespace-nowrap">
+                    <time dateTime={ticket.createdAt} title={formatDate(ticket.createdAt)}>
+                      {new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(
+                        new Date(ticket.createdAt),
+                      )}
+                    </time>
+                  </Td>
                 </tr>
               ))}
             </tbody>

@@ -48,15 +48,12 @@ authRouter.post(
   rateLimit('recovery-ip', 20, 3600),
   rateLimit('recovery-email', 5, 3600, true),
   validateRequest({ body: z.object({ email: emailSchema }).strict() }),
-  asyncHandler((req, res) => {
-    // Identical response precedes mailbox lookup/delivery, avoiding SMTP timing enumeration.
+  asyncHandler(async (req, res) => {
+    await requestPasswordReset(req.body.email);
     sendSuccess(
       res,
       { message: 'If this account can sign in, a password reset link will be sent.' },
       202,
-    );
-    void requestPasswordReset(req.body.email).catch(() =>
-      console.error('Password recovery delivery failed.'),
     );
   }),
 );

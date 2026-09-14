@@ -17,6 +17,7 @@ import {
 import { env } from '../src/config/env';
 import { hashToken } from '../src/middleware/session';
 import { bootstrapAdministrator } from '../src/services/account.service';
+import { drainMail } from '../src/services/mail-outbox.service';
 import { anonymousSession, authHeader, loginResponse, loginSession } from './helpers/auth';
 
 const app = createApp();
@@ -24,6 +25,7 @@ const password = 'Fictional-test-passphrase-42';
 const mailUrl = process.env.MAILPIT_URL ?? 'http://localhost:18025';
 
 async function mailToken(email: string, reset = false) {
+  await drainMail(30);
   let token = '';
   await expect
     .poll(

@@ -1,31 +1,61 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import { resolve } from 'node:path';
 
 // This runbook only manages these two named loopback fixtures, never development volumes.
 const root = process.cwd();
 const uiFixture = process.argv.includes('--ui');
-const demoProject = uiFixture ? 'clientops-ui' : 'clientops-hardening';
-const accountsProject = uiFixture ? 'clientops-ui-accounts' : 'clientops-accounts';
+const opsFixture = process.argv.includes('--ops');
+const demoProject = opsFixture
+  ? 'clientops-ops'
+  : uiFixture
+    ? 'clientops-ui'
+    : 'clientops-hardening';
+const accountsProject = opsFixture
+  ? 'clientops-ops-accounts'
+  : uiFixture
+    ? 'clientops-ui-accounts'
+    : 'clientops-accounts';
 const legacy =
-  'ghcr.io/edencirakoglu/client-tracker-api@sha256:0e500d2bde8d2dc055d106befede3b1edb78becfd211cf6d46bbbc088487be6d';
+  'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83';
+mkdirSync('test-results/tls', { recursive: true });
+const keysFile = `test-results/tls/${demoProject}-keys.json`;
+if (!existsSync(keysFile))
+  writeFileSync(
+    keysFile,
+    JSON.stringify({
+      session: randomBytes(48).toString('hex'),
+      mail: randomBytes(32).toString('hex'),
+    }),
+    { mode: 0o600 },
+  );
+const keys = JSON.parse(readFileSync(keysFile, 'utf8'));
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: uiFixture ? 'clientops_ui_demo' : 'clientops_hardening_demo',
-  HTTPS_PORT: uiFixture ? '8445' : '8443',
-  MAIL_PORT: uiFixture ? '8027' : '8025',
+  HARDENING_DATABASE: opsFixture
+    ? 'clientops_ops_demo'
+    : uiFixture
+      ? 'clientops_ui_demo'
+      : 'clientops_hardening_demo',
+  HTTPS_PORT: opsFixture ? '8452' : uiFixture ? '8445' : '8443',
+  MAIL_PORT: opsFixture ? '8032' : uiFixture ? '8027' : '8025',
   HARDENING_API_IMAGE: `${demoProject}-api:local`,
   HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
-  SESSION_SECRET: 'local_7a63af495caf28e6a280bcd13949726b5507afacefe37491',
+  SESSION_SECRET: keys.session,
+  MAIL_ENCRYPTION_KEY: keys.mail,
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: uiFixture ? 'clientops_ui_accounts_demo' : 'clientops_accounts_demo',
-  HTTPS_PORT: uiFixture ? '8446' : '8444',
-  MAIL_PORT: uiFixture ? '8028' : '8026',
+  HARDENING_DATABASE: opsFixture
+    ? 'clientops_ops_accounts_demo'
+    : uiFixture
+      ? 'clientops_ui_accounts_demo'
+      : 'clientops_accounts_demo',
+  HTTPS_PORT: opsFixture ? '8453' : uiFixture ? '8446' : '8444',
+  MAIL_PORT: opsFixture ? '8033' : uiFixture ? '8028' : '8026',
   DEMO_MODE: 'false',
-  SESSION_SECRET: 'local_29a7f021c06e9272ad63182be3a7fa9fbe11b049e07953ef',
 };
 function run(command, args, env = baseEnv, capture = false) {
   return execFileSync(command, args, {
@@ -64,10 +94,7 @@ function snapshot() {
       'releases',
       'triage_suggestions',
     ].map((table) => {
-      const row =
-        table === 'users'
-          ? "to_jsonb(t) - 'account_status' - 'auth_version' - 'is_demo'"
-          : 'to_jsonb(t)';
+      const row = 'to_jsonb(t)';
       const result = compose(
         false,
         [
@@ -100,11 +127,24 @@ if (action === 'snapshot') {
 }
 if (action !== 'start')
   throw new Error('Use start, stop or snapshot. No reset command is provided.');
-mkdirSync('test-results/tls', { recursive: true });
-if (!existsSync('test-results/tls/cert.pem')) {
-  const openssl =
-    process.env.OPENSSL_PATH ??
-    (process.platform === 'win32' ? 'C:\\Program Files\\Git\\usr\\bin\\openssl.exe' : 'openssl');
+const openssl =
+  process.env.OPENSSL_PATH ??
+  (process.platform === 'win32' ? 'C:\\Program Files\\Git\\usr\\bin\\openssl.exe' : 'openssl');
+let renewCertificate =
+  !existsSync('test-results/tls/cert.pem') || !existsSync('test-results/tls/key.pem');
+if (!renewCertificate) {
+  try {
+    run(
+      openssl,
+      ['x509', '-checkend', '86400', '-noout', '-in', 'test-results/tls/cert.pem'],
+      baseEnv,
+      true,
+    );
+  } catch {
+    renewCertificate = true;
+  }
+}
+if (renewCertificate) {
   run(openssl, [
     'req',
     '-x509',
@@ -173,7 +213,7 @@ const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  `test-results/${uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
+  `test-results/${opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),

@@ -22,6 +22,12 @@ export function formatHours(value: number | null) {
   return `${value}h`;
 }
 
+export function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(
+    new Date(value),
+  );
+}
+
 export function titleCase(value: string) {
   return value
     .split('_')
@@ -30,4 +36,13 @@ export function titleCase(value: string) {
 }
 export function ticketReference(id: string) {
   return `CT-${id.slice(0, 8).toUpperCase()}`;
+}
+
+export function openedAge(value: string, now = Date.now()) {
+  const days = Math.max(0, Math.floor((now - new Date(value).getTime()) / 86400000));
+  return days === 0
+    ? 'Opened under 24h ago'
+    : days === 1
+      ? 'Opened 1 day ago'
+      : `Opened ${days} days ago`;
 }

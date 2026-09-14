@@ -27,14 +27,13 @@ The web application calls Express with cookie sessions and synchronizer CSRF tok
 
 ## Testing and CI
 
-The unmerged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
-has [verified CI at `4614642`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34612080774):
+The merged [session hardening PR #3](https://github.com/EdenCirakoglu/Client-Tracker/pull/3)
+has [verified main CI at `bdc7494`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34767427740):
 60 API/configuration tests and nine real browser/accessibility scenarios, including
 HTTPS cookies, Mailpit invitation/recovery, role queues, URL filters, both themes
 and a populated database upgrade without reseeding. Earlier results at `2341e61`
 remain revision-specific in the release evidence.
-These are runner/local verification results, not a production email service or
-public deployment. Exact revisions and reports are in the release evidence below.
+Both published images were additionally pulled and tested locally without rebuilding: nine browser scenarios, organisation isolation, logout replay rejection and persistence passed. [Release evidence](docs/RELEASE_BDC749.md) separates hosted CI, publication and local verification. Neither production email nor public deployment is claimed.
 
 The merged release revision `3fa8d7f` passed hosted CI with 37 API tests and four browser/accessibility scenarios. Both GHCR images were published for that exact SHA, pulled locally without rebuilding, and passed all four browser scenarios again. Database fingerprints verified persistence after full container recreation and preservation of existing databases. See [published-image evidence](docs/REGISTRY_VERIFICATION.md) for exact revisions, digests and reports. Twenty-one fictional-data screenshots are included in [the screenshot index](docs/SCREENSHOTS.md). Public deployment has not been performed.
 
@@ -50,7 +49,7 @@ The older main commit (`611ca061`) contained the placeholder frontend. PR #1 pre
 
 ## Future Improvements
 
-Cookie sessions, recovery, invitations and PostgreSQL-backed authentication rate limits are implemented in the hardening branch. Its [UI refinement](docs/UI_REFINEMENT.md) adds role-specific work queues, database-backed pagination, exact metric links, private activity and consistent accessible themes. The expanded suite retains earlier coverage and adds dashboard behavior: 60 API/configuration tests and nine browser scenarios, with revision-specific results in the release evidence. The next milestone covers backup/restore drills, monitoring, real TLS/secrets/SMTP configuration, security-event audit retention and durable email delivery. MFA, pagination of remaining legacy collections, integrations and an optional provider-backed triage adapter remain future improvements. See [session hardening](docs/SESSION_HARDENING.md) for design and local verification, distinct from public deployment.
+Cookie sessions, recovery, invitations and PostgreSQL-backed authentication rate limits were merged in `bdc7494`. Its [UI refinement](docs/UI_REFINEMENT.md) adds role-specific work queues, database-backed pagination, exact metric links, private activity and consistent accessible themes. That release passed 60 API/configuration tests and nine browser scenarios. The subsequent [operations review](docs/OPERATIONS_READINESS.md) adds database readiness, encrypted durable email delivery, restore/rollback rehearsals, privacy safeguards and focused UI acceptance; its evidence and unmerged status are separate. Public TLS, SMTP, off-host backups and tested alerts remain operator launch requirements. MFA, pagination of remaining legacy collections, integrations and an optional provider-backed triage adapter remain future improvements.
 
 ## Links
 
