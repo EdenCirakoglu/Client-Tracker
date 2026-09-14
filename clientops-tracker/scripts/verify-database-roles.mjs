@@ -1,7 +1,61 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { compose, database, project, query } from './lib/ops-fixture.mjs';
+import { compose, database, environment, keys, project, query } from './lib/ops-fixture.mjs';
+
+// Only this named disposable fixture is changed. Re-provisioning must remove stale direct grants.
+const fingerprint = query(
+  "SELECT md5(string_agg(to_jsonb(t)::text, '' ORDER BY id)) FROM tickets t",
+);
+query(`GRANT CREATE, TEMPORARY ON DATABASE ${database} TO clientops_runtime, clientops_backup;
+  GRANT CREATE ON SCHEMA public TO clientops_runtime, clientops_backup;
+  GRANT UPDATE ON tickets TO clientops_backup`);
+try {
+  compose(
+    [
+      'run',
+      '--rm',
+      '--no-deps',
+      '-e',
+      'ADMIN_DATABASE_URL',
+      '-e',
+      'DATABASE_ADMIN_CONFIRM',
+      '-e',
+      'MIGRATION_PASSWORD',
+      '-e',
+      'RUNTIME_PASSWORD',
+      '-e',
+      'BACKUP_PASSWORD',
+      'api',
+      'node',
+      'dist/provision-roles.js',
+    ],
+    {
+      env: {
+        ...environment,
+        ADMIN_DATABASE_URL: `postgresql://hardening:local_disposable_database_password@postgres:5432/${database}`,
+        DATABASE_ADMIN_CONFIRM: database,
+        MIGRATION_PASSWORD: keys.migrator,
+        RUNTIME_PASSWORD: keys.runtime,
+        BACKUP_PASSWORD: keys.backup,
+      },
+    },
+  );
+  assert.equal(
+    query(
+      "SELECT has_table_privilege('clientops_backup','tickets','UPDATE') OR has_database_privilege('clientops_runtime',current_database(),'CREATE') OR has_database_privilege('clientops_backup',current_database(),'TEMPORARY') OR has_schema_privilege('clientops_backup','public','CREATE')",
+    ),
+    'f',
+  );
+} finally {
+  query(`REVOKE CREATE, TEMPORARY ON DATABASE ${database} FROM clientops_runtime, clientops_backup;
+    REVOKE CREATE ON SCHEMA public FROM clientops_runtime, clientops_backup;
+    REVOKE UPDATE ON tickets FROM clientops_backup`);
+}
+assert.equal(
+  query("SELECT md5(string_agg(to_jsonb(t)::text, '' ORDER BY id)) FROM tickets t"),
+  fingerprint,
+);
 
 compose(['exec', '-T', 'api', 'node', 'dist/check-runtime-role.js']);
 assert.throws(
@@ -70,6 +124,7 @@ writeFileSync(
       ...checked,
       backupReadOnly: true,
       migrationOwnerSeparate: true,
+      stalePrivilegesRemovedWithoutChangingTickets: true,
       checkedAt: new Date().toISOString(),
     },
     null,

@@ -21,6 +21,7 @@ export async function grantRuntimeAccess(client: PoolClient | Pool) {
   const role = await client.query("SELECT 1 FROM pg_roles WHERE rolname='clientops_runtime'");
   if (!role.rowCount) return; // Existing development/test databases need no new cluster roles.
   await client.query('REVOKE ALL ON SCHEMA public FROM PUBLIC');
+  await client.query('REVOKE ALL ON SCHEMA public FROM clientops_runtime');
   await client.query('GRANT USAGE ON SCHEMA public TO clientops_runtime');
   await client.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM clientops_runtime, PUBLIC');
   for (const table of applicationTables) {
@@ -43,6 +44,11 @@ export async function grantRuntimeAccess(client: PoolClient | Pool) {
     await client.query(`GRANT ${operations} ON public.${table} TO clientops_runtime`);
   }
   if ((await client.query("SELECT 1 FROM pg_roles WHERE rolname='clientops_backup'")).rowCount) {
+    await client.query('REVOKE ALL ON SCHEMA public, drizzle FROM clientops_backup');
+    await client.query('REVOKE ALL ON ALL TABLES IN SCHEMA public, drizzle FROM clientops_backup');
+    await client.query(
+      'REVOKE ALL ON ALL SEQUENCES IN SCHEMA public, drizzle FROM clientops_backup',
+    );
     await client.query('GRANT USAGE ON SCHEMA public, drizzle TO clientops_backup');
     await client.query('GRANT SELECT ON ALL TABLES IN SCHEMA public, drizzle TO clientops_backup');
     await client.query(

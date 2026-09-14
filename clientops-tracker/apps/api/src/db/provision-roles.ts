@@ -57,7 +57,7 @@ try {
   const {
     rows: [databaseGrant],
   } = await client.query(
-    "SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC; GRANT CONNECT ON DATABASE %I TO clientops_runtime, clientops_migrator, clientops_backup; GRANT CREATE ON DATABASE %I TO clientops_migrator', current_database(), current_database(), current_database()) AS sql",
+    "SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC, clientops_runtime, clientops_backup; GRANT CONNECT ON DATABASE %I TO clientops_runtime, clientops_migrator, clientops_backup; GRANT CREATE ON DATABASE %I TO clientops_migrator', current_database(), current_database(), current_database()) AS sql",
   );
   await client.query(databaseGrant.sql);
   for (const schema of ['public', 'drizzle']) {
