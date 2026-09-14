@@ -242,19 +242,23 @@ test('real administrator, developer and client workflows with persisted advisory
     });
     try {
       await page.getByLabel('Status', { exact: true }).selectOption('IN_PROGRESS');
-      await expect(page.getByRole('status')).toHaveText('Saving changes...');
+      await expect(page.getByRole('status', { name: 'Ticket update' })).toHaveText(
+        'Saving changes...',
+      );
       await expect(page.getByLabel('Status', { exact: true })).toBeDisabled();
     } finally {
       releaseRequest();
     }
-    await expect(page.getByRole('status')).toHaveText('Changes saved.');
+    await expect(page.getByRole('status', { name: 'Ticket update' })).toHaveText('Changes saved.');
     await page.unroute(endpoint);
     for (const [label, value] of [
       ['Priority', 'HIGH'],
       ['Category', 'BUG'],
     ] as const) {
       await page.getByLabel(label, { exact: true }).selectOption(value);
-      await expect(page.getByRole('status')).toHaveText('Changes saved.');
+      await expect(page.getByRole('status', { name: 'Ticket update' })).toHaveText(
+        'Changes saved.',
+      );
       await expect(page.getByLabel(label, { exact: true })).toHaveValue(value);
     }
     await capture(page, 'ticket-update-saved');

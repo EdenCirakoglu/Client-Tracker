@@ -258,7 +258,12 @@ export default function TicketDetailPage() {
                   </div>
                 </div>
                 <div className="min-h-10 px-5 pb-4 text-sm">
-                  <p role="status" aria-live="polite" className="text-brand-700">
+                  <p
+                    role="status"
+                    aria-label="Ticket update"
+                    aria-live="polite"
+                    className="text-brand-700"
+                  >
                     {updateMessage}
                   </p>
                   {updateError ? (
@@ -339,7 +344,7 @@ export default function TicketDetailPage() {
                       ? 'Add internal note'
                       : 'Send reply'}
                 </Button>
-                <p role="status" className="text-sm text-brand-700">
+                <p role="status" aria-label="Comment delivery" className="text-sm text-brand-700">
                   {commentMessage}
                 </p>
               </form>
