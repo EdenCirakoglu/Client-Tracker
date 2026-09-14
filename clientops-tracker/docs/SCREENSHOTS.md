@@ -1,5 +1,32 @@
 # Screenshot Evidence
 
+## Operations Acceptance: 2026-09-14
+
+These five captures were opened and inspected from the clean local revision
+`77236fc6bfb31af3dafff0e7cbbee927776485f6`, running the isolated ops images recorded
+in [operations evidence](OPERATIONS_READINESS.md#reviewed-local-revision). They
+show fictional records only. No personal browser profile, tokens, cookies or
+credentials are included. Earlier captures below retain their original revisions.
+
+| Capture                                                                                    | Inspected result                                                                                       |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| [Desktop tickets](assets/screenshots/operations/desktop-tickets.png)                       | Compact rows, one-line description previews and readable status/priority; full text remains in detail. |
+| [Administrator mobile dashboard](assets/screenshots/operations/admin-mobile-dashboard.png) | First Review ticket action is visible at 390 x 844; explicit under-24-hour age wording.                |
+| [Developer mobile dashboard](assets/screenshots/operations/developer-mobile-dashboard.png) | Personal queue remains distinct from team snapshot; first action is visible.                           |
+| [Client dashboard](assets/screenshots/operations/client-dashboard.png)                     | Own organisation, reply-needed queue and permitted public updates; no internal workload.               |
+| [Native 200% keyboard focus](assets/screenshots/operations/native-200-keyboard-focus.png)  | Password field focus stays visible below the header; no overlap or document-wide horizontal scrolling. |
+
+Chrome's native Page zoom setting changed from 100% to 200% in a temporary
+isolated profile. Device pixel ratio changed from 1 to 2, CSS width from 1422 to
+711, while the outer window stayed 1440px wide. The zoom capture uses the full
+CDP browser surface; the initial Playwright capture clipped the surface and was
+not a layout defect. Native zoom, keyboard and axe checks passed on dashboard,
+tickets, accounts and password change. **Screen-reader acceptance remains manual**;
+these checks do not claim complete accessibility compliance.
+
+The complete 16-capture set and provenance JSON are in the browser artifact linked
+from [operations evidence](OPERATIONS_READINESS.md#draft-pr-and-hosted-ci).
+
 ## Operations UI: 2026-09-11
 
 All 34 captures in `assets/screenshots/ui/` were opened and visually inspected.
