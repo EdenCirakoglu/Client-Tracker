@@ -108,12 +108,10 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await expect(
     delivery.getByRole('cell', { name: 'Accepted by mail server', exact: true }).first(),
   ).toBeVisible();
-  await test
-    .info()
-    .attach('invitation-delivered', {
-      body: await delivery.screenshot(),
-      contentType: 'image/png',
-    });
+  await test.info().attach('invitation-delivered', {
+    body: await delivery.screenshot(),
+    contentType: 'image/png',
+  });
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto(invitation);
