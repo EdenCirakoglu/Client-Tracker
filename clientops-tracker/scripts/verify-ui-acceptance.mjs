@@ -10,6 +10,7 @@ const origin = process.env.VERIFY_URL ?? 'https://localhost:8452';
 if (!/^https:\/\/localhost:\d+$/.test(origin) || process.env.E2E_ALLOW_DISPOSABLE_DEMO !== 'true')
   throw new Error('Explicit disposable loopback HTTPS verification is required.');
 const directory = resolve(`test-results/ui-${before ? 'before' : 'acceptance'}`);
+const fixture = new URL(origin).port === '8452' ? 'clientops-ops' : 'clientops-hardening';
 mkdirSync(directory, { recursive: true });
 const revision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || undefined });
@@ -18,6 +19,14 @@ const evidence = {
   workingTreeDirty: !!execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim(),
   checkedAt: new Date().toISOString(),
   stage: before ? 'before' : 'after',
+  runtimeImages: Object.fromEntries(
+    ['api', 'web'].map((app) => [
+      app,
+      execFileSync('docker', ['inspect', `${fixture}-${app}-1`, '--format', '{{.Image}}'], {
+        encoding: 'utf8',
+      }).trim(),
+    ]),
+  ),
   screens: [],
   screenReader: 'Manual acceptance pending',
 };
@@ -59,7 +68,12 @@ try {
     await expect(page.getByText('Loading tickets...', { exact: true })).toHaveCount(0);
     await screenshot(page, `${role.toLowerCase()}-mobile-dashboard`, false);
     if (!before) {
-      const action = page.getByRole('region', { name: 'Needs attention' }).locator('li a').first();
+      const action = page
+        .getByRole('region', { name: 'Needs attention' })
+        .locator('li')
+        .first()
+        .locator('a')
+        .last();
       await expect(action).toBeInViewport();
       expect(await page.getByText('0d since opened', { exact: true }).count()).toBe(0);
     }
@@ -111,6 +125,18 @@ if (!before) {
     }));
     expect(zoom.dpr / normal.dpr).toBeCloseTo(2, 1);
     expect(zoom.width / normal.width).toBeCloseTo(0.5, 1);
+    const cdp = await native.newCDPSession(page);
+    const nativeCapture = async (name) => {
+      const shot = await cdp.send('Page.captureScreenshot', {
+        format: 'png',
+        fromSurface: true,
+        captureBeyondViewport: false,
+      });
+      const png = Buffer.from(shot.data, 'base64');
+      expect(png.readUInt32BE(16)).toBeGreaterThanOrEqual(Math.floor(zoom.width * zoom.dpr));
+      writeFileSync(resolve(directory, `${name}.png`), png);
+      evidence.screens.push(name);
+    };
     for (const route of ['/dashboard', '/tickets', '/users', '/account']) {
       await page.goto(`${origin}${route}`);
       await expect(page.locator('main h1')).toBeVisible();
@@ -124,7 +150,7 @@ if (!before) {
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
         .analyze();
       expect(results.violations).toEqual([]);
-      await screenshot(page, `native-200-${route.slice(1)}`, false);
+      await nativeCapture(`native-200-${route.slice(1)}`);
     }
     await page.getByLabel('Current password', { exact: true }).focus();
     const field = await page.getByLabel('Current password', { exact: true }).boundingBox();
@@ -132,6 +158,7 @@ if (!before) {
     expect(field.y).toBeGreaterThanOrEqual(header.y + header.height);
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => globalThis.document.activeElement?.tagName)).toBe('INPUT');
+    await nativeCapture('native-200-keyboard-focus');
     evidence.nativeZoom = {
       normal,
       zoom,

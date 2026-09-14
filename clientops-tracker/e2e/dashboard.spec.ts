@@ -2,6 +2,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openedAge } from '../apps/web/src/lib/format';
 
 async function capture(page: Page, name: string) {
   const dir = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'test-results/screenshots');
@@ -37,6 +38,10 @@ async function login(page: Page, role: string) {
 test('role queues, metric destinations and URL filters agree with authorised records', async ({
   browser,
 }) => {
+  const now = Date.parse('2026-09-14T12:00:00Z');
+  expect(openedAge('2026-09-14T11:00:00Z', now)).toBe('Opened under 24h ago');
+  expect(openedAge('2026-09-13T11:00:00Z', now)).toBe('Opened 1 day ago');
+  expect(openedAge('2026-09-11T11:00:00Z', now)).toBe('Opened 3 days ago');
   for (const role of ['Admin', 'Developer', 'Client']) {
     const context = await browser.newContext({
       baseURL: process.env.VERIFY_URL ?? 'https://localhost:8443',
