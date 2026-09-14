@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: ops/Dockerfile
-    image: clientops-operations:local
+    image: ${OPERATIONS_IMAGE:-clientops-operations:local}
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]

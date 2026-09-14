@@ -288,9 +288,11 @@ try {
     process.execPath,
     [
       'scripts/rollback.mjs',
+      `--state-dir=${privateDirectory}/${restoreProject}-deployment`,
       `--config=${configPath}`,
       `--confirm-project=${restoreProject}`,
       '--target=bdc749',
+      '--schema-reviewed=true',
       '--acknowledge-account-pause=true',
     ],
     { stdio: 'inherit' },

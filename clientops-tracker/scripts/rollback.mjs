@@ -2,14 +2,21 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { planRollback } from './lib/rollback-plan.mjs';
+import { deploymentLock } from './lib/deployment.mjs';
 
 // No migration reversal, database reset, automatic fallback, or unpinned image selection.
 const options = Object.fromEntries(
   process.argv.slice(2).map((arg) => arg.replace(/^--/, '').split('=')),
 );
-if (!options.config || !options.target || !options['confirm-project'])
+if (
+  !options.config ||
+  !options.target ||
+  !options['confirm-project'] ||
+  !options['state-dir'] ||
+  options['schema-reviewed'] !== 'true'
+)
   throw new Error(
-    'Supply --config=<private-json> --target=7eba339|bdc749 --confirm-project=<name>; older releases also need --acknowledge-account-pause=true.',
+    'Supply --config=<private-json> --state-dir=<stable-private-directory> --target=7eba339|bdc749 --confirm-project=<name> --schema-reviewed=true; review the applied schema first. Older releases also need --acknowledge-account-pause=true.',
   );
 const original = JSON.parse(readFileSync(options.config, 'utf8'));
 if (original.name !== options['confirm-project'])
@@ -24,20 +31,30 @@ const result = planRollback(
   options['acknowledge-account-pause'] === 'true',
 );
 const directory = dirname(resolve(options.config));
+const state = resolve(options['state-dir']);
+const unlock = deploymentLock(state);
 const nginxPath = resolve(directory, 'rollback-nginx.conf');
 const configPath = resolve(directory, 'rollback-compose.json');
-writeFileSync(nginxPath, result.nginx, { mode: 0o600 });
-result.config.services.nginx.volumes.find((item) => item.target === mount.target).source =
-  nginxPath;
-writeFileSync(configPath, JSON.stringify(result.config), { mode: 0o600 });
+let paused = false;
 try {
+  writeFileSync(nginxPath, result.nginx, { mode: 0o600 });
+  result.config.services.nginx.volumes.find((item) => item.target === mount.target).source =
+    nginxPath;
+  writeFileSync(configPath, JSON.stringify(result.config), { mode: 0o600 });
   for (const image of [result.release.api, result.release.web])
     execFileSync('docker', ['pull', image], { stdio: 'inherit' });
-  const workers = ['mail-worker', 'worker'].filter((name) => original.services[name]);
-  if (workers.length)
-    execFileSync('docker', ['compose', '-p', original.name, '-f', configPath, 'stop', ...workers], {
-      stdio: 'inherit',
-    });
+  paused = true;
+  writeFileSync(
+    `${state}/blocked.json`,
+    JSON.stringify({ rollback: result.release.revision, started: new Date().toISOString() }),
+    { mode: 0o600 },
+  );
+  const writers = ['api', 'web', 'nginx', 'mail-worker', 'worker'].filter(
+    (name) => original.services[name],
+  );
+  execFileSync('docker', ['compose', '-p', original.name, '-f', configPath, 'stop', ...writers], {
+    stdio: 'inherit',
+  });
   // Install the account-maintenance gate before starting an older API without an outbox.
   execFileSync(
     'docker',
@@ -68,6 +85,7 @@ try {
       'up',
       '-d',
       '--no-build',
+      '--no-deps',
       '--wait',
       'api',
       'web',
@@ -108,8 +126,20 @@ try {
     `Pinned rollback ${result.release.revision} started. Verify login, business workflow and organisation boundaries before reopening traffic. Account pause: ${result.release.accountPause}.`,
   );
 } catch {
+  try {
+    if (paused)
+      execFileSync(
+        'docker',
+        ['compose', '-p', original.name, '-f', configPath, 'stop', 'api', 'web', 'nginx'],
+        { stdio: 'ignore', timeout: 60000 },
+      );
+  } catch {
+    /* Operator must inspect actual container state if Docker is unavailable. */
+  }
   console.error(
     'Rollback failed; leave traffic restricted and inspect the selected Compose project. No automatic alternative attempted.',
   );
   process.exitCode = 1;
+} finally {
+  unlock();
 }

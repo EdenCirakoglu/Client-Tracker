@@ -119,27 +119,32 @@ chmod 600 .env.production
 Use the two independently generated values for the database password and session secret.
 Generate a third independent `openssl rand -hex 32` value for `MAIL_ENCRYPTION_KEY`.
 Do not paste real secrets into issue reports, workflow logs or screenshots.
-Keep the PostgreSQL password in `DATABASE_URL` consistent with `POSTGRES_PASSWORD`;
-URL-encode non-hex passwords. Never source an env file as shell code.
+Use independent owner, migrator, runtime and backup database passwords; `DATABASE_URL`
+is the restricted runtime identity, not `POSTGRES_PASSWORD`. Match each URL to its
+own role password and URL-encode non-hex values. Never source a Compose env file as
+shell code. Install Node 24 on the operator host for the shared deployment/renewal
+commands; application runtime remains in containers.
 
 ## Required Production Configuration
 
-| Variable                                            | Meaning                                                                     |
-| --------------------------------------------------- | --------------------------------------------------------------------------- |
-| `GHCR_OWNER`, `GHCR_REPOSITORY`                     | Lowercase registry coordinates                                              |
-| `IMAGE_TAG`                                         | Full commit SHA whose CI and image publication succeeded                    |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Unique database identity; do not use a disposable suffix                    |
-| `DATABASE_URL`                                      | Connection URL using `postgres:5432`, not localhost                         |
-| `SESSION_SECRET`                                    | Independently generated signing secret, at least 32 characters              |
-| `MAIL_ENCRYPTION_KEY`                               | Independent 32-byte random hex key for encrypted account-delivery work      |
-| `APP_ORIGIN`                                        | Exact public HTTPS origin, no trailing slash                                |
-| `SESSION_IDLE_SECONDS`, `SESSION_ABSOLUTE_SECONDS`  | Server expiry defaults: 1800 and 28800                                      |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`             | Real mail transport; STARTTLS required when not using implicit TLS          |
-| `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`           | SMTP credentials and verified sender address                                |
-| `TLS_CERTS_DIR`                                     | Directory with trusted `fullchain.pem` and `privkey.pem`, mounted read-only |
-| `HTTPS_PORT`                                        | Normally 443; the public origin must match                                  |
-| `NEXT_PUBLIC_API_URL`                               | `/` for the supplied same-origin image                                      |
-| `HTTP_BIND`, `HTTP_PORT`                            | Default loopback listener; expose only behind an approved HTTPS entry point |
+| Variable                                                    | Meaning                                                                       |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `GHCR_OWNER`, `GHCR_REPOSITORY`                             | Lowercase registry coordinates                                                |
+| `IMAGE_TAG`                                                 | Full commit SHA whose CI and image publication succeeded                      |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`         | Unique database identity; do not use a disposable suffix                      |
+| `DATABASE_URL`                                              | Connection URL using `postgres:5432`, not localhost                           |
+| `ADMIN_DATABASE_URL`, `MIGRATION_DATABASE_URL`              | Separate owner-only provisioning and migrator job URLs; never API credentials |
+| `MIGRATION_PASSWORD`, `RUNTIME_PASSWORD`, `BACKUP_PASSWORD` | Independent role passwords used only by explicit provisioning                 |
+| `SESSION_SECRET`                                            | Independently generated signing secret, at least 32 characters                |
+| `MAIL_ENCRYPTION_KEY`                                       | Independent 32-byte random hex key for encrypted account-delivery work        |
+| `APP_ORIGIN`                                                | Exact public HTTPS origin, no trailing slash                                  |
+| `SESSION_IDLE_SECONDS`, `SESSION_ABSOLUTE_SECONDS`          | Server expiry defaults: 1800 and 28800                                        |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`                     | Real mail transport; STARTTLS required when not using implicit TLS            |
+| `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`                   | SMTP credentials and verified sender address                                  |
+| `TLS_CERTS_DIR`                                             | Directory with trusted `fullchain.pem` and `privkey.pem`, mounted read-only   |
+| `HTTPS_PORT`                                                | Normally 443; the public origin must match                                    |
+| `NEXT_PUBLIC_API_URL`                                       | `/` for the supplied same-origin image                                        |
+| `HTTP_BIND`, `HTTP_PORT`                                    | Default loopback listener; expose only behind an approved HTTPS entry point   |
 
 The API rejects placeholder session secrets and non-HTTPS production origins. Real env files
 are ignored by Git and excluded from Docker build contexts. No production defaults
@@ -147,9 +152,10 @@ are used for database credentials.
 
 ## First Deployment
 
-Wait for CI and image publication for the reviewed commit. Authenticate to GHCR for
-private packages using a read-packages token; public packages can be pulled without
-a login. Then run as the deploy user:
+Wait for successful main CI and both image jobs for the exact reviewed commit.
+Authenticate to GHCR with read-packages access if necessary. Follow the single
+[installation/conversion/update sequence](OPERATOR_CONTROLS.md#first-setup-and-updates),
+which is also used by `deploy.yml`. Prepare from a clean checkout:
 
 ```bash
 cd /opt/clientops
@@ -160,16 +166,11 @@ export IMAGE_TAG=REVIEWED_FULL_COMMIT_SHA
 git merge-base --is-ancestor "$IMAGE_TAG" origin/main
 git checkout --detach "$IMAGE_TAG"
 cd clientops-tracker
-dc() { docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml "$@"; }
-dc config --quiet
-dc pull
-dc up -d --wait postgres
-# First setup / reviewed role conversion only, before app startup.
-dc run --rm --no-deps provision
-dc run --rm --no-deps migrate
-dc up -d --no-build --wait
-dc ps
-curl --fail https://YOUR_CONFIGURED_DOMAIN/api/health
+export STATE_DIR=/etc/clientops/deployment
+export CONFIG="$STATE_DIR/releases/$IMAGE_TAG/compose.json"
+node scripts/deploy.mjs prepare --env=/etc/clientops/production.env --config="$CONFIG" --project=clientops-production --revision="$IMAGE_TAG"
+# Initialise the encrypted repository only if it is new, then choose install or
+# convert with explicit database-name approval as documented in OPERATOR_CONTROLS.md.
 ```
 
 An empty database has no users. Run the one-time administrator bootstrap described
@@ -191,18 +192,13 @@ not be public. Never advertise a public demo while default accounts are installe
 
 ## Later Updates and Recovery
 
-Take a database backup first and verify the proposed migrations. Reuse the exact
-same Compose project name to retain the volume.
+Review migrations and prepare the new digest-pinned configuration. Reuse the exact
+project, database and state directory. The shared command stops all project writers
+before the verified encrypted backup and migration, then starts and checks readiness.
 
 ```bash
-# First take and verify the private, credential-excluding backup in OPERATIONS.md.
-# Check out the new reviewed SHA at the Git root as above and export IMAGE_TAG.
-dc pull
-dc stop api
-dc run --rm --no-deps migrate
-dc up -d --no-build --wait
-dc up -d --no-deps --force-recreate --wait nginx
-dc ps
+# CONFIG is the newly prepared private configuration, not a moving Compose tag.
+node scripts/deploy.mjs apply --config="$CONFIG" --project=clientops-production --revision="$IMAGE_TAG" --state-dir="$STATE_DIR" --mode=update
 ```
 
 The Nginx recreation resolves any new container addresses. Keep backups private and
@@ -228,9 +224,10 @@ Workflow files are at the Git root, not inside the workspace.
 - Deploy to DigitalOcean is manual, checks successful CI for the requested SHA,
   uses the protected `production` environment and serializes deployments.
   It verifies the SSH host fingerprint, refuses a dirty server checkout, verifies
-  the SHA is on main, checks out that revision, pulls images, migrates inside the
-  Compose network and restarts services. It never installs Node/pnpm on the host
-  or seeds production.
+  the SHA is on main, checks out that revision and invokes the same prepare/apply
+  commands. It refuses missing prior installation/conversion or blocked recovery
+  state. It never provisions privileges, seeds production or chooses an automatic
+  rollback. Node24 must already be installed; only the operator image is built locally.
 
 Configure required reviewers and a main-only deployment branch policy on the
 `production` GitHub environment. Approval enforcement depends on your GitHub plan
@@ -246,31 +243,33 @@ Production environment secrets:
 - `GHCR_USERNAME`: registry reader
 - `GHCR_TOKEN`: read-packages token
 
-Production environment variable:
+Production environment variables:
 
 - `DO_APP_DIR=/opt/clientops`: Git checkout root, not the nested pnpm workspace
+- `DO_ENV_FILE=/etc/clientops/production.env`: private full production/operations configuration
+- `DO_STATE_DIR=/etc/clientops/deployment`: stable state directory shared with schedules/renewal
 
 No `NEXT_PUBLIC_API_URL` GitHub variable is needed for same-origin images.
 GitHub supplies the publishing workflow's `GITHUB_TOKEN`; do not create your own.
 
 ## Troubleshooting
 
-| Symptom                                 | Check                                                                                                            |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| No package.json                         | Enter `clientops-tracker/` before pnpm commands                                                                  |
-| Docker daemon unavailable               | Start Docker Desktop locally, or inspect the Docker service on Ubuntu                                            |
-| Address already in use                  | Inspect `docker ps`; change the verification `HTTP_PORT`, not an existing service                                |
-| GHCR manifest unknown                   | Wait for both image jobs for that SHA; verify lowercase image coordinates                                        |
-| Permission denied pulling               | Authenticate with a read-packages token and check package visibility                                             |
-| Database connection refused             | Use host address for local Node, `postgres` only inside Compose                                                  |
-| Relation does not exist                 | Run `dc run --rm --no-deps migrate` using the separate migration credentials                                     |
-| Database auth fails after env edit      | Existing volumes retain original credentials; env edits do not rotate them                                       |
-| Browser calls localhost:8080 from VPS   | Rebuild web with `NEXT_PUBLIC_API_URL=/`; a runtime edit is insufficient                                         |
-| CORS failure                            | Match exact origin; same-origin Nginx needs no cross-origin browser exception                                    |
-| 502 after replacing containers          | Check `dc logs --tail=100 api web nginx`, then recreate Nginx                                                    |
-| Test command refuses configuration      | Copy `apps/api/.env.test.example` to `.env.test` and start the separate test cluster                             |
-| Seed refuses reset                      | Only an explicitly designated `clientops_*demo`/`clientops_*test` DB, with `SEED_RESET=true`, outside production |
-| Failed login after production migration | Bootstrap once on a new database, then invite accounts; demo identities are rejected                             |
+| Symptom                                 | Check                                                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| No package.json                         | Enter `clientops-tracker/` before pnpm commands                                                                       |
+| Docker daemon unavailable               | Start Docker Desktop locally, or inspect the Docker service on Ubuntu                                                 |
+| Address already in use                  | Inspect `docker ps`; change the verification `HTTP_PORT`, not an existing service                                     |
+| GHCR manifest unknown                   | Wait for both image jobs for that SHA; verify lowercase image coordinates                                             |
+| Permission denied pulling               | Authenticate with a read-packages token and check package visibility                                                  |
+| Database connection refused             | Use host address for local Node, `postgres` only inside Compose                                                       |
+| Relation does not exist                 | Review the failed migration and use the shared `deploy.mjs apply` recovery sequence; do not migrate while writers run |
+| Database auth fails after env edit      | Existing volumes retain original credentials; env edits do not rotate them                                            |
+| Browser calls localhost:8080 from VPS   | Rebuild web with `NEXT_PUBLIC_API_URL=/`; a runtime edit is insufficient                                              |
+| CORS failure                            | Match exact origin; same-origin Nginx needs no cross-origin browser exception                                         |
+| 502 after replacing containers          | Check `dc logs --tail=100 api web nginx`, then recreate Nginx                                                         |
+| Test command refuses configuration      | Copy `apps/api/.env.test.example` to `.env.test` and start the separate test cluster                                  |
+| Seed refuses reset                      | Only an explicitly designated `clientops_*demo`/`clientops_*test` DB, with `SEED_RESET=true`, outside production      |
+| Failed login after production migration | Bootstrap once on a new database, then invite accounts; demo identities are rejected                                  |
 
 Inspect `dc logs --tail=100` privately. Prefer `config --quiet` because plain
 `config` prints resolved environment values. Do not delete volumes to fix an auth

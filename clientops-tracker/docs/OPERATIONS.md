@@ -53,7 +53,7 @@ Production Compose uses Docker's local rotating log driver, 3 x 10MB per service
 Run one bounded retention batch daily, repeat if backlog remains, and monitor failures:
 
 ```bash
-dc run --rm --no-deps api node dist/maintenance.js
+sudo systemctl start clientops-ops@maintenance.service
 ```
 
 This deletes at most 500 rows per operational table per run: terminal mail and expired account/session grants older than 30 days, expired browser sessions and expired rate limits. It does not delete business records or active account links. Backups and external logs need separate retention.
@@ -74,9 +74,10 @@ Encrypt/upload via the chosen backup provider; verify checksum and decryptabilit
 Restore into a **new, empty database/volume**, with no API, workers or Studio connected. Do not import a backup from an untrusted source. Run `pg_restore --no-owner --no-acl --exit-on-error` against that new database, then the reviewed migration command. Before exposing it, use the new image's offline command:
 
 ```bash
-# Restore Compose/environment must point ONLY to the new database.
-dc run --rm --no-deps migrate
-dc run --rm --no-deps -e RESTORE_CONFIRM_DATABASE="$RESTORED_DATABASE" -e RESTORE_OFFLINE=true api node dist/restore-sanitize.js
+# Restore Compose/environment must point ONLY to the new OFFLINE database.
+# Use a dedicated one-shot owner-credential service for sanitisation, never runtime API credentials.
+dc run --rm --no-deps -e DATABASE_URL="$RESTORE_OWNER_URL" -e RESTORE_CONFIRM_DATABASE="$RESTORED_DATABASE" -e RESTORE_OFFLINE=true provision node dist/restore-sanitize.js
+# Then explicit role provisioning and migration per OPERATOR_CONTROLS.md.
 ```
 
 Sanitisation requires an exact database-name confirmation and refuses other connected clients. It deletes all restored session grants, browser sessions, invitation/reset tokens, mail jobs and rate limits, and increments each user's auth version. Business records/password hashes remain intact. Keep network access blocked throughout; the confirmation is not a substitute for firewall isolation. Rotate session and mail keys, verify relationships, login and organisation boundaries, then invite pending users again and request new recovery links as needed.

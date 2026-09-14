@@ -2,6 +2,10 @@
 
 ## Current Published Release
 
+PR #5's final deployment-sequence review and real-environment acceptance handoff
+are tracked in [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md). This does not change
+the published release or relabel prior evidence.
+
 PR #4 is merged as `7eba339b37a2aa948ef4f6ed019d268816d4ec99`. Main CI and image publication passed. Both published digest-pinned images passed separate local verification without rebuilding, including nine browser scenarios, database outage recovery, durable email retry and persistence. See [exact release evidence and commands](RELEASE_7EBA339.md). Public deployment has not occurred. [Draft PR #5 follow-up evidence](FOLLOWUP_READINESS.md) covers the separate usability and operator-control review; it is not a new published release.
 
 ## Operations UI and Account Hardening: Historical PR Evidence

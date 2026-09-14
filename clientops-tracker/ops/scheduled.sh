@@ -2,9 +2,20 @@
 set -eu
 umask 077
 cd "${APP_DIR:?Set APP_DIR}"
+: "${DEPLOYMENT_STATE_DIR:?Set the stable private deployment state directory}"
+case "$DEPLOYMENT_STATE_DIR" in /*) ;; *) exit 64 ;; esac
+mkdir -p "$DEPLOYMENT_STATE_DIR"
+# Deployment uses the same atomic directory lock. Never expire or steal a live lock.
+case "${1:-}" in
+  maintenance|backup|check|prune)
+    mkdir "$DEPLOYMENT_STATE_DIR/lock" || { echo 'Deployment/maintenance is already running'; exit 75; }
+    trap 'rmdir "$DEPLOYMENT_STATE_DIR/lock"' EXIT
+    [ ! -f "$DEPLOYMENT_STATE_DIR/blocked.json" ] || { echo 'Deployment recovery review is required'; exit 75; }
+    ;;
+esac
 compose() {
-  docker compose --env-file "${ENV_FILE:?Set ENV_FILE}" -p "${COMPOSE_PROJECT_NAME:?Set project}" \
-    -f docker-compose.prod.yml -f docker-compose.operations.yml "$@"
+  # Use the exact configuration which passed deployment, never a moving tag or checkout.
+  docker compose -p "${COMPOSE_PROJECT_NAME:?Set project}" -f "$DEPLOYMENT_STATE_DIR/current.json" "$@"
 }
 case "${1:-}" in
   maintenance)

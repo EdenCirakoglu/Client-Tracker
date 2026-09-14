@@ -22,8 +22,11 @@ jobs:
         env:
           SSH_FINGERPRINT: ${{ secrets.DO_SSH_FINGERPRINT }}
           APP_DIR: ${{ vars.DO_APP_DIR }}
+          ENV_FILE: ${{ vars.DO_ENV_FILE }}
+          STATE_DIR: ${{ vars.DO_STATE_DIR }}
         run: |
           test -n "$APP_DIR"
+          [[ "$ENV_FILE" == /* ]] && [[ "$STATE_DIR" == /* ]] || { echo 'Configure private absolute DO_ENV_FILE and DO_STATE_DIR paths.'; exit 1; }
           [[ "$SSH_FINGERPRINT" == SHA256:* ]] || { echo 'Configure DO_SSH_FINGERPRINT from the trusted VPS console.'; exit 1; }
       - name: Validate revision and CI
         uses: actions/github-script@v7
@@ -46,15 +49,18 @@ jobs:
           DEPLOY_SHA: ${{ inputs.commit_sha }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          ENV_FILE: ${{ vars.DO_ENV_FILE }}
+          STATE_DIR: ${{ vars.DO_STATE_DIR }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
           fingerprint: ${{ secrets.DO_SSH_FINGERPRINT }}
-          envs: APP_DIR,DEPLOY_SHA,GHCR_USERNAME,GHCR_TOKEN
-          command_timeout: 20m
+          envs: APP_DIR,DEPLOY_SHA,GHCR_USERNAME,GHCR_TOKEN,ENV_FILE,STATE_DIR
+          command_timeout: 45m
           script: |
             set -eu
+            umask 077
             test -n "$APP_DIR"
             test -n "$GHCR_USERNAME"
             test -n "$GHCR_TOKEN"
@@ -64,14 +70,12 @@ jobs:
             git merge-base --is-ancestor "$DEPLOY_SHA" origin/main
             git checkout --detach "$DEPLOY_SHA"
             cd clientops-tracker
-            test -f .env.production
+            test -f "$ENV_FILE"
+            test -f "$STATE_DIR/current.json" || { echo 'First installation / restricted-role conversion must be completed explicitly using OPERATOR_CONTROLS.md.'; exit 1; }
+            test ! -f "$STATE_DIR/blocked.json" || { echo 'A previous operation requires manual recovery review; automation will not resume it.'; exit 1; }
             printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
             trap 'docker logout ghcr.io >/dev/null 2>&1' EXIT
-            export IMAGE_TAG="$DEPLOY_SHA"
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml config --quiet
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml pull
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --wait postgres
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml run --rm --no-deps migrate
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --no-build --wait
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml up -d --no-deps --force-recreate --wait nginx
-            docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml ps
+            CONFIG="$STATE_DIR/releases/$DEPLOY_SHA/compose.json"
+            node scripts/deploy.mjs prepare --env="$ENV_FILE" --config="$CONFIG" --project=clientops-production --revision="$DEPLOY_SHA"
+            node scripts/deploy.mjs apply --config="$CONFIG" --project=clientops-production --revision="$DEPLOY_SHA" --state-dir="$STATE_DIR" --mode=update
+            # A failed step leaves writers stopped and a blocked marker. Never auto-rollback schema.

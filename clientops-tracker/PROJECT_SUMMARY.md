@@ -27,6 +27,11 @@ The web application calls Express with cookie sessions and synchronizer CSRF tok
 
 ## Testing and CI
 
+The [release-candidate handoff](docs/RELEASE_CANDIDATE.md) adds one deployment
+sequence for manual/SSH updates, explicit role conversion, verified backups,
+failure recovery and certificate-hook acceptance. External-service and
+screen-reader sign-off remain separate from automated checks.
+
 The [current draft follow-up PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5)
 passed [hosted CI at `cf6d0f4`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34858027875):
 75 API tests, 10 verification-helper tests and 10 browser/accessibility scenarios,

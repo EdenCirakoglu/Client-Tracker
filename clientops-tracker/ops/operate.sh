@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 umask 077
-action=${1:?Choose init, backup, check, prune, monitor or notify}
-case "$action" in init|backup|check|prune|monitor|notify) ;; *) exit 64 ;; esac
+action=${1:?Choose init, backup, check, prune, monitor, readiness or notify}
+case "$action" in init|backup|check|prune|monitor|readiness|notify) ;; *) exit 64 ;; esac
 mkdir -p /state
 export PGCONNECT_TIMEOUT=5
 export PGOPTIONS='-c statement_timeout=300000'
@@ -51,7 +51,7 @@ case "$action" in
   check) restic check --read-data >/dev/null 2>&1 ;;
   prune) restic forget --host clientops --tag clientops --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune >/dev/null 2>&1 ;;
   notify) notify ;;
-  monitor)
+  monitor|readiness)
     # A trusted HTTPS request validates both hostname/chain and database readiness.
     if [ "${OPS_MODE:-production}" = disposable ]; then
       curl --silent --fail --max-time 5 --cacert /certs/cert.pem \
@@ -62,6 +62,7 @@ case "$action" in
       certificate=/certs/fullchain.pem
     fi
     openssl x509 -checkend "${CERT_MIN_SECONDS:-1209600}" -noout -in "$certificate" >/dev/null 2>&1
+    if [ "$action" = readiness ]; then exit 0; fi
     mail=$(psql -XAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM mail_outbox WHERE status='FAILED' OR (status IN ('PENDING','SENDING') AND created_at < now()-interval '10 minutes')" 2>/dev/null)
     [ "$mail" = 0 ]
     for item in backup maintenance; do

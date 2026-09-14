@@ -140,6 +140,9 @@ jobs:
       - name: Populated restore and pinned rollback
         run: node scripts/verify-restore.mjs
 
+      - name: Deployment sequence and failure recovery
+        run: node scripts/verify-deployment.mjs
+
       - name: Check browser artifact privacy
         id: artifact-privacy
         if: always()

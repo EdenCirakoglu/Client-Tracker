@@ -1,4 +1,7 @@
 FROM postgres:16-alpine
+ARG SOURCE_REVISION=unrecorded
+LABEL org.opencontainers.image.revision=$SOURCE_REVISION
+LABEL org.opencontainers.image.source=https://github.com/EdenCirakoglu/Client-Tracker
 RUN --mount=type=secret,id=build_ca \
     cp /etc/ssl/cert.pem /tmp/original-ca.pem && \
     if [ -f /run/secrets/build_ca ]; then cat /run/secrets/build_ca >> /etc/ssl/cert.pem; fi && \
