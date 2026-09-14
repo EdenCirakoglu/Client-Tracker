@@ -124,6 +124,7 @@ export const api = {
       body: { currentPassword, password },
     }),
   users: () => apiRequest<Account[]>('/api/users'),
+  mailDeliveries: () => apiRequest<MailDeliveryStatus>('/api/users/deliveries'),
   invite: (body: { name: string; email: string; role: User['role']; clientId: string | null }) =>
     apiRequest<User>('/api/users/invitations', { method: 'POST', body }),
   updateAccount: (
@@ -196,3 +197,16 @@ export const api = {
     ),
 };
 export type Account = User & { accountStatus: 'ACTIVE' | 'INVITED' | 'DISABLED' };
+export interface MailDeliveryStatus {
+  summary: { status: string; count: number; oldestCreatedAt: string | null }[];
+  recent: {
+    id: string;
+    kind: string;
+    status: string;
+    attempts: number;
+    createdAt: string;
+    availableAt: string;
+    completedAt: string | null;
+    lastError: string | null;
+  }[];
+}

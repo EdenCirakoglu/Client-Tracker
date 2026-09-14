@@ -7,7 +7,7 @@ import { api } from '../../lib/api';
 import { useApiData } from '../../lib/use-api-data';
 import type { UserRole } from '../../lib/types';
 import { useState } from 'react';
-import { ticketReference } from '../../lib/format';
+import { openedAge, ticketReference } from '../../lib/format';
 
 interface NeedsAttentionProps {
   role: UserRole;
@@ -87,7 +87,7 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
           {state.data.items.length ? (
             <ul className="divide-y divide-border rounded-lg border border-border bg-panel">
               {state.data.items.map((ticket) => (
-                <li key={ticket.id} className="p-4">
+                <li key={ticket.id} className="px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="mb-1 text-xs text-muted">
@@ -105,11 +105,11 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
                     </div>
                     <ArrowRight className="mt-5 h-4 w-4 text-muted" aria-hidden="true" />
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge value={ticket.status} />
                     <Badge value={ticket.priority} />
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                     <span>
                       {tab === 'reply'
                         ? 'Your reply needed'
@@ -119,11 +119,7 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
                     </span>
                     <span className="inline-flex items-center gap-1 tabular-nums">
                       <Clock3 className="h-3 w-3" />
-                      {Math.max(
-                        0,
-                        Math.floor((Date.now() - new Date(ticket.createdAt).getTime()) / 86400000),
-                      )}
-                      d since opened
+                      <time dateTime={ticket.createdAt}>{openedAge(ticket.createdAt)}</time>
                     </span>
                   </div>
                   <Link

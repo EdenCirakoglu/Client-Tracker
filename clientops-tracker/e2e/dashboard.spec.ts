@@ -178,7 +178,7 @@ test('theme and navigation preferences work across responsive portal and account
       expect(await firstLink.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
   }
-  await page.setViewportSize({ width: 768, height: 500 }); // Effective CSS width at 200% desktop zoom.
+  await page.setViewportSize({ width: 768, height: 500 }); // Reflow check; native zoom has a separate acceptance script.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await accessible(page);
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
