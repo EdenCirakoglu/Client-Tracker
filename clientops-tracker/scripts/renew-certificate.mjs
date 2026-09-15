@@ -10,6 +10,7 @@ import {
 import { resolve, isAbsolute } from 'node:path';
 import { deploymentLock } from './lib/deployment.mjs';
 import { createHash } from 'node:crypto';
+import { replaceCertificateFile } from './lib/certificate-files.mjs';
 
 const openssl =
   process.env.OPENSSL_BIN ??
@@ -67,8 +68,11 @@ try {
   }
   replaced = true;
   for (const file of ['fullchain.pem', 'privkey.pem']) {
-    copyFileSync(`${lineage}/${file}`, `${destination}/${file}`);
-    chmodSync(`${destination}/${file}`, file === 'privkey.pem' ? 0o600 : 0o644);
+    replaceCertificateFile(
+      `${lineage}/${file}`,
+      `${destination}/${file}`,
+      file === 'privkey.pem' ? 0o600 : 0o644,
+    );
   }
   // Docker Desktop bind propagation may lag host writes. Do not acknowledge an old pair.
   const deadline = Date.now() + 30000;
@@ -99,8 +103,11 @@ try {
   if (replaced) {
     try {
       for (const file of ['fullchain.pem', 'privkey.pem']) {
-        copyFileSync(`${destination}/${file}.previous`, `${destination}/${file}`);
-        chmodSync(`${destination}/${file}`, file === 'privkey.pem' ? 0o600 : 0o644);
+        replaceCertificateFile(
+          `${destination}/${file}.previous`,
+          `${destination}/${file}`,
+          file === 'privkey.pem' ? 0o600 : 0o644,
+        );
       }
       compose(['exec', '-T', 'nginx', 'nginx', '-t']);
       compose(['exec', '-T', 'nginx', 'nginx', '-s', 'reload']);

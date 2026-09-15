@@ -205,6 +205,11 @@ hook. The local fixture verifies an actual served-serial change on Nginx, wrong-
 rejection and failure reporting using a private CA; it is not public CA acceptance.
 On hook failure (including a deployment lock conflict), correct the cause and rerun
 the hook explicitly; do not wait until the next certificate becomes due.
+Installation and recovery replace each file by atomic rename from a mode-600
+temporary file, then reload only after both files are visible in the container.
+Changing file identity avoids stale SSL-object inheritance during rapid renewals.
+The pair is not a filesystem transaction; the shared lock prevents this tooling's
+concurrent reload, and failed validation attempts to restore both previous files.
 
 Keep the production TLS directory root-owned/private and its private key mode 600.
 The public `fullchain.pem` is mode 644 after installation or recovery; certificates

@@ -71,6 +71,19 @@ and recorded Git HEAD identify the actual checkout; Playwright's additional CI
 metadata may identify GitHub's synthetic PR merge ref instead.
 
 The final stdout/stderr and Linux-permission corrections follow this evidence.
+The clean local rehearsal at `585ee27297e877d7ca6ac69ea316f17215bc1380`
+passed installation, conversion and migration/startup recovery but failed its
+served-certificate assertion: the new pair was on disk while Nginx still served
+the old serial. It is not recorded as a complete local pass. Certificate replacement
+now uses a secure temporary file and atomic rename, including restoration, so file
+identity changes even during rapid renewal. This avoids Nginx's metadata-based
+[SSL object inheritance](https://blog.nginx.org/blog/optimizing-resource-usage-for-complex-ssl-configurations).
+The focused fixture then passed serial changes, hostname rejection, wrong-key
+failure and Nginx recovery without extending the timeout. A new helper regression
+checks changed file identity, restrictive permissions and preservation after a
+failed replacement (22 helper tests total). Final clean-head CI and full local
+rehearsal results remain separately identified in the PR handoff.
+
 **Do not approve merge until the latest PR head's complete CI passes.** Its exact
 head, final run and artifact links are maintained in the PR handoff rather than
 assigning these earlier screenshots/results to a later revision. Screen-reader
