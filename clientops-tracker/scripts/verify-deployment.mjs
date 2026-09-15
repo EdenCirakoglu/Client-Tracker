@@ -376,6 +376,7 @@ try {
       "SELECT NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole FROM pg_roles WHERE rolname='clientops_runtime'",
     ) === 't';
   assert(results.runtimeRoleRestricted);
+  console.log('Rehearsing private-CA certificate renewal and failure recovery.');
   results.certificateHook = await verifyCertificateHook({
     config,
     state,
@@ -405,6 +406,15 @@ try {
   );
 } catch (error) {
   console.error('Deployment rehearsal failed; private configuration and container output omitted.');
+  const location = error.stack?.match(
+    /(?:certificate-fixture|verify-deployment)\.mjs:(\d+):\d+/,
+  )?.[1];
+  if (location) console.error(`Verification script line: ${location}`);
+  save('test-results/deployment-failure.json', {
+    ...results,
+    outcome: 'failed',
+    verificationLine: location ?? null,
+  });
   const phases = String(error.stdout ?? '')
     .split('\n')
     .filter((line) => line.startsWith('Deployment:'));

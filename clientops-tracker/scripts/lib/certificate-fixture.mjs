@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, copyFileSync, existsSync } from 'node:fs';
+import {
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  copyFileSync,
+  existsSync,
+  chmodSync,
+} from 'node:fs';
 
 export async function verifyCertificateHook({ config, state, directory, saveConfig, dc }) {
   const openssl =
@@ -10,6 +17,9 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
   const lineage = `${certs}-renewed`;
   mkdirSync(certs, { mode: 0o700 });
   mkdirSync(lineage, { mode: 0o700 });
+  // CI owns these host files as the runner, while the operator drops all capabilities.
+  // Only public certificates are readable across users; fixture private keys stay owner-only.
+  chmodSync(certs, 0o755);
   const ssl = (args) => execFileSync(openssl, args, { stdio: 'pipe', timeout: 30000 });
   ssl([
     'req',
@@ -26,6 +36,8 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
     '-subj',
     '/CN=ClientOps disposable authority',
   ]);
+  chmodSync(`${certs}/cert.pem`, 0o644);
+  chmodSync(`${directory}/ca.key`, 0o600);
   const extension = `${directory}/extensions.cnf`;
   writeFileSync(
     extension,
@@ -66,6 +78,8 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
       '-extfile',
       extension,
     ]);
+    chmodSync(`${folder}/fullchain.pem`, 0o644);
+    chmodSync(`${folder}/privkey.pem`, 0o600);
   }
   const nginx = `${directory}/nginx.conf`;
   writeFileSync(nginx, readFileSync('nginx/production.conf'), { mode: 0o600 });
@@ -79,6 +93,20 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
   saveConfig();
   writeFileSync(`${state}/current.json`, JSON.stringify(config), { mode: 0o600 });
   dc(['up', '-d', '--no-deps', '--force-recreate', '--wait', 'nginx']);
+  const verifyKeyIsolation = () => {
+    if (process.getuid && process.getuid() !== 0)
+      dc([
+        'run',
+        '--rm',
+        '--no-deps',
+        '--entrypoint',
+        'sh',
+        'operations',
+        '-ec',
+        'cat /certs/fullchain.pem >/dev/null; if cat /certs/privkey.pem >/dev/null 2>&1; then exit 1; fi',
+      ]);
+  };
+  verifyKeyIsolation();
   // Verify in the Compose network: host antivirus may replace localhost certificates.
   const servedSerial = () => {
     dc(['run', '--rm', '--no-deps', 'operations', 'readiness']);
@@ -140,6 +168,8 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
   hook();
   await new Promise((resolve) => setTimeout(resolve, 1000));
   await expectSerial('66');
+  productionProbe('https://localhost');
+  verifyKeyIsolation();
   assert(existsSync(`${state}/certificate.ok`));
   const previous = readFileSync(`${certs}/fullchain.pem`);
   // Wrong key is rejected before installation and sends a local capture-only failure alert.
@@ -185,10 +215,13 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
   hook();
   assert(!existsSync(`${state}/certificate.failed`));
   await expectSerial('67');
+  productionProbe('https://localhost');
+  verifyKeyIsolation();
   return {
     privateCaOnly: true,
     productionProbePrivateRouting: true,
     hostnameMismatchRejected: true,
+    runnerOwnedKeyOpenDenied: !!process.getuid && process.getuid() !== 0,
     actualNginxReload: true,
     servedSerialChanged: true,
     wrongKeyRejectedAndAlerted: true,

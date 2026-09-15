@@ -68,7 +68,7 @@ try {
   replaced = true;
   for (const file of ['fullchain.pem', 'privkey.pem']) {
     copyFileSync(`${lineage}/${file}`, `${destination}/${file}`);
-    chmodSync(`${destination}/${file}`, 0o600);
+    chmodSync(`${destination}/${file}`, file === 'privkey.pem' ? 0o600 : 0o644);
   }
   // Docker Desktop bind propagation may lag host writes. Do not acknowledge an old pair.
   const deadline = Date.now() + 30000;
@@ -98,8 +98,10 @@ try {
 } catch {
   if (replaced) {
     try {
-      for (const file of ['fullchain.pem', 'privkey.pem'])
+      for (const file of ['fullchain.pem', 'privkey.pem']) {
         copyFileSync(`${destination}/${file}.previous`, `${destination}/${file}`);
+        chmodSync(`${destination}/${file}`, file === 'privkey.pem' ? 0o600 : 0o644);
+      }
       compose(['exec', '-T', 'nginx', 'nginx', '-t']);
       compose(['exec', '-T', 'nginx', 'nginx', '-s', 'reload']);
     } catch {
