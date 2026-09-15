@@ -95,6 +95,7 @@ const restoredQuery = (sql) =>
 let client;
 let restoredAdmin;
 let bluewave;
+let phase = 'source login and recovery link';
 try {
   assert.equal(
     (
@@ -116,12 +117,14 @@ try {
     ),
     '1',
   );
+  phase = 'encrypted backup';
   const before = query(fingerprintSql);
   const dumpStarted = Date.now();
   const dump = backupDump();
   const dumpMs = Date.now() - dumpStarted;
   writeFileSync(resolve(privateDirectory, `${restoreProject}.dump`), dump, { mode: 0o600 });
   const restoreStarted = Date.now();
+  phase = 'restore into new database';
   restored(['up', '-d', '--wait', 'postgres', 'mailpit']);
   assert.equal(
     restoredQuery("SELECT count(*) FROM information_schema.tables WHERE table_schema='public'"),
@@ -144,6 +147,7 @@ try {
     { input: dump },
   );
   assert.equal(restoredQuery(fingerprintSql), before);
+  phase = 'offline sanitisation';
   const sanitize = [
     'run',
     '--rm',
@@ -167,6 +171,7 @@ try {
     restoredQuery("SELECT count(*) FROM pg_constraint WHERE contype='f' AND NOT convalidated"),
     '0',
   );
+  phase = 'restricted role provisioning';
   restored(
     [
       'run',
@@ -198,6 +203,7 @@ try {
       },
     },
   );
+  phase = 'migration and startup';
   config.services.api.environment.DATABASE_URL = `postgresql://clientops_migrator:${keys.migrator}@postgres:5432/${restoreDatabase}`;
   saveConfig();
   restored(['run', '--rm', '-T', '--no-deps', 'api', 'node', 'dist/migrate.js']);
@@ -205,6 +211,7 @@ try {
   saveConfig();
   restored(['up', '-d', '--wait', '--no-build']);
   const recoveryMs = Date.now() - restoreStarted;
+  phase = 'restored sessions, accounts and tenant boundaries';
   const { request } = await import('@playwright/test');
   restoredAdmin = await request.newContext({
     baseURL: restoredOrigin,
@@ -281,6 +288,7 @@ try {
   assert.equal(query(fingerprintSql), before);
 
   // Roll back application images only. Keep the additive schema and stop all new workers.
+  phase = 'pinned rollback startup';
   docker(['pull', rollbackApi]);
   docker(['pull', rollbackWeb]);
   const beforeRollback = restoredQuery(fingerprintSql);
@@ -297,6 +305,7 @@ try {
     ],
     { stdio: 'inherit' },
   );
+  phase = 'rollback account gate and business workflow';
   assert.equal((await restoredAdmin.get('/api/health/ready')).status(), 503);
   assert.equal(
     (await mutation(restoredAdmin, '/api/auth/forgot-password', { email })).status(),
@@ -357,9 +366,10 @@ try {
   console.log(
     'Populated restore, offline safeguards, session/link invalidation, authorisation and pinned session-era rollback passed.',
   );
-} catch {
+} catch (error) {
+  const line = error.stack?.match(/verify-restore\.mjs:(\d+):\d+/)?.[1] ?? 'unknown';
   console.error(
-    'Restore/rollback acceptance failed. Request headers and private configuration are intentionally omitted.',
+    `Restore/rollback acceptance failed at ${phase} (script line ${line}). Request headers and private configuration are intentionally omitted.`,
   );
   process.exitCode = 1;
 } finally {

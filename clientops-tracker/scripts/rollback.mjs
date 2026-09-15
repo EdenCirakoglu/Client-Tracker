@@ -55,7 +55,28 @@ try {
   execFileSync('docker', ['compose', '-p', original.name, '-f', configPath, 'stop', ...writers], {
     stdio: 'inherit',
   });
-  // Install the account-maintenance gate before starting an older API without an outbox.
+  // Keep the proxy stopped until the private applications are healthy. Its health probe needs the API.
+  execFileSync(
+    'docker',
+    [
+      'compose',
+      '-p',
+      original.name,
+      '-f',
+      configPath,
+      'up',
+      '-d',
+      '--no-build',
+      '--no-deps',
+      '--wait',
+      '--wait-timeout',
+      '90',
+      'api',
+      'web',
+    ],
+    { stdio: 'inherit' },
+  );
+  // The account-maintenance gate is already in the generated config before traffic is reopened.
   execFileSync(
     'docker',
     [
@@ -70,25 +91,9 @@ try {
       '--no-deps',
       '--force-recreate',
       '--wait',
+      '--wait-timeout',
+      '60',
       'nginx',
-    ],
-    { stdio: 'inherit' },
-  );
-  execFileSync(
-    'docker',
-    [
-      'compose',
-      '-p',
-      original.name,
-      '-f',
-      configPath,
-      'up',
-      '-d',
-      '--no-build',
-      '--no-deps',
-      '--wait',
-      'api',
-      'web',
     ],
     { stdio: 'inherit' },
   );

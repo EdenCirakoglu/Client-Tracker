@@ -31,6 +31,7 @@ const evidence = {
 let paused = false;
 let mailStopped = false;
 let secondWorker;
+let phase = 'login and readiness';
 try {
   assert.equal(
     (
@@ -42,6 +43,7 @@ try {
     200,
   );
   assert.equal((await api.get('/api/health/ready')).status(), 200);
+  phase = 'database outage and recovery';
   compose(['pause', 'postgres']);
   paused = true;
   const started = Date.now();
@@ -71,6 +73,7 @@ try {
     recovery: 200,
   };
 
+  phase = 'SMTP failure and durable retry';
   compose(['stop', 'mailpit']);
   mailStopped = true;
   const email = `delivery-${Date.now()}@ops.example`;
@@ -98,6 +101,7 @@ try {
     `SELECT t.token_hash FROM account_tokens t JOIN mail_outbox m ON m.token_id=t.id WHERE m.id='${jobId}'`,
   );
   assert(!query(`SELECT payload FROM mail_outbox WHERE id='${jobId}'`).includes(email));
+  phase = 'restart and concurrent delivery';
   compose(['restart', 'api']);
   await waitFor(
     async () => (await api.get('/api/health/ready')).status() === 200,
@@ -124,6 +128,7 @@ try {
   );
   assert.equal((await mailMessages(email)).length, 1);
   assert.equal(query(`SELECT payload IS NULL FROM mail_outbox WHERE id='${jobId}'`), 't');
+  phase = 'invitation acceptance';
   assert.equal(
     (
       await mutation(anonymous, '/api/auth/accept-invitation', {
@@ -139,6 +144,7 @@ try {
     ).status(),
     200,
   );
+  phase = 'recovery and stale-link rejection';
   await mutation(anonymous, '/api/auth/forgot-password', { email });
   const oldReset = await mailToken(email, true);
   await mutation(anonymous, '/api/auth/forgot-password', { email });
@@ -168,7 +174,12 @@ try {
     ).status(),
     200,
   );
-  const logs = compose(['logs', '--no-color', 'api']);
+  phase = 'log redaction';
+  const logOptions = { maxBuffer: 8 * 1024 * 1024 };
+  const logs = [
+    compose(['logs', '--no-color', '--since', evidence.checkedAt, 'api'], logOptions),
+    docker(['logs', '--since', evidence.checkedAt, secondWorker], logOptions),
+  ].join('\n');
   for (const secret of [invitationToken, oldReset, currentReset, keys.session, keys.mail, email])
     assert(!logs.includes(secret), 'Sensitive account data appeared in application logs');
   evidence.checks.mail = {
@@ -193,7 +204,7 @@ try {
   );
 } catch {
   console.error(
-    'Outage/retry acceptance failed. Request headers and private configuration are intentionally omitted.',
+    `Outage/retry acceptance failed at ${phase}. Request headers and private configuration are intentionally omitted.`,
   );
   process.exitCode = 1;
 } finally {

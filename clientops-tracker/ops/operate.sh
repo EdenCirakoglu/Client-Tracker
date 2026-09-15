@@ -55,10 +55,12 @@ case "$action" in
     # A trusted HTTPS request validates both hostname/chain and database readiness.
     if [ "${OPS_MODE:-production}" = disposable ]; then
       curl --silent --fail --max-time 5 --cacert /certs/cert.pem \
-        --connect-to localhost:443:nginx:443 https://localhost/api/health/ready --output /dev/null 2>/dev/null
+        --connect-to ::nginx:443 https://localhost/api/health/ready --output /dev/null 2>/dev/null
       certificate=/certs/cert.pem
     else
-      curl --silent --fail --max-time 5 "${MONITOR_ORIGIN}/api/health/ready" --output /dev/null 2>/dev/null
+      # Connect internally during private installation; URL hostname/SNI/chain are still verified.
+      curl --silent --fail --max-time 5 --connect-to ::nginx:443 \
+        "${MONITOR_ORIGIN}/api/health/ready" --output /dev/null 2>/dev/null
       certificate=/certs/fullchain.pem
     fi
     openssl x509 -checkend "${CERT_MIN_SECONDS:-1209600}" -noout -in "$certificate" >/dev/null 2>&1

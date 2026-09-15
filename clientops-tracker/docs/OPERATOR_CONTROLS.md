@@ -150,6 +150,11 @@ Schedules: daily 02:00 UTC backup; hourly bounded maintenance; five-minute monit
 
 ## Failure Visibility
 
+The operator readiness request connects to Nginx inside Compose, preserving the URL
+hostname/SNI and certificate verification with curl's [connect-to](https://curl.se/docs/manpage.html#--connect-to).
+This works before opening the host firewall and does not depend on public DNS routing.
+It is not an external availability probe; independent monitoring remains mandatory.
+
 Status timestamps and failure markers live in `operations_state`, separate from business data. Monitoring verifies a trusted HTTPS database-readiness request, certificate lifetime (14-day warning by default), failed mail or pending/sending work older than ten minutes, a successful backup younger than 26 hours, and completed maintenance. Invalid timestamps and prior backup failures fail closed.
 
 The local rehearsal deliberately tests database unavailability, backup connection failure, stale success markers, certificate-expiry threshold, failed email jobs and recovery. Webhook requests go only to an internal capture container. The private curl config supplies the real operator alert endpoint/auth in production. No recipients, reset links or tokens appear in alert payloads. Failed alert delivery exits nonzero and is visible in the unit journal. Both job-level notification and systemd `OnFailure` can notify, so duplicate alerts are possible.
@@ -173,7 +178,18 @@ node scripts/rollback.mjs --config="$STATE_DIR/current.json" --state-dir="$STATE
 node scripts/rollback.mjs --config="$STATE_DIR/current.json" --state-dir="$STATE_DIR" --confirm-project=clientops-production --target=bdc749 --schema-reviewed=true --acknowledge-account-pause=true
 ```
 
-No schema downgrade occurs. Old `bdc749` has no outbox worker/readiness endpoint: account-changing routes are blocked at Nginx **before** the API is replaced, standalone workers stopped, container health uses **liveness only**, and `/api/health/ready` explicitly returns 503 rather than pretending database readiness. The gate matches Express's case-insensitive routes and rejects a directly published API port. Monitoring must continue reporting degraded capability. Login and ticket/comment work remain available and are rehearsed. Resume dispatch only after rolling forward. JWT-era images are rejected. The generated rollback JSON/nginx config is private; subsequent operations must use it until a deliberate roll-forward to the original pinned configuration. Unknown schema changes require a new rehearsal, not blind reuse of this allowlist.
+No schema downgrade occurs. Old `bdc749` has no outbox worker/readiness endpoint:
+stop proxy/API/workers, start the private API/web and wait for their health, then
+start Nginx with account-changing routes already blocked. The API has no host port,
+so there is no ungated traffic window. Container health uses **liveness only**, and
+`/api/health/ready` explicitly returns 503 rather than pretending database readiness.
+The gate matches Express's case-insensitive routes and rejects a directly published
+API port. Monitoring must continue reporting degraded capability. Login and
+ticket/comment work remain available and are rehearsed. Resume dispatch only after
+rolling forward. JWT-era images are rejected. The generated rollback JSON/nginx
+config is private; subsequent operations must use it until a deliberate roll-forward
+to the original pinned configuration. Unknown schema changes require a new rehearsal,
+not blind reuse of this allowlist.
 
 ## Trusted HTTPS and SMTP
 

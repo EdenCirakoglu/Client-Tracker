@@ -97,6 +97,8 @@ sudo apt-get install -y git ca-certificates openssl
 sudo adduser deploy
 sudo usermod -aG docker deploy
 sudo install -d -o deploy -g deploy /opt/clientops
+sudo install -d -o root -g deploy -m 750 /etc/clientops
+sudo install -d -o deploy -g deploy -m 700 /etc/clientops/deployment
 ```
 
 Configure the deploy user's `~/.ssh/authorized_keys` with the deployment public key
@@ -109,15 +111,17 @@ docker compose version
 git clone https://github.com/EdenCirakoglu/Client-Tracker.git /opt/clientops
 cd /opt/clientops/clientops-tracker
 umask 077
-cp .env.production.example .env.production
+sudo install -o deploy -g deploy -m 600 .env.production.example /etc/clientops/production.env
 openssl rand -hex 32
 openssl rand -hex 32
-nano .env.production
-chmod 600 .env.production
+nano /etc/clientops/production.env
 ```
 
 Use the two independently generated values for the database password and session secret.
 Generate a third independent `openssl rand -hex 32` value for `MAIL_ENCRYPTION_KEY`.
+Generate additional independent values for migrator, runtime and backup passwords;
+add the required operations variables from `ops/operations.env.example` to this
+same private file. Bucket and SMTP credentials come from their actual providers.
 Do not paste real secrets into issue reports, workflow logs or screenshots.
 Use independent owner, migrator, runtime and backup database passwords; `DATABASE_URL`
 is the restricted runtime identity, not `POSTGRES_PASSWORD`. Match each URL to its

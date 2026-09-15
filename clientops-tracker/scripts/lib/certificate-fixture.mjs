@@ -95,6 +95,27 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
     return String(result).trim().replace('serial=', '');
   };
   assert.equal(await servedSerial(), '65');
+  // Test the production routing path with a private CA, not public DNS or external services.
+  const productionProbe = (origin) =>
+    dc([
+      'run',
+      '--rm',
+      '--no-deps',
+      '-e',
+      'OPS_MODE=production',
+      '-e',
+      'RESTIC_REPOSITORY=s3:https://fixture.example/unused',
+      '-e',
+      'CERT_MIN_SECONDS=604800',
+      '-e',
+      'CURL_CA_BUNDLE=/certs/cert.pem',
+      '-e',
+      `MONITOR_ORIGIN=${origin}`,
+      'operations',
+      'readiness',
+    ]);
+  productionProbe('https://localhost');
+  assert.throws(() => productionProbe('https://wrong-host.example'));
   const expectSerial = async (expected) => {
     const deadline = Date.now() + 30000;
     for (;;) {
@@ -166,6 +187,8 @@ export async function verifyCertificateHook({ config, state, directory, saveConf
   await expectSerial('67');
   return {
     privateCaOnly: true,
+    productionProbePrivateRouting: true,
+    hostnameMismatchRejected: true,
     actualNginxReload: true,
     servedSerialChanged: true,
     wrongKeyRejectedAndAlerted: true,
