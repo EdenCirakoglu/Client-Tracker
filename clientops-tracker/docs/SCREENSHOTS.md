@@ -1,5 +1,32 @@
 # Screenshot Evidence
 
+## Release Candidate Acceptance: 2026-09-15
+
+Nine fresh captures below were opened and inspected from clean `92a9b8e785db1784941bca55bcdb57a4dfd9110c`.
+Its ten browser scenarios and native-zoom step passed, but the overall CI run failed
+later in the deployment/certificate fixture. These are **UI evidence only**, not a
+passing-release claim. [Manifest and checksums](assets/screenshots/candidate-92a9b8e/manifest.json)
+identify each original PNG and the [downloaded artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34972131669/artifacts/10398681499).
+The following fixes change operational scripts, not the application or these journeys.
+
+| Step | Capture                                                                                 | Inspected result                                                                                                      |
+| ---- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 1    | [Recovery request](assets/screenshots/candidate-92a9b8e/recovery-request.png)           | Healthy: generic Check your inbox with newest-link, expiry and spam-folder guidance.                                  |
+| 2    | [Recovery success](assets/screenshots/candidate-92a9b8e/recovery-complete.png)          | Healthy: Password updated and clear Sign in action.                                                                   |
+| 3    | [Used invitation](assets/screenshots/candidate-92a9b8e/used-invitation.png)             | Healthy error state: Link unavailable, disabled submission and back/recovery guidance.                                |
+| 4    | [Password validation](assets/screenshots/candidate-92a9b8e/account-password.png)        | Healthy: visible mismatch feedback/focus, Change password, Cancel and session-ending warning.                         |
+| 5    | [Invitation delivery](assets/screenshots/candidate-92a9b8e/invitation-delivered.png)    | Healthy: explicitly reports mail-server acceptance; does not imply real inbox receipt.                                |
+| 6    | [Comment audience](assets/screenshots/candidate-92a9b8e/comment-audiences.png)          | Healthy: Internal note retained after success; matching action and confirmation, composer below header.               |
+| 7    | [Mobile collapsed](assets/screenshots/candidate-92a9b8e/mobile-filters-collapsed.png)   | Healthy: first ticket, status and priority visible at 390x640.                                                        |
+| 8    | [Mobile expanded](assets/screenshots/candidate-92a9b8e/mobile-filters-expanded.png)     | Healthy: intentional disclosure, reset/scope and readable results; URL/Back/rapid filters have behavioral assertions. |
+| 9    | [Native 200% focus](assets/screenshots/candidate-92a9b8e/native-200-keyboard-focus.png) | Healthy: password visibility focus stays below the header; remaining form is reachable by scrolling.                  |
+
+Desktop 1440x1000, mobile 390x640; expanded filters are a full-page capture.
+Native zoom used a 1440px outer window, DPR 2 and 720px effective CSS width.
+All data is fictional; no image was retouched. No additional UI defect was reproduced.
+Keyboard and axe results do **not** replace the outstanding [screen-reader walkthrough](RELEASE_CANDIDATE.md#screen-reader-manual-acceptance).
+See the [handoff](RELEASE_CANDIDATE.md) and PR for the final head's separate CI result.
+
 ## Usability and Operator Follow-up: 2026-09-14
 
 All 15 captures below were opened and inspected from hosted CI at exact revision

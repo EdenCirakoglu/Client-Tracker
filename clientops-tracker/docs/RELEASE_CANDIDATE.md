@@ -7,6 +7,75 @@ evidence must identify the newly tested PR head. PR #5 remains unmerged; no paid
 resource, public deployment, real-recipient email or manual image publication occurs
 in this phase.
 
+## Reviewed Candidate and Reproduction
+
+Operational implementation: `92a9b8e785db1784941bca55bcdb57a4dfd9110c`.
+The evidence-only commit following it does not relabel its reports. The final PR
+head and its own CI result are recorded in [PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5).
+
+The preceding [CI at `74615def`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34871656821)
+**failed**, despite passing its browser, native-zoom, API and other preceding gates.
+Rollback waited for Nginx health while its upstream API was stopped. The fix starts
+the private API/web first, then starts the already-gated proxy. No probe or test was
+removed. The clean local deployment rehearsal at `74615def` remains separate evidence
+for that revision, not a passing hosted run.
+
+The renewed local outage check initially exceeded Node's default output buffer by
+reading all accumulated preview logs; it was not a detected credential leak. The
+check now scans the entire test interval, including the temporary worker, with a
+bounded buffer and redacted phase diagnostics. A final verification-only follow-up
+also includes both stdout and stderr. Two restore attempts could not create
+a network because Docker's default address pool was exhausted. Only two confirmed
+empty diagnostic networks were removed; no container or database volume was removed.
+The succeeding populated restore retained all eight business tables, rejected old
+sessions/links and passed the pinned rollback. Its report records `74615def` plus
+uncommitted fixes; do not mislabel it as a clean-head run.
+
+At clean `92a9b8e`, these local commands completed successfully:
+
+- `pnpm typecheck`, `pnpm test` (75 API tests, nine files), `pnpm build` (API and web).
+- `node scripts/verify-deployment.mjs --followup`: installation, populated `7eba339`
+  restricted-role conversion, verified encrypted backup, deliberately failing SQL
+  migration, startup failure, reviewed repair-forward, later update, login/comments
+  and cross-organisation denial. Source records were unchanged; application images
+  were not rebuilt by the rehearsal.
+- The deployment fixture tested private-CA HTTPS, production-mode private routing,
+  hostname mismatch rejection, actual served certificate changes, wrong-key rejection,
+  failed Nginx validation/restoration and five captured failure alerts. Public CA,
+  real SMTP, S3 and real operator delivery were not exercised.
+
+Immediately before that commit, lint, formatting, all 21 helper regressions, the
+redacted secret/history scan, DB/SMTP outage/retry, encrypted backup/failure detection
+and populated restore/rollback also passed with these fixes. Hosted CI provides the
+fresh-checkout, exact-head verification rather than treating a dirty local report as
+clean evidence. Reports and exact repeat commands are below.
+
+The [fresh CI for `92a9b8e`](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34972131669)
+passed 75 API tests, 21 helper tests, builds, ten browser scenarios (82.22s,
+zero failed/skipped/flaky), native 200% zoom, restricted roles, outages, backups,
+schedules and populated restore/rollback. It **failed** during the final certificate
+fixture, so it is not a successful overall CI result. Linux reproduced the problem:
+the capabilities-dropped operator cannot open a runner-owned mode-700 certificate
+directory. The fixture now exposes only public certificates across UIDs; keys stay
+mode 600. The hook preserves readable public-chain permissions after renewal and
+restore, and Linux CI checks that the runner-owned private key cannot be opened by
+the restricted operator. Production certificate directories remain root-owned/private.
+
+The [artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34972131669/artifacts/10398681499)
+was downloaded and its ZIP SHA-256 independently matched
+`c558d19f2e8dabe18bdefa59101e22c5b11d762311fd60bb157d6897aeb5cf11`.
+[Nine inspected captures](SCREENSHOTS.md#release-candidate-acceptance-2026-09-15)
+record account states, invitation delivery, comment audience, mobile filters and
+native zoom. The archive excludes keys and dumps. Its explicit `metadata.revision`
+and recorded Git HEAD identify the actual checkout; Playwright's additional CI
+metadata may identify GitHub's synthetic PR merge ref instead.
+
+The final stdout/stderr and Linux-permission corrections follow this evidence.
+**Do not approve merge until the latest PR head's complete CI passes.** Its exact
+head, final run and artifact links are maintained in the PR handoff rather than
+assigning these earlier screenshots/results to a later revision. Screen-reader
+and real-environment acceptance remain independent launch gates.
+
 ## Review Findings and Changes
 
 - Confirmed: the old SSH workflow migrated before stopping API/worker writers and
@@ -130,9 +199,13 @@ docker image inspect "ghcr.io/edencirakoglu/client-tracker-web:$MAIN_SHA" --form
 
 Require completed/success for main CI and **both** publishing jobs, with source and
 both OCI labels equal to `MAIN_SHA`. Record their URLs and registry digests. Publication
-does not prove runtime correctness. In a clean checkout of that SHA:
+does not prove runtime correctness. On a fresh verification host, retaining the
+verified `MAIN_SHA` in the shell, use a new checkout:
 
 ```bash
+git clone https://github.com/EdenCirakoglu/Client-Tracker.git clientops-post-merge
+cd clientops-post-merge
+git checkout --detach "$MAIN_SHA"
 cd clientops-tracker
 pnpm install --frozen-lockfile
 # Only when no baseline exists on this verification host; otherwise use its preserved config.
@@ -140,6 +213,10 @@ node scripts/verify-published.mjs start --release=7eba339
 # Uses only the baseline as a read-only data source. Pulls target images, never builds them.
 node scripts/verify-deployment.mjs --published=7eba339 --target-revision="$MAIN_SHA"
 ```
+
+On this existing development machine, do not initialise a second copy of an
+already-named published baseline. Use its preserved checkout/private configuration
+or a separate verification host instead. Never remove its volume to free a name.
 
 The new rehearsal builds **only the operator image** from that clean source revision,
 labels it and pins its ID in the private configuration. Keep the source SHA, operator

@@ -206,6 +206,13 @@ rejection and failure reporting using a private CA; it is not public CA acceptan
 On hook failure (including a deployment lock conflict), correct the cause and rerun
 the hook explicitly; do not wait until the next certificate becomes due.
 
+Keep the production TLS directory root-owned/private and its private key mode 600.
+The public `fullchain.pem` is mode 644 after installation or recovery; certificates
+are not secret. The Linux CI fixture has a runner-owned public-certificate directory
+so the capabilities-dropped operator can validate its chain, while an actual file-open
+check denies access to the runner-owned private key. No production capabilities or
+secret-directory permissions are relaxed for this test.
+
 The disposable helper renews a local certificate when fewer than 24 hours remain. Browser self-signed exceptions are restricted to loopback. Production has no certificate-verification bypass and rejects demo/test/capture-mail configurations. SMTP duplicate delivery remains possible if a worker crashes after SMTP acceptance but before recording success; retries preserve single-use tokens. Real SMTP/bounce/alert acceptance remains separate from Mailpit fixture evidence.
 
 ## Real-Environment Acceptance
