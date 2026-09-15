@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import {
   compose,
@@ -175,11 +175,19 @@ try {
     200,
   );
   phase = 'log redaction';
-  const logOptions = { maxBuffer: 8 * 1024 * 1024 };
-  const logs = [
-    compose(['logs', '--no-color', '--since', evidence.checkedAt, 'api'], logOptions),
-    docker(['logs', '--since', evidence.checkedAt, secondWorker], logOptions),
-  ].join('\n');
+  const containers = [...compose(['ps', '-q', 'api']).split('\n').filter(Boolean), secondWorker];
+  const logs = containers
+    .map((container) => {
+      const result = spawnSync('docker', ['logs', '--since', evidence.checkedAt, container], {
+        encoding: 'utf8',
+        maxBuffer: 8 * 1024 * 1024,
+        timeout: 30000,
+        windowsHide: true,
+      });
+      assert(!result.error && result.status === 0, 'Could not read complete application logs');
+      return `${result.stdout}\n${result.stderr}`;
+    })
+    .join('\n');
   for (const secret of [invitationToken, oldReset, currentReset, keys.session, keys.mail, email])
     assert(!logs.includes(secret), 'Sensitive account data appeared in application logs');
   evidence.checks.mail = {
