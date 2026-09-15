@@ -1,5 +1,74 @@
 # Screenshot Evidence
 
+## Release Candidate Acceptance: 2026-09-15
+
+Nine fresh captures below were opened and inspected from clean `92a9b8e785db1784941bca55bcdb57a4dfd9110c`.
+Its ten browser scenarios and native-zoom step passed, but the overall CI run failed
+later in the deployment/certificate fixture. These are **UI evidence only**, not a
+passing-release claim. [Manifest and checksums](assets/screenshots/candidate-92a9b8e/manifest.json)
+identify each original PNG and the [downloaded artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34972131669/artifacts/10398681499).
+The following fixes change operational scripts, not the application or these journeys.
+
+| Step | Capture                                                                                 | Inspected result                                                                                                      |
+| ---- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 1    | [Recovery request](assets/screenshots/candidate-92a9b8e/recovery-request.png)           | Healthy: generic Check your inbox with newest-link, expiry and spam-folder guidance.                                  |
+| 2    | [Recovery success](assets/screenshots/candidate-92a9b8e/recovery-complete.png)          | Healthy: Password updated and clear Sign in action.                                                                   |
+| 3    | [Used invitation](assets/screenshots/candidate-92a9b8e/used-invitation.png)             | Healthy error state: Link unavailable, disabled submission and back/recovery guidance.                                |
+| 4    | [Password validation](assets/screenshots/candidate-92a9b8e/account-password.png)        | Healthy: visible mismatch feedback/focus, Change password, Cancel and session-ending warning.                         |
+| 5    | [Invitation delivery](assets/screenshots/candidate-92a9b8e/invitation-delivered.png)    | Healthy: explicitly reports mail-server acceptance; does not imply real inbox receipt.                                |
+| 6    | [Comment audience](assets/screenshots/candidate-92a9b8e/comment-audiences.png)          | Healthy: Internal note retained after success; matching action and confirmation, composer below header.               |
+| 7    | [Mobile collapsed](assets/screenshots/candidate-92a9b8e/mobile-filters-collapsed.png)   | Healthy: first ticket, status and priority visible at 390x640.                                                        |
+| 8    | [Mobile expanded](assets/screenshots/candidate-92a9b8e/mobile-filters-expanded.png)     | Healthy: intentional disclosure, reset/scope and readable results; URL/Back/rapid filters have behavioral assertions. |
+| 9    | [Native 200% focus](assets/screenshots/candidate-92a9b8e/native-200-keyboard-focus.png) | Healthy: password visibility focus stays below the header; remaining form is reachable by scrolling.                  |
+
+Desktop 1440x1000, mobile 390x640; expanded filters are a full-page capture.
+Native zoom used a 1440px outer window, DPR 2 and 720px effective CSS width.
+All data is fictional; no image was retouched. No additional UI defect was reproduced.
+Keyboard and axe results do **not** replace the outstanding [screen-reader walkthrough](RELEASE_CANDIDATE.md#screen-reader-manual-acceptance).
+See the [handoff](RELEASE_CANDIDATE.md) and PR for the final head's separate CI result.
+
+## Usability and Operator Follow-up: 2026-09-14
+
+All 15 captures below were opened and inspected from hosted CI at exact revision
+`cf6d0f4518a66df9110e6b9891d21c07309631ca`. They are original browser PNGs using
+fictional records, not mockups or retouched composites. The [manifest](assets/screenshots/followup-cf6d0f4/manifest.json)
+records scenarios, source attachments, viewport/pixel dimensions and SHA-256 checksums.
+The [passing CI artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34858027875/artifacts/10354425992)
+contains the reports and all additional captures; [follow-up evidence](FOLLOWUP_READINESS.md)
+separates published-release verification, local checks and hosted review builds.
+
+| Capture                                                                                         | Inspected result                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [Login](assets/screenshots/followup-cf6d0f4/login.png)                                          | Concise ClientOps branding; shortcuts clearly labelled Disposable demo access. Non-demo fixture independently asserts their absence. |
+| [Recovery request](assets/screenshots/followup-cf6d0f4/recovery-request.png)                    | Generic Check your inbox outcome with expiry, newest-link and spam-folder next steps.                                                |
+| [Recovery success](assets/screenshots/followup-cf6d0f4/recovery-complete.png)                   | Password updated heading and clear Sign in action.                                                                                   |
+| [Invitation setup](assets/screenshots/followup-cf6d0f4/invitation-setup.png)                    | Specific password setup action and labelled visibility controls.                                                                     |
+| [Used invitation](assets/screenshots/followup-cf6d0f4/used-invitation.png)                      | Link unavailable heading and actionable recovery guidance.                                                                           |
+| [Invitation delivery](assets/screenshots/followup-cf6d0f4/invitation-delivered.png)             | Named Email delivery region; SMTP acceptance shown, not a claim of real inbox delivery.                                              |
+| [Password validation](assets/screenshots/followup-cf6d0f4/account-password.png)                 | Check your password heading, field feedback, explicit action, Cancel and session-ending warning.                                     |
+| [Comment audiences](assets/screenshots/followup-cf6d0f4/comment-audiences.png)                  | Internal note remains selected after submission with matching action; header does not obscure the composer at scroll position 700.   |
+| [Mobile filters closed](assets/screenshots/followup-cf6d0f4/mobile-filters-collapsed.png)       | At 390x640 the first ticket title/action, status and priority are visible.                                                           |
+| [Mobile filters expanded](assets/screenshots/followup-cf6d0f4/mobile-filters-expanded.png)      | Intentional filter disclosure; scope/reset preserved. URL, rapid change and Back behaviour have browser assertions.                  |
+| [Native 200% account](assets/screenshots/followup-cf6d0f4/native-200-account.png)               | Password flow reflows without document-wide horizontal scrolling.                                                                    |
+| [Native 200% keyboard focus](assets/screenshots/followup-cf6d0f4/native-200-keyboard-focus.png) | Password visibility control focus remains visible below the header.                                                                  |
+| [Native 200% login](assets/screenshots/followup-cf6d0f4/native-200-login.png)                   | Login reflows at actual browser zoom; lower form controls remain reachable by scrolling.                                             |
+| [Desktop tickets](assets/screenshots/followup-cf6d0f4/desktop-tickets.png)                      | Existing compact rows, readable relationship names, priority and status retained.                                                    |
+| [Dark account](assets/screenshots/followup-cf6d0f4/dark-account.png)                            | Readable form, specific action, warning and Cancel within the existing teal theme.                                                   |
+
+Standard desktop viewport: 1440x1000; mobile: 390x640. Some captures are full-page,
+so PNG height can exceed viewport height. Invitation delivery is an original
+Playwright region capture. Native-zoom images capture the full Chrome content
+surface: fixed 1440px outer width, DPR 2, effective CSS width 720 (normal DPR 1,
+CSS width 1440). The manifest's native entries record the configured pre-zoom
+window, not the effective CSS viewport. Isolated Chrome 153.0.8010.12 used its
+Settings Page zoom control, not CSS scaling. Keyboard and axe checks passed;
+**an actual screen-reader walkthrough remains outstanding**.
+
+Fresh before-captures from the published `7eba339` stack reproduced the success
+heading and short-mobile filter obstruction; they remain in ignored local
+`test-results/release-7eba339/` evidence. Historical public captures below retain
+their original revisions and are not relabelled as current screens.
+
 ## Operations Acceptance: 2026-09-14
 
 These five captures were opened and inspected from the clean local revision

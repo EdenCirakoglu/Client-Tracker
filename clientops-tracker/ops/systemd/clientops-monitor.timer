@@ -1,0 +1,8 @@
+[Unit]
+Description=ClientOps readiness, mail, certificate and backup checks
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=5m
+Unit=clientops-ops@monitor.service
+[Install]
+WantedBy=timers.target

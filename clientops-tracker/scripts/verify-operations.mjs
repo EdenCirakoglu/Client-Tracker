@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import {
   compose,
@@ -11,6 +11,7 @@ import {
   mailToken,
   mutation,
   project,
+  published,
   query,
   waitFor,
 } from './lib/ops-fixture.mjs';
@@ -30,6 +31,7 @@ const evidence = {
 let paused = false;
 let mailStopped = false;
 let secondWorker;
+let phase = 'login and readiness';
 try {
   assert.equal(
     (
@@ -41,6 +43,7 @@ try {
     200,
   );
   assert.equal((await api.get('/api/health/ready')).status(), 200);
+  phase = 'database outage and recovery';
   compose(['pause', 'postgres']);
   paused = true;
   const started = Date.now();
@@ -70,6 +73,7 @@ try {
     recovery: 200,
   };
 
+  phase = 'SMTP failure and durable retry';
   compose(['stop', 'mailpit']);
   mailStopped = true;
   const email = `delivery-${Date.now()}@ops.example`;
@@ -97,6 +101,7 @@ try {
     `SELECT t.token_hash FROM account_tokens t JOIN mail_outbox m ON m.token_id=t.id WHERE m.id='${jobId}'`,
   );
   assert(!query(`SELECT payload FROM mail_outbox WHERE id='${jobId}'`).includes(email));
+  phase = 'restart and concurrent delivery';
   compose(['restart', 'api']);
   await waitFor(
     async () => (await api.get('/api/health/ready')).status() === 200,
@@ -123,6 +128,7 @@ try {
   );
   assert.equal((await mailMessages(email)).length, 1);
   assert.equal(query(`SELECT payload IS NULL FROM mail_outbox WHERE id='${jobId}'`), 't');
+  phase = 'invitation acceptance';
   assert.equal(
     (
       await mutation(anonymous, '/api/auth/accept-invitation', {
@@ -138,6 +144,7 @@ try {
     ).status(),
     200,
   );
+  phase = 'recovery and stale-link rejection';
   await mutation(anonymous, '/api/auth/forgot-password', { email });
   const oldReset = await mailToken(email, true);
   await mutation(anonymous, '/api/auth/forgot-password', { email });
@@ -167,7 +174,20 @@ try {
     ).status(),
     200,
   );
-  const logs = compose(['logs', '--no-color', 'api']);
+  phase = 'log redaction';
+  const containers = [...compose(['ps', '-q', 'api']).split('\n').filter(Boolean), secondWorker];
+  const logs = containers
+    .map((container) => {
+      const result = spawnSync('docker', ['logs', '--since', evidence.checkedAt, container], {
+        encoding: 'utf8',
+        maxBuffer: 8 * 1024 * 1024,
+        timeout: 30000,
+        windowsHide: true,
+      });
+      assert(!result.error && result.status === 0, 'Could not read complete application logs');
+      return `${result.stdout}\n${result.stderr}`;
+    })
+    .join('\n');
   for (const secret of [invitationToken, oldReset, currentReset, keys.session, keys.mail, email])
     assert(!logs.includes(secret), 'Sensitive account data appeared in application logs');
   evidence.checks.mail = {
@@ -181,10 +201,20 @@ try {
     logRedaction: true,
     fictionalAccount: email,
   };
-  writeFileSync('test-results/operations-runtime.json', JSON.stringify(evidence, null, 2));
+  writeFileSync(
+    published
+      ? 'test-results/release-7eba339/operations-runtime.json'
+      : 'test-results/operations-runtime.json',
+    JSON.stringify(evidence, null, 2),
+  );
   console.log(
     'Database outage/recovery, real SMTP outage/retry, restart, concurrent workers and stale-link checks passed.',
   );
+} catch {
+  console.error(
+    `Outage/retry acceptance failed at ${phase}. Request headers and private configuration are intentionally omitted.`,
+  );
+  process.exitCode = 1;
 } finally {
   if (paused) compose(['unpause', 'postgres']);
   if (mailStopped) compose(['start', 'mailpit']);

@@ -7,16 +7,21 @@ import { resolve } from 'node:path';
 const root = process.cwd();
 const uiFixture = process.argv.includes('--ui');
 const opsFixture = process.argv.includes('--ops');
-const demoProject = opsFixture
-  ? 'clientops-ops'
-  : uiFixture
-    ? 'clientops-ui'
-    : 'clientops-hardening';
-const accountsProject = opsFixture
-  ? 'clientops-ops-accounts'
-  : uiFixture
-    ? 'clientops-ui-accounts'
-    : 'clientops-accounts';
+const followup = process.argv.includes('--followup');
+const demoProject = followup
+  ? 'clientops-followup'
+  : opsFixture
+    ? 'clientops-ops'
+    : uiFixture
+      ? 'clientops-ui'
+      : 'clientops-hardening';
+const accountsProject = followup
+  ? 'clientops-followup-accounts'
+  : opsFixture
+    ? 'clientops-ops-accounts'
+    : uiFixture
+      ? 'clientops-ui-accounts'
+      : 'clientops-accounts';
 const legacy =
   'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83';
 mkdirSync('test-results/tls', { recursive: true });
@@ -31,15 +36,26 @@ if (!existsSync(keysFile))
     { mode: 0o600 },
   );
 const keys = JSON.parse(readFileSync(keysFile, 'utf8'));
+if (!keys.runtime || !keys.migrator) {
+  keys.runtime = randomBytes(32).toString('hex');
+  keys.migrator = randomBytes(32).toString('hex');
+  writeFileSync(keysFile, JSON.stringify(keys), { mode: 0o600 });
+}
+if (!keys.backup) {
+  keys.backup = randomBytes(32).toString('hex');
+  writeFileSync(keysFile, JSON.stringify(keys), { mode: 0o600 });
+}
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: opsFixture
-    ? 'clientops_ops_demo'
-    : uiFixture
-      ? 'clientops_ui_demo'
-      : 'clientops_hardening_demo',
-  HTTPS_PORT: opsFixture ? '8452' : uiFixture ? '8445' : '8443',
-  MAIL_PORT: opsFixture ? '8032' : uiFixture ? '8027' : '8025',
+  HARDENING_DATABASE: followup
+    ? 'clientops_followup_demo'
+    : opsFixture
+      ? 'clientops_ops_demo'
+      : uiFixture
+        ? 'clientops_ui_demo'
+        : 'clientops_hardening_demo',
+  HTTPS_PORT: followup ? '8456' : opsFixture ? '8452' : uiFixture ? '8445' : '8443',
+  MAIL_PORT: followup ? '8036' : opsFixture ? '8032' : uiFixture ? '8027' : '8025',
   HARDENING_API_IMAGE: `${demoProject}-api:local`,
   HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
@@ -48,15 +64,20 @@ const baseEnv = {
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: opsFixture
-    ? 'clientops_ops_accounts_demo'
-    : uiFixture
-      ? 'clientops_ui_accounts_demo'
-      : 'clientops_accounts_demo',
-  HTTPS_PORT: opsFixture ? '8453' : uiFixture ? '8446' : '8444',
-  MAIL_PORT: opsFixture ? '8033' : uiFixture ? '8028' : '8026',
+  HARDENING_DATABASE: followup
+    ? 'clientops_followup_accounts_demo'
+    : opsFixture
+      ? 'clientops_ops_accounts_demo'
+      : uiFixture
+        ? 'clientops_ui_accounts_demo'
+        : 'clientops_accounts_demo',
+  HTTPS_PORT: followup ? '8457' : opsFixture ? '8453' : uiFixture ? '8446' : '8444',
+  MAIL_PORT: followup ? '8037' : opsFixture ? '8033' : uiFixture ? '8028' : '8026',
   DEMO_MODE: 'false',
 };
+for (const env of [baseEnv, accountsEnv]) {
+  env.RUNTIME_DATABASE_URL = `postgresql://clientops_runtime:${keys.runtime}@postgres:5432/${env.HARDENING_DATABASE}`;
+}
 function run(command, args, env = baseEnv, capture = false) {
   return execFileSync(command, args, {
     cwd: root,
@@ -65,7 +86,7 @@ function run(command, args, env = baseEnv, capture = false) {
     encoding: 'utf8',
   })?.trim();
 }
-function compose(accounts, args, capture = false) {
+function compose(accounts, args, capture = false, extraEnv = {}) {
   return run(
     'docker',
     [
@@ -78,8 +99,61 @@ function compose(accounts, args, capture = false) {
       'docker-compose.hardening.yml',
       ...args,
     ],
-    accounts ? accountsEnv : baseEnv,
+    { ...(accounts ? accountsEnv : baseEnv), ...extraEnv },
     capture,
+  );
+}
+function provision(accounts) {
+  const database = (accounts ? accountsEnv : baseEnv).HARDENING_DATABASE;
+  compose(
+    accounts,
+    [
+      'run',
+      '--rm',
+      '--no-deps',
+      '-e',
+      'ADMIN_DATABASE_URL',
+      '-e',
+      'DATABASE_ADMIN_CONFIRM',
+      '-e',
+      'RUNTIME_PASSWORD',
+      '-e',
+      'MIGRATION_PASSWORD',
+      '-e',
+      'BACKUP_PASSWORD',
+      'api',
+      'node',
+      'dist/provision-roles.js',
+    ],
+    false,
+    {
+      ADMIN_DATABASE_URL: `postgresql://hardening:local_disposable_database_password@postgres:5432/${database}`,
+      DATABASE_ADMIN_CONFIRM: database,
+      RUNTIME_PASSWORD: keys.runtime,
+      MIGRATION_PASSWORD: keys.migrator,
+      BACKUP_PASSWORD: keys.backup,
+    },
+  );
+}
+function migrate(accounts, command = 'migrate', extras = []) {
+  const env = accounts ? accountsEnv : baseEnv;
+  compose(
+    accounts,
+    [
+      'run',
+      '--rm',
+      '--no-deps',
+      '-e',
+      'DATABASE_URL',
+      ...extras,
+      'api',
+      'node',
+      `dist/${command}.js`,
+    ],
+    false,
+    {
+      DATABASE_URL: `postgresql://clientops_migrator:${keys.migrator}@postgres:5432/${env.HARDENING_DATABASE}`,
+    },
   );
 }
 function snapshot() {
@@ -208,12 +282,13 @@ if (hasTables === '0') {
     ]);
 }
 const before = snapshot();
-compose(false, ['run', '--rm', '--no-deps', 'api', 'node', 'dist/migrate.js']);
+provision(false);
+migrate(false);
 const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  `test-results/${opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
+  `test-results/${followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),
@@ -231,7 +306,8 @@ writeFileSync(
 compose(false, ['up', '-d', '--no-build', '--wait']);
 compose(false, ['up', '-d', '--no-deps', '--force-recreate', '--wait', 'nginx']);
 compose(true, ['up', '-d', '--wait', 'postgres', 'mailpit']);
-compose(true, ['run', '--rm', '--no-deps', 'api', 'node', 'dist/migrate.js']);
+provision(true);
+migrate(true);
 const hasAdmin = compose(
   true,
   [
@@ -249,19 +325,13 @@ const hasAdmin = compose(
   true,
 );
 if (hasAdmin === '0')
-  compose(true, [
-    'run',
-    '--rm',
-    '--no-deps',
+  migrate(true, 'bootstrap', [
     '-e',
     'BOOTSTRAP_NAME=Fictional Workspace Owner',
     '-e',
     'BOOTSTRAP_EMAIL=owner@accounts.example',
     '-e',
     'BOOTSTRAP_PASSWORD=Local-owner-passphrase-42',
-    'api',
-    'node',
-    'dist/bootstrap.js',
   ]);
 compose(true, ['up', '-d', '--no-build', '--wait']);
 compose(true, ['up', '-d', '--no-deps', '--force-recreate', '--wait', 'nginx']);

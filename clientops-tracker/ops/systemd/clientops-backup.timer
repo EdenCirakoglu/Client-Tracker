@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily encrypted ClientOps backup
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+Persistent=true
+RandomizedDelaySec=5m
+Unit=clientops-ops@backup.service
+[Install]
+WantedBy=timers.target

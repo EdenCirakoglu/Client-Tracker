@@ -9,8 +9,12 @@ const expect = baseExpect.configure({ timeout: 15000 });
 const origin = process.env.VERIFY_URL ?? 'https://localhost:8452';
 if (!/^https:\/\/localhost:\d+$/.test(origin) || process.env.E2E_ALLOW_DISPOSABLE_DEMO !== 'true')
   throw new Error('Explicit disposable loopback HTTPS verification is required.');
-const directory = resolve(`test-results/ui-${before ? 'before' : 'acceptance'}`);
-const fixture = new URL(origin).port === '8452' ? 'clientops-ops' : 'clientops-hardening';
+const directory = resolve(
+  process.env.UI_EVIDENCE_DIR ?? `test-results/ui-${before ? 'before' : 'acceptance'}`,
+);
+const fixture =
+  process.env.VERIFY_PROJECT ??
+  (new URL(origin).port === '8452' ? 'clientops-ops' : 'clientops-hardening');
 mkdirSync(directory, { recursive: true });
 const revision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || undefined });
@@ -80,6 +84,11 @@ try {
     await page.goto(`${origin}/tickets`);
     await expect(page.getByRole('table')).toBeVisible();
     await screenshot(page, `${role.toLowerCase()}-mobile-tickets`, false);
+    if (before && role === 'Admin') {
+      await page.setViewportSize({ width: 390, height: 640 });
+      await screenshot(page, 'short-mobile-tickets', false);
+      await page.setViewportSize({ width: 390, height: 844 });
+    }
     if (!before) {
       await expect(page.locator('tbody a').first()).toBeInViewport();
       const results = await new AxeBuilder({ page })
@@ -157,8 +166,26 @@ if (!before) {
     const header = await page.locator('header').boundingBox();
     expect(field.y).toBeGreaterThanOrEqual(header.y + header.height);
     await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => globalThis.document.activeElement?.tagName)).toBe('INPUT');
+    await expect(
+      page.getByRole('button', { name: 'Show current password', exact: true }),
+    ).toBeFocused();
     await nativeCapture('native-200-keyboard-focus');
+    await page.getByRole('button', { name: 'Logout', exact: true }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    for (const route of ['login', 'forgot-password', 'reset-password', 'set-password']) {
+      await page.goto(`${origin}/${route}`);
+      await expect(page.locator('main h1')).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+        ),
+      ).toBe(true);
+      expect(
+        (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
+          .violations,
+      ).toEqual([]);
+      await nativeCapture(`native-200-${route}`);
+    }
     evidence.nativeZoom = {
       normal,
       zoom,

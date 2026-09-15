@@ -1,0 +1,94 @@
+{
+  "revision": "92a9b8e785db1784941bca55bcdb57a4dfd9110c",
+  "workingTreeDirty": false,
+  "ciRun": "https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34972131669",
+  "overallCiResult": "failure in deployment/certificate fixture; browser and native zoom steps passed",
+  "artifactId": 10398681499,
+  "artifactZipSha256": "c558d19f2e8dabe18bdefa59101e22c5b11d762311fd60bb157d6897aeb5cf11",
+  "inspected": "2026-09-15",
+  "source": "Original PNG attachments from test-results/browser-results.json, except native zoom from test-results/ui-acceptance. No image alteration.",
+  "desktopViewport": { "width": 1440, "height": 1000 },
+  "mobileViewport": { "width": 390, "height": 640 },
+  "nativeZoom": {
+    "outerWidth": 1440,
+    "cssWidth": 720,
+    "devicePixelRatio": 2,
+    "browser": "153.0.8010.12",
+    "method": "Chrome Settings Page zoom 200% in isolated profile"
+  },
+  "screenReader": "Manual acceptance outstanding",
+  "captures": [
+    {
+      "file": "recovery-request.png",
+      "attachment": "recovery-request",
+      "scenario": "Generic recovery outcome and next steps",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "29fdcf5fcb67931857e72761aae69b23d91cbf1f0c14409fa954604ebbe6297b"
+    },
+    {
+      "file": "recovery-complete.png",
+      "attachment": "recovery-complete",
+      "scenario": "Password updated and Sign in",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "fb79cd015e5fe9e3d2034a8a540b6479404d0f44c89fd7b40722c22eec62a49c"
+    },
+    {
+      "file": "used-invitation.png",
+      "attachment": "used-invitation",
+      "scenario": "Used link failure with recovery guidance",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "4d10efc16b56bb3c9cf3217061aa39f29556dd2221517f3acb5c999f4d07549a"
+    },
+    {
+      "file": "account-password.png",
+      "attachment": "account-password",
+      "scenario": "Password mismatch, focus, specific action and Cancel",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "25fa5f99bc0f9a783cb03935bcdea559a7e497d77e35559da73377e4c9b2862f"
+    },
+    {
+      "file": "invitation-delivered.png",
+      "attachment": "invitation-delivered",
+      "scenario": "Original Email delivery region, captured SMTP acceptance only",
+      "width": 1120,
+      "height": 204,
+      "sha256": "2b50e8b89d96699b1dbd6d6f61673fdfdfbab9cec1bb67f6eadb8edc8c52d1b1"
+    },
+    {
+      "file": "comment-audiences.png",
+      "attachment": "ticket-scroll-700",
+      "scenario": "Internal note selection and success feedback retained at scroll 700",
+      "width": 1440,
+      "height": 1000,
+      "sha256": "fa35b276c78ccd627206aba2934eacf860217904c76ef20f288d46557146230b"
+    },
+    {
+      "file": "mobile-filters-collapsed.png",
+      "attachment": "mobile-filters-collapsed",
+      "scenario": "First ticket action/status/priority visible at 390x640",
+      "width": 390,
+      "height": 640,
+      "sha256": "641e2354869bc000bb26ff6bb0cec5eccaf26dbe4e298b483fed6d1e107dc697"
+    },
+    {
+      "file": "mobile-filters-expanded.png",
+      "attachment": "mobile-filters-expanded",
+      "scenario": "Full-page expanded mobile filters and results",
+      "width": 390,
+      "height": 2132,
+      "sha256": "6db7dd48e2b8e6c363d209613b10de5c41e2d12643ae9210946e81ab07509175"
+    },
+    {
+      "file": "native-200-keyboard-focus.png",
+      "source": "test-results/ui-acceptance/native-200-keyboard-focus.png",
+      "scenario": "Visibility-control focus below header at native 200% zoom",
+      "width": 1440,
+      "height": 913,
+      "sha256": "beffe1b1808174d605f441dfd7db08f6d32cc2421182c89df4f7152ffc2af389"
+    }
+  ]
+}

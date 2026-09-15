@@ -6,6 +6,7 @@ import { LogIn, ShieldCheck, UserCog, Users } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { FieldLabel, Input } from '../../components/ui/input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import Link from 'next/link';
@@ -66,17 +67,14 @@ export default function LoginPage() {
               </div>
               <h1 className="mt-4 text-[28px] font-semibold leading-tight">ClientOps Tracker</h1>
               <p className="mt-3 text-sm leading-6 text-muted">
-                ClientOps Tracker helps software teams manage clients, projects, support tickets,
-                releases, and delivery workflow.
+                Support and delivery operations for your team and clients.
               </p>
             </div>
           </section>
 
           <section className="p-6 sm:p-8">
             <div>
-              <p className="text-sm font-semibold text-brand-700">Welcome back</p>
-              <h2 className="mt-2 text-2xl font-semibold text-ink">Sign in to ClientOps</h2>
-              <p className="mt-2 text-sm text-muted">Sign in to your workspace.</p>
+              <h2 className="text-xl font-semibold text-ink">Sign in</h2>
             </div>
 
             {sessionEnded ? (
@@ -100,21 +98,26 @@ export default function LoginPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
                   value={email}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
               </div>
               <div>
                 <FieldLabel htmlFor="login-password">Password</FieldLabel>
-                <Input
+                <PasswordInput
                   id="login-password"
+                  visibilityLabel="password"
                   required
                   autoComplete="current-password"
                   onChange={(event) => setPassword(event.target.value)}
-                  type="password"
                   value={password}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? 'login-error' : undefined}
                 />
               </div>
               {error ? (
                 <div
+                  id="login-error"
                   role="alert"
                   className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
                 >
@@ -134,6 +137,7 @@ export default function LoginPage() {
             </Link>
             {demoEnabled ? (
               <div className="mt-6 grid gap-2">
+                <p className="mb-1 text-xs font-medium text-muted">Disposable demo access</p>
                 {demoUsers.map((demo) => {
                   const Icon = demo.icon;
 

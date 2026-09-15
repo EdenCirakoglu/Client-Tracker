@@ -103,6 +103,15 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   ).toBe(true);
   await accessible(page, 'admin-invitations');
   const invitation = await emailLink(page, address);
+  await page.getByRole('button', { name: 'Refresh email delivery', exact: true }).click();
+  const delivery = page.getByRole('region', { name: 'Email delivery', exact: true });
+  await expect(
+    delivery.getByRole('cell', { name: 'Accepted by mail server', exact: true }).first(),
+  ).toBeVisible();
+  await test.info().attach('invitation-delivered', {
+    body: await delivery.screenshot(),
+    contentType: 'image/png',
+  });
   await page.getByRole('button', { name: 'Logout', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto(invitation);
@@ -110,16 +119,17 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Confirm password', { exact: true }).fill(password);
   await accessible(page, 'invitation-setup');
-  await page.getByRole('button', { name: 'Save password', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up account', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Account ready');
   await page.goto(invitation);
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Confirm password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Save password', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up account', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText(
     'expired or has already been used',
   );
   await accessible(page, 'used-invitation');
+  await expect(page.getByRole('heading', { name: 'Link unavailable' })).toBeVisible();
   await login(page, address, password);
   await expect(page.getByRole('link', { name: 'Accounts', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Clients', exact: true })).toHaveCount(0);
@@ -135,9 +145,11 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await resetTab.goto(reset);
   await resetTab.getByLabel('New password', { exact: true }).fill(`${password}-new`);
   await resetTab.getByLabel('Confirm password', { exact: true }).fill(`${password}-new`);
-  await resetTab.getByRole('button', { name: 'Save password', exact: true }).click();
+  await resetTab.getByRole('button', { name: 'Update password', exact: true }).click();
   await expect(resetTab.getByRole('status')).toContainText('All previous sessions have ended');
   await accessible(resetTab, 'recovery-complete');
+  await expect(resetTab.getByRole('heading', { name: 'Password updated' })).toBeVisible();
+  await expect(resetTab.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Tickets', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('status')).toContainText('Your session has ended');
@@ -170,20 +182,45 @@ test('password change requires confirmation and ends existing sessions', async (
   await page.goto(invitation);
   await page.getByLabel('New password', { exact: true }).fill(password);
   await page.getByLabel('Confirm password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Save password', exact: true }).click();
+  await page.getByRole('button', { name: 'Set up account', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Account ready');
   await login(page, email, password);
+  await page.getByRole('link', { name: 'My account', exact: true }).click();
+  await expect(
+    page.getByText(
+      'Changing your password ends all sessions, including this one. You will need to sign in again.',
+    ),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Cancel', exact: true }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole('link', { name: 'My account', exact: true }).click();
   await page.getByLabel('Current password', { exact: true }).fill(password);
   await page.getByLabel('New password', { exact: true }).fill(`${password}-new`);
   await page.getByLabel('Confirm password', { exact: true }).fill('Not-the-same-password');
-  await page.getByRole('button', { name: 'Save password', exact: true }).click();
+  await page.getByRole('button', { name: 'Change password', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toHaveText('Passwords do not match.');
+  await expect(page.getByLabel('Confirm password', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  await expect(page.getByLabel('Confirm password', { exact: true })).toHaveAttribute(
+    'aria-describedby',
+    'account-error',
+  );
+  await page.getByRole('button', { name: 'Show new password', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('New password', { exact: true })).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Hide new password', exact: true }).click();
+  await expect(page.getByLabel('New password', { exact: true })).toHaveAttribute(
+    'type',
+    'password',
+  );
   await page.getByLabel('Confirm password', { exact: true }).fill(`${password}-new`);
   await accessible(page, 'account-password');
-  await page.getByRole('button', { name: 'Save password', exact: true }).click();
+  await page.getByRole('button', { name: 'Change password', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Password changed');
-  await page.getByRole('link', { name: 'Back to sign in', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Password updated' })).toBeVisible();
+  await page.getByRole('link', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await login(page, email, `${password}-new`);
 });

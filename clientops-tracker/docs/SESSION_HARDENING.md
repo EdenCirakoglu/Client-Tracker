@@ -163,12 +163,13 @@ uses localhost and a published port, never the Compose hostname.
 ```bash
 dc() { docker compose -p clientops-production --env-file .env.production -f docker-compose.prod.yml "$@"; }
 dc up -d --wait postgres
-dc run --rm --no-deps api node dist/migrate.js
+dc run --rm --no-deps provision
+dc run --rm --no-deps migrate
 read -r -p 'Administrator name: ' BOOTSTRAP_NAME
 read -r -p 'Administrator email: ' BOOTSTRAP_EMAIL
 read -r -s -p 'Unique password (12+ characters): ' BOOTSTRAP_PASSWORD
 export BOOTSTRAP_NAME BOOTSTRAP_EMAIL BOOTSTRAP_PASSWORD
-dc run --rm --no-deps -e BOOTSTRAP_NAME -e BOOTSTRAP_EMAIL -e BOOTSTRAP_PASSWORD api node dist/bootstrap.js
+dc run --rm --no-deps -e BOOTSTRAP_NAME -e BOOTSTRAP_EMAIL -e BOOTSTRAP_PASSWORD bootstrap
 unset BOOTSTRAP_NAME BOOTSTRAP_EMAIL BOOTSTRAP_PASSWORD
 ```
 

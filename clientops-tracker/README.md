@@ -7,7 +7,7 @@ ClientOps Tracker is an open-source support and delivery operations platform for
 
 > See [screenshots](docs/SCREENSHOTS.md) and [release verification evidence](docs/RELEASE_READINESS.md). Local verification, hosted CI and public deployment are reported separately.
 
-The published session release is `bdc7494`. The subsequent [operations review](docs/OPERATIONS_READINESS.md) covers database readiness, encrypted durable email, backup/restore and public-launch preparation; it is not a new published or publicly deployed release.
+The current published release is [`7eba339`](docs/RELEASE_7EBA339.md), including database readiness and durable account email. Both registry images were verified locally without rebuilding. The unmerged [release candidate](docs/RELEASE_CANDIDATE.md) adds operator controls and focused usability improvements; its latest head/CI and real-environment handoff are tracked in [PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5). It is not a publicly deployed release.
 
 ![Administrator dashboard from an isolated CI container stack using fictional data](docs/assets/screenshots/ui/after/ui-admin-dashboard.png)
 

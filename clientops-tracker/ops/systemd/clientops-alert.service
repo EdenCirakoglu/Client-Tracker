@@ -1,0 +1,9 @@
+[Unit]
+Description=ClientOps operator alert
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/clientops/operations.env
+ExecStart=/usr/local/lib/clientops/scheduled.sh notify
+TimeoutStartSec=60
+UMask=0077

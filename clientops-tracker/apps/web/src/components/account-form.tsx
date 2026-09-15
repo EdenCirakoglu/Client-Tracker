@@ -3,13 +3,17 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { KeyRound, Mail } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { Button } from './ui/button';
 import { FieldLabel, Input } from './ui/input';
 import { ThemePicker } from './ui/preferences';
+import { PasswordInput } from './ui/password-input';
 
-export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' | 'change' }) {
+interface AccountFormProps {
+  mode: 'forgot' | 'invitation' | 'reset' | 'change';
+}
+export function AccountForm({ mode }: AccountFormProps) {
   const { refreshUser } = useAuth();
   const token = useRef('');
   const [ready, setReady] = useState(false);
@@ -20,13 +24,31 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [invalidLink, setInvalidLink] = useState(false);
+  const [invalidField, setInvalidField] = useState<string | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const linkRequired = mode === 'invitation' || mode === 'reset';
-  const title = {
-    forgot: 'Reset your password',
-    invitation: 'Set up your account',
-    reset: 'Choose a new password',
-    change: 'Change password',
-  }[mode];
+  const title = message
+    ? mode === 'forgot'
+      ? 'Check your inbox'
+      : mode === 'invitation'
+        ? 'Account ready'
+        : 'Password updated'
+    : invalidLink
+      ? 'Link unavailable'
+      : error
+        ? mode === 'forgot'
+          ? 'Request could not be sent'
+          : 'Check your password'
+        : {
+            forgot: 'Reset your password',
+            invitation: 'Set up your account',
+            reset: 'Choose a new password',
+            change: 'Change password',
+          }[mode];
+  useEffect(() => {
+    if (message || error) heading.current?.focus();
+  }, [message, error]);
   useEffect(() => {
     function readLink() {
       if (linkRequired) {
@@ -35,11 +57,15 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
           window.history.replaceState(null, '', window.location.pathname);
           setMessage(null);
           setError(null);
+          setInvalidLink(false);
+          setInvalidField(null);
           setPassword('');
           setConfirmation('');
         }
-        if (!/^[a-f0-9]{64}$/.test(token.current))
+        if (!/^[a-f0-9]{64}$/.test(token.current)) {
+          setInvalidLink(true);
           setError('This link is incomplete or no longer available. Request a new link.');
+        }
       }
       setReady(true);
     }
@@ -50,11 +76,14 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+    setInvalidField(null);
     if (mode !== 'forgot' && password !== confirmation) {
+      setInvalidField('confirm-password');
       setError('Passwords do not match.');
       return;
     }
     if (mode !== 'forgot' && new TextEncoder().encode(password).length > 72) {
+      setInvalidField('new-password');
       setError('Use no more than 72 bytes for your password.');
       return;
     }
@@ -72,6 +101,12 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
       setCurrent('');
       token.current = '';
     } catch (caught) {
+      if (caught instanceof ApiError && caught.code === 'LINK_INVALID') {
+        setInvalidLink(true);
+        token.current = '';
+      }
+      if (caught instanceof ApiError && caught.code === 'INVALID_PASSWORD')
+        setInvalidField('current-password');
       setError(caught instanceof Error ? caught.message : 'Unable to complete this request.');
     } finally {
       setBusy(false);
@@ -79,12 +114,20 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
   }
   return (
     <section className="mx-auto w-full max-w-md py-8">
-      <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+      <h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold text-ink">
+        {title}
+      </h1>
       {message ? (
         <div className="mt-6 space-y-4">
           <p role="status" className="text-sm text-brand-700">
             {message}
           </p>
+          {mode === 'forgot' ? (
+            <p className="text-sm text-muted">
+              If a reset email arrives, open the newest link within 30 minutes. Check your spam
+              folder. Still need help? Contact your workspace administrator.
+            </p>
+          ) : null}
           <Link
             href="/login"
             onClick={() => {
@@ -92,11 +135,17 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
             }}
             className="inline-block font-medium text-brand-700 underline"
           >
-            Back to sign in
+            Sign in
           </Link>
         </div>
       ) : (
         <form className="mt-6 space-y-4" onSubmit={(event) => void submit(event)}>
+          {mode === 'change' ? (
+            <p className="text-sm text-muted">
+              Changing your password ends all sessions, including this one. You will need to sign in
+              again.
+            </p>
+          ) : null}
           {mode === 'forgot' ? (
             <div>
               <FieldLabel htmlFor="recovery-email">Email</FieldLabel>
@@ -114,9 +163,13 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
               {mode === 'change' ? (
                 <div>
                   <FieldLabel htmlFor="current-password">Current password</FieldLabel>
-                  <Input
+                  <PasswordInput
                     id="current-password"
-                    type="password"
+                    visibilityLabel="current password"
+                    aria-invalid={invalidField === 'current-password'}
+                    aria-describedby={
+                      invalidField === 'current-password' ? 'account-error' : undefined
+                    }
                     autoComplete="current-password"
                     required
                     value={current}
@@ -126,11 +179,13 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
               ) : null}
               <div>
                 <FieldLabel htmlFor="new-password">New password</FieldLabel>
-                <Input
+                <PasswordInput
                   id="new-password"
-                  type="password"
+                  visibilityLabel="new password"
+                  disabled={invalidLink}
                   autoComplete="new-password"
-                  aria-describedby="password-requirements"
+                  aria-invalid={invalidField === 'new-password'}
+                  aria-describedby={`password-requirements${invalidField === 'new-password' ? ' account-error' : ''}`}
                   minLength={12}
                   required
                   value={password}
@@ -142,9 +197,14 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
               </div>
               <div>
                 <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
-                <Input
+                <PasswordInput
                   id="confirm-password"
-                  type="password"
+                  visibilityLabel="confirmation password"
+                  disabled={invalidLink}
+                  aria-invalid={invalidField === 'confirm-password'}
+                  aria-describedby={
+                    invalidField === 'confirm-password' ? 'account-error' : undefined
+                  }
                   autoComplete="new-password"
                   minLength={12}
                   required
@@ -155,20 +215,34 @@ export function AccountForm({ mode }: { mode: 'forgot' | 'invitation' | 'reset' 
             </>
           )}
           {error ? (
-            <p role="alert" className="text-sm text-red-700">
+            <p id="account-error" role="alert" className="text-sm text-red-700">
               {error}
             </p>
           ) : null}
           <Button type="submit" disabled={busy || !ready || (linkRequired && !token.current)}>
             {mode === 'forgot' ? <Mail className="h-4 w-4" /> : <KeyRound className="h-4 w-4" />}
-            {busy ? 'Submitting...' : mode === 'forgot' ? 'Send reset link' : 'Save password'}
+            {busy
+              ? 'Submitting...'
+              : mode === 'forgot'
+                ? 'Send reset link'
+                : mode === 'invitation'
+                  ? 'Set up account'
+                  : mode === 'change'
+                    ? 'Change password'
+                    : 'Update password'}
           </Button>
           <p className="text-sm">
             <Link
               className="text-brand-700 underline"
-              href={mode === 'reset' ? '/forgot-password' : '/login'}
+              href={
+                mode === 'change' ? '/dashboard' : mode === 'reset' ? '/forgot-password' : '/login'
+              }
             >
-              {mode === 'reset' ? 'Request another link' : 'Back to sign in'}
+              {mode === 'change'
+                ? 'Cancel'
+                : mode === 'reset'
+                  ? 'Request another link'
+                  : 'Back to sign in'}
             </Link>
           </p>
           {mode === 'invitation' ? (

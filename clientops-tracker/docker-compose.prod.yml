@@ -4,6 +4,28 @@ x-logging: &bounded-logs
     max-size: '10m'
     max-file: '3'
 services:
+  migrate:
+    profiles: [operator]
+    image: ghcr.io/${GHCR_OWNER:-edencirakoglu}/${GHCR_REPOSITORY:-client-tracker}-api:${IMAGE_TAG:-latest}
+    command: ['node', 'dist/migrate.js']
+    environment:
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:?Set the separate migrator URL}
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  provision:
+    profiles: [operator]
+    image: ghcr.io/${GHCR_OWNER:-edencirakoglu}/${GHCR_REPOSITORY:-client-tracker}-api:${IMAGE_TAG:-latest}
+    command: ['node', 'dist/provision-roles.js']
+    environment:
+      ADMIN_DATABASE_URL: ${ADMIN_DATABASE_URL:?Set the database-owner URL for provisioning only}
+      DATABASE_ADMIN_CONFIRM: ${POSTGRES_DB}
+      MIGRATION_PASSWORD: ${MIGRATION_PASSWORD:?Set the migrator password}
+      RUNTIME_PASSWORD: ${RUNTIME_PASSWORD:?Set the restricted runtime password}
+      BACKUP_PASSWORD: ${BACKUP_PASSWORD:?Set the read-only backup password}
+    depends_on:
+      postgres: { condition: service_healthy }
+
   api:
     logging: *bounded-logs
     image: ghcr.io/${GHCR_OWNER:-edencirakoglu}/${GHCR_REPOSITORY:-client-tracker}-api:${IMAGE_TAG:-latest}
@@ -46,6 +68,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  bootstrap:
+    profiles: [operator]
+    extends: { service: api }
+    restart: 'no'
+    command: ['node', 'dist/bootstrap.js']
+    environment:
+      DATABASE_URL: ${MIGRATION_DATABASE_URL}
 
   web:
     logging: *bounded-logs
@@ -91,6 +121,7 @@ services:
     volumes:
       - ./nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
       - ${TLS_CERTS_DIR:?Set a directory containing fullchain.pem and privkey.pem}:/etc/nginx/tls:ro
+      - ${ACME_WEBROOT_DIR:-./certbot-webroot}:/var/www/certbot:ro
     healthcheck:
       # Local liveness only; external acceptance must validate the trusted certificate.
       test:

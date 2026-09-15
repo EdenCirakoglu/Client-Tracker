@@ -107,6 +107,9 @@ jobs:
       - name: Build and start isolated production-style stack
         run: node scripts/hardening-stack.mjs start
 
+      - name: Restricted database privileges
+        run: node scripts/verify-database-roles.mjs
+
       - name: Browser journeys and accessibility
         env:
           E2E_ALLOW_DISPOSABLE_DEMO: "true"
@@ -125,8 +128,20 @@ jobs:
       - name: Database and SMTP outage recovery
         run: node scripts/verify-operations.mjs
 
+      - name: Encrypted backups and operational failure detection
+        run: node scripts/verify-controls.mjs
+
+      - name: Validate operator schedules without starting services
+        run: |
+          sudo install -D -m 755 ops/scheduled.sh /usr/local/lib/clientops/scheduled.sh
+          systemd-analyze verify ops/systemd/*.service ops/systemd/*.timer
+          sh -n ops/operate.sh ops/scheduled.sh ops/renew-certificate.sh
+
       - name: Populated restore and pinned rollback
         run: node scripts/verify-restore.mjs
+
+      - name: Deployment sequence and failure recovery
+        run: node scripts/verify-deployment.mjs
 
       - name: Check browser artifact privacy
         id: artifact-privacy

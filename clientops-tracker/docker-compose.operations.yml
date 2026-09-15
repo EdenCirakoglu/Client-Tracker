@@ -1,0 +1,29 @@
+# Operator jobs only. Never mount the Docker socket in a container.
+services:
+  operations:
+    profiles: [operator]
+    build:
+      context: .
+      dockerfile: ops/Dockerfile
+    image: ${OPERATIONS_IMAGE:-clientops-operations:local}
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    environment:
+      OPS_MODE: production
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: clientops_backup
+      PGPASSWORD: ${BACKUP_PASSWORD}
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?Set the encrypted off-host repository}
+      AWS_ACCESS_KEY_ID: ${BACKUP_ACCESS_KEY_ID:?Set the bucket-specific access key}
+      AWS_SECRET_ACCESS_KEY: ${BACKUP_SECRET_ACCESS_KEY:?Set the bucket-specific secret}
+      MONITOR_ORIGIN: ${APP_ORIGIN}
+    volumes:
+      - operations_state:/state
+      - ${OPS_SECRETS_DIR:?Private directory with restic-password and alert-curl.conf}:/run/secrets:ro
+      - ${TLS_CERTS_DIR}:/certs:ro
+volumes:
+  operations_state:
