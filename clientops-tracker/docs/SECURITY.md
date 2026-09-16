@@ -84,6 +84,13 @@ within the API process, not a durable queue; process interruption can lose a rec
 email. Users can request another link. Durable delivery/retry monitoring is a launch
 requirement, not something verified by local Mailpit tests.
 
+`express-rate-limit` caps `/api/auth` traffic at 300 requests/IP/15min before
+session-store access, including requests rejected by CSRF validation. It uses
+IPv6 subnet grouping and the configured trusted proxy policy. This outer guard is
+process-local and resets on restart; it supplements, not replaces, the persistent
+limits below. Health probes are outside this guard. Rejections return the usual
+JSON `RATE_LIMITED` error with HTTP 429 and `Retry-After`.
+
 `rate-limiter-flexible` uses shared PostgreSQL buckets, without memory fallback:
 login 100/IP/15min and 20/email+IP/15min; recovery 20/IP/hour and 5/email+IP/hour;
 token consumption 30/IP/15min; password change 10/IP/15min; invitations 30/IP/hour;

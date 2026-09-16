@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 
@@ -31,6 +32,23 @@ export function createApp() {
   if (env.NODE_ENV !== 'test') {
     app.use(requestLog);
   }
+
+  // Bound auth traffic before session-store access; persistent route limits still apply.
+  app.use(
+    '/api/auth',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 300,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: {
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many attempts. Please wait before trying again.',
+        },
+      },
+    }),
+  );
 
   app.get('/', (_req, res) => {
     res.status(200).json({
