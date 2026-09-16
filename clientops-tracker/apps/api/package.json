@@ -4,10 +4,7 @@
   "private": true,
   "type": "module",
   "main": "dist/server.js",
-  "files": [
-    "dist",
-    "drizzle"
-  ],
+  "files": ["dist", "drizzle"],
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup --config tsup.config.ts",
@@ -33,7 +30,7 @@
     "express": "^4.21.2",
     "express-session": "^1.19.0",
     "helmet": "^8.0.0",
-    "morgan": "^1.10.0",
+    "morgan": "^1.12.0",
     "nodemailer": "^10.0.3",
     "pg": "^8.13.1",
     "rate-limiter-flexible": "^11.2.0",
@@ -55,6 +52,6 @@
     "supertest": "^7.0.0",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.11"
   }
 }
