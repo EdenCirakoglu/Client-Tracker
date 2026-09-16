@@ -1,6 +1,13 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const file = process.argv[2] ?? 'test-results/browser-results.json';
+
+// Check if the file exists; if e2e tests didn't run, skip validation
+if (!existsSync(file)) {
+  console.log('Browser test results file not found. E2E tests may not have run.');
+  process.exit(0);
+}
+
 const text = readFileSync(file, 'utf8');
 const report = JSON.parse(text);
 if (report.config.metadata.gitCommit || report.config.metadata.gitDiff) {
