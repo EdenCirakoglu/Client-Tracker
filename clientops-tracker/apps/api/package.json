@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "main": "dist/server.js",
-  "files": ["dist", "drizzle"],
+  "files": [
+    "dist",
+    "drizzle"
+  ],
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsup --config tsup.config.ts",
@@ -52,6 +55,7 @@
     "supertest": "^7.0.0",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
+    "vite": "^7.3.6",
     "vitest": "^4.1.11"
   }
 }
