@@ -65,6 +65,20 @@ curl -fsS -b cookies.txt http://localhost:8080/api/auth/me
 
 ## Endpoint Groups
 
+### Delivery, scope and progress summaries
+
+The [delivery-plan contract](DELIVERY_PLANNING.md) adds `GET /api/dashboard/delivery`
+with bounded, tenant-scoped views and full-scope counts. Delivery proposals accept an
+optional UTC `targetDate` and internal `ownerId`; internal users can retrieve allowed
+owner IDs/names at `GET /api/tickets/:id/delivery/owners`. Date/owner changes create
+a revision requiring renewed client agreement.
+
+The [product workflow reference](PRODUCT_WORKFLOWS.md) documents the new routes under
+`/api/tickets/:id/delivery`, `/api/tickets/:id/scope` and `/api/summaries`, including
+revision conflicts, designated client decisions, safe exports and preview/publication.
+These routes use the same session and CSRF controls as the existing API. Publishing a
+summary makes its reviewed snapshot visible in the client portal; it does not send email.
+
 ### Health and documentation
 
 - `GET /health` - public liveness response on the direct API service.

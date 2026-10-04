@@ -8,20 +8,25 @@ const root = process.cwd();
 const uiFixture = process.argv.includes('--ui');
 const opsFixture = process.argv.includes('--ops');
 const followup = process.argv.includes('--followup');
-const demoProject = followup
-  ? 'clientops-followup'
-  : opsFixture
-    ? 'clientops-ops'
-    : uiFixture
-      ? 'clientops-ui'
-      : 'clientops-hardening';
-const accountsProject = followup
-  ? 'clientops-followup-accounts'
-  : opsFixture
-    ? 'clientops-ops-accounts'
-    : uiFixture
-      ? 'clientops-ui-accounts'
-      : 'clientops-accounts';
+const feature = process.argv.includes('--feature');
+const demoProject = feature
+  ? 'clientops-feature-release'
+  : followup
+    ? 'clientops-followup'
+    : opsFixture
+      ? 'clientops-ops'
+      : uiFixture
+        ? 'clientops-ui'
+        : 'clientops-hardening';
+const accountsProject = feature
+  ? 'clientops-feature-release-accounts'
+  : followup
+    ? 'clientops-followup-accounts'
+    : opsFixture
+      ? 'clientops-ops-accounts'
+      : uiFixture
+        ? 'clientops-ui-accounts'
+        : 'clientops-accounts';
 const legacy =
   'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83';
 mkdirSync('test-results/tls', { recursive: true });
@@ -47,15 +52,33 @@ if (!keys.backup) {
 }
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: followup
-    ? 'clientops_followup_demo'
-    : opsFixture
-      ? 'clientops_ops_demo'
-      : uiFixture
-        ? 'clientops_ui_demo'
-        : 'clientops_hardening_demo',
-  HTTPS_PORT: followup ? '8456' : opsFixture ? '8452' : uiFixture ? '8445' : '8443',
-  MAIL_PORT: followup ? '8036' : opsFixture ? '8032' : uiFixture ? '8027' : '8025',
+  HARDENING_DATABASE: feature
+    ? 'clientops_feature_release_demo'
+    : followup
+      ? 'clientops_followup_demo'
+      : opsFixture
+        ? 'clientops_ops_demo'
+        : uiFixture
+          ? 'clientops_ui_demo'
+          : 'clientops_hardening_demo',
+  HTTPS_PORT: feature
+    ? '8458'
+    : followup
+      ? '8456'
+      : opsFixture
+        ? '8452'
+        : uiFixture
+          ? '8445'
+          : '8443',
+  MAIL_PORT: feature
+    ? '8038'
+    : followup
+      ? '8036'
+      : opsFixture
+        ? '8032'
+        : uiFixture
+          ? '8027'
+          : '8025',
   HARDENING_API_IMAGE: `${demoProject}-api:local`,
   HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
@@ -64,15 +87,33 @@ const baseEnv = {
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: followup
-    ? 'clientops_followup_accounts_demo'
-    : opsFixture
-      ? 'clientops_ops_accounts_demo'
-      : uiFixture
-        ? 'clientops_ui_accounts_demo'
-        : 'clientops_accounts_demo',
-  HTTPS_PORT: followup ? '8457' : opsFixture ? '8453' : uiFixture ? '8446' : '8444',
-  MAIL_PORT: followup ? '8037' : opsFixture ? '8033' : uiFixture ? '8028' : '8026',
+  HARDENING_DATABASE: feature
+    ? 'clientops_feature_release_accounts_demo'
+    : followup
+      ? 'clientops_followup_accounts_demo'
+      : opsFixture
+        ? 'clientops_ops_accounts_demo'
+        : uiFixture
+          ? 'clientops_ui_accounts_demo'
+          : 'clientops_accounts_demo',
+  HTTPS_PORT: feature
+    ? '8459'
+    : followup
+      ? '8457'
+      : opsFixture
+        ? '8453'
+        : uiFixture
+          ? '8446'
+          : '8444',
+  MAIL_PORT: feature
+    ? '8039'
+    : followup
+      ? '8037'
+      : opsFixture
+        ? '8033'
+        : uiFixture
+          ? '8028'
+          : '8026',
   DEMO_MODE: 'false',
 };
 for (const env of [baseEnv, accountsEnv]) {
@@ -168,7 +209,11 @@ function snapshot() {
       'releases',
       'triage_suggestions',
     ].map((table) => {
-      const row = 'to_jsonb(t)';
+      // Compare all pre-feature fields; the two additive nullable columns did not exist before.
+      const row =
+        table === 'tickets'
+          ? "to_jsonb(t) - 'original_title' - 'original_description'"
+          : 'to_jsonb(t)';
       const result = compose(
         false,
         [
@@ -288,7 +333,7 @@ const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  `test-results/${followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
+  `test-results/${feature ? 'feature' : followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),

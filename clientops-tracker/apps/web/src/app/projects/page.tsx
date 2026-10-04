@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useMemo, useState } from 'react';
 import { Plus, Save } from 'lucide-react';
@@ -152,7 +153,14 @@ export default function ProjectsPage() {
               <tbody className="divide-y divide-border">
                 {filteredProjects.map((project) => (
                   <tr key={project.id}>
-                    <Td className="font-medium text-ink">{project.name}</Td>
+                    <Td className="font-medium text-ink">
+                      <Link
+                        className="text-brand-700 hover:underline"
+                        href={`/delivery?projectId=${project.id}`}
+                      >
+                        {project.name}
+                      </Link>
+                    </Td>
                     <Td>{clientById.get(project.clientId)?.name ?? 'Not available'}</Td>
                     <Td>
                       <Badge value={project.status} />

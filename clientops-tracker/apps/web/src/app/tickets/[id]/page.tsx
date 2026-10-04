@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Bot, MessageSquare, RefreshCw, WandSparkles } from 'lucide-react';
 
 import { ProtectedPage } from '../../../components/app-shell';
+import { TicketDeliveryRecord } from '../../../components/tickets/delivery-record';
+import { ScopeChange } from '../../../components/tickets/scope-change';
 import { PageHeader } from '../../../components/page-header';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -78,6 +80,41 @@ export default function TicketDetailPage() {
   useEffect(() => {
     if (user) void loadTicket();
   }, [ticketId, user?.id]);
+
+  useEffect(() => {
+    if (loading) return;
+    const root = document.getElementById('main-content');
+    if (!root) return;
+    let frame = 0;
+    // Both records load independently; an earlier section can move the anchor below the viewport.
+    const observer = new MutationObserver(jumpToRecord);
+    function jumpToRecord() {
+      const id = window.location.hash.slice(1);
+      if (!['delivery', 'scope'].includes(id)) return;
+      if (root!.querySelector('#scope[aria-busy="true"], #delivery[aria-busy="true"]')) return;
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() =>
+        document.getElementById(id)?.scrollIntoView({ block: 'start' }),
+      );
+    }
+    function watchRecord() {
+      observer.observe(root!, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['aria-busy'],
+      });
+      jumpToRecord();
+    }
+    watchRecord();
+    window.addEventListener('hashchange', watchRecord);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener('hashchange', watchRecord);
+    };
+  }, [loading, ticketId]);
 
   async function updateTicket(body: Partial<Pick<Ticket, 'status' | 'priority' | 'category'>>) {
     setSaving(true);
@@ -274,6 +311,12 @@ export default function TicketDetailPage() {
               </Card>
             ) : null}
 
+            <ScopeChange ticketId={ticket.id} category={ticket.category} />
+            <TicketDeliveryRecord
+              key={ticket.id}
+              ticketId={ticket.id}
+              projectId={ticket.projectId}
+            />
             <Card>
               <CardHeader title="Comments" />
               <div className="divide-y divide-border">

@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   check,
+  date,
   index,
   integer,
   json,
@@ -209,6 +210,8 @@ export const tickets = pgTable(
     assignedToId: uuid('assigned_to_id').references(() => users.id, { onDelete: 'set null' }),
     title: varchar('title', { length: 220 }).notNull(),
     description: text('description').notNull(),
+    originalTitle: text('original_title'),
+    originalDescription: text('original_description'),
     category: ticketCategoryEnum('category').notNull(),
     priority: ticketPriorityEnum('priority').notNull().default('MEDIUM'),
     status: ticketStatusEnum('status').notNull().default('OPEN'),
@@ -309,6 +312,140 @@ export const triageSuggestions = pgTable(
       'triage_suggestions_confidence_score_check',
       sql`${table.confidenceScore} >= 0 AND ${table.confidenceScore} <= 100`,
     ),
+  }),
+);
+
+export const deliveryRevisions = pgTable(
+  'delivery_revisions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    revision: integer('revision').notNull(),
+    outcome: text('outcome').notNull(),
+    targetDate: date('target_date', { mode: 'string' }),
+    ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'restrict' }),
+    ownerName: text('owner_name'),
+    reviewerId: uuid('reviewer_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    reviewerName: text('reviewer_name').notNull(),
+    state: varchar('state', { length: 32 }).notNull().default('PROPOSED'),
+    releaseId: uuid('release_id').references(() => releases.id, { onDelete: 'restrict' }),
+    releaseVersion: text('release_version'),
+    deliveryNotes: text('delivery_notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    revisionUnique: uniqueIndex('delivery_revisions_ticket_revision_unique').on(
+      table.ticketId,
+      table.revision,
+    ),
+    stateCheck: check(
+      'delivery_revisions_state_check',
+      sql`${table.state} IN ('PROPOSED', 'AGREED', 'AWAITING_ACCEPTANCE', 'ACCEPTED', 'CHANGES_REQUESTED')`,
+    ),
+    revisionCheck: check('delivery_revisions_revision_check', sql`${table.revision} > 0`),
+    targetDateIdx: index('delivery_revisions_target_date_idx').on(table.targetDate),
+  }),
+);
+
+// All entries here are deliberately client-visible. Internal events stay in ticket_events.
+export const deliveryEvents = pgTable(
+  'delivery_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    revisionId: uuid('revision_id')
+      .notNull()
+      .references(() => deliveryRevisions.id, { onDelete: 'cascade' }),
+    actorId: uuid('actor_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    actorName: text('actor_name').notNull(),
+    action: varchar('action', { length: 32 }).notNull(),
+    feedback: text('feedback'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    actionUnique: uniqueIndex('delivery_events_revision_action_unique').on(
+      table.revisionId,
+      table.action,
+    ),
+    actionCheck: check(
+      'delivery_events_action_check',
+      sql`${table.action} IN ('PROPOSED', 'AGREED', 'ACCEPTANCE_REQUESTED', 'ACCEPTED', 'CHANGES_REQUESTED')`,
+    ),
+  }),
+);
+
+export const scopeProposals = pgTable(
+  'scope_proposals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ticketId: uuid('ticket_id')
+      .notNull()
+      .references(() => tickets.id, { onDelete: 'cascade' }),
+    revision: integer('revision').notNull(),
+    scope: text('scope').notNull(),
+    exclusions: text('exclusions').notNull(),
+    estimate: text('estimate').notNull(),
+    deliveryImplications: text('delivery_implications').notNull(),
+    externalReference: varchar('external_reference', { length: 255 }),
+    approverId: uuid('approver_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    approverName: text('approver_name').notNull(),
+    proposedBy: text('proposed_by').notNull(),
+    state: varchar('state', { length: 24 }).notNull().default('PROPOSED'),
+    decidedBy: text('decided_by'),
+    feedback: text('feedback'),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    revisionUnique: uniqueIndex('scope_proposals_ticket_revision_unique').on(
+      table.ticketId,
+      table.revision,
+    ),
+    stateCheck: check(
+      'scope_proposals_state_check',
+      sql`${table.state} IN ('PROPOSED', 'APPROVED', 'REJECTED', 'CHANGES_REQUESTED')`,
+    ),
+    revisionCheck: check('scope_proposals_revision_check', sql`${table.revision} > 0`),
+  }),
+);
+
+export interface SummaryItem {
+  title: string;
+  href: string;
+  detail: string;
+  recordedAt: string | null;
+}
+export interface SummarySection {
+  key: string;
+  label: string;
+  items: SummaryItem[];
+  truncated: boolean;
+}
+export const progressSummaries = pgTable(
+  'progress_summaries',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    clientId: uuid('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'cascade' }),
+    clientName: text('client_name').notNull(),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+    sections: json('sections').$type<SummarySection[]>().notNull(),
+    createdBy: text('created_by').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    publishedBy: text('published_by'),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+  },
+  (table) => ({
+    clientIdx: index('progress_summaries_client_created_idx').on(table.clientId, table.createdAt),
   }),
 );
 

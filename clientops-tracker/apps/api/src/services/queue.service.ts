@@ -15,6 +15,7 @@ export const queueQuerySchema = z
     assignment: z.enum(['mine', 'unassigned']).optional(),
     assignedToId: z.string().uuid().optional(),
     projectId: z.string().uuid().optional(),
+    clientId: z.string().uuid().optional(),
     resolvedMonth: z
       .string()
       .regex(/^[1-9]\d{3}-(0[1-9]|1[0-2])$/)
@@ -60,6 +61,7 @@ export function queuePredicate(user: AuthenticatedUser, query: Partial<QueueQuer
     query.priority ? eq(tickets.priority, query.priority) : undefined,
     query.category ? eq(tickets.category, query.category) : undefined,
     query.projectId ? eq(tickets.projectId, query.projectId) : undefined,
+    query.clientId ? eq(projects.clientId, query.clientId) : undefined,
     query.assignment === 'mine' ? eq(tickets.assignedToId, user.id) : undefined,
     query.assignment === 'unassigned' ? isNull(tickets.assignedToId) : undefined,
     query.assignedToId ? eq(tickets.assignedToId, query.assignedToId) : undefined,

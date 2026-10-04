@@ -5,9 +5,17 @@
 
 ClientOps Tracker is an open-source support and delivery operations platform for small software teams. It brings client context, projects, support tickets, releases, operational metrics, and assisted triage into one workflow.
 
+## Open Source and Paid Services
+
+Use or self-host the public code without purchasing a service. Optional paid work starts with **assisted installation**: a scoped private deployment, configuration, branding and onboarding. Managed hosting is a later offer, subject to real operational acceptance.
+
+[Book a demo](docs/SERVICES.md#book-a-demo) | [Buy installation](docs/SERVICES.md#buy-installation)
+
+Booking and checkout are **not yet configured**. These links currently lead to service information, not a live booking system or payment page. See the [service scope](docs/SERVICES.md) and [commercial setup guide](docs/MONETISATION.md). Sponsorship is optional support for development, not a service purchase.
+
 > See [screenshots](docs/SCREENSHOTS.md) and [release verification evidence](docs/RELEASE_READINESS.md). Local verification, hosted CI and public deployment are reported separately.
 
-The current published release is [`7eba339`](docs/RELEASE_7EBA339.md), including database readiness and durable account email. Both registry images were verified locally without rebuilding. The unmerged [release candidate](docs/RELEASE_CANDIDATE.md) adds operator controls and focused usability improvements; its latest head/CI and real-environment handoff are tracked in [PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5). It is not a publicly deployed release.
+The historical [`7eba339` published-image verification](docs/RELEASE_7EBA339.md) remains evidence for that image pair only. [PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5) was subsequently merged as `bcbb953`, adding operator controls and usability improvements. Current delivery workflows, source-revision CI, isolated upgrade/recovery checks and preview instructions are recorded in [feature release verification](docs/FEATURE_RELEASE_VERIFICATION.md) and [PR #16](https://github.com/EdenCirakoglu/Client-Tracker/pull/16). Source-built container checks do not verify a later published image. Public deployment is not claimed.
 
 ![Administrator dashboard from an isolated CI container stack using fictional data](docs/assets/screenshots/ui/after/ui-admin-dashboard.png)
 
@@ -16,6 +24,9 @@ The current published release is [`7eba339`](docs/RELEASE_7EBA339.md), including
 Small software teams often split client requests between email, chat, spreadsheets, and issue trackers. That makes ownership, visibility, and delivery history difficult to maintain. ClientOps Tracker provides a focused portal where internal teams and clients can work from the same operational record while seeing only the data appropriate to their role.
 
 ## Features
+
+- [Client delivery workflows](docs/PRODUCT_WORKFLOWS.md): versioned acceptance criteria, release-linked delivery, explicit client acceptance, client-safe export, scope approval and previewed portal progress summaries. These are product hypotheses for agency validation, not proven commercial demand.
+- [Delivery planning](docs/DELIVERY_PLANNING.md): named owners and client-agreed target dates, project-filtered plans and factual dashboard follow-up. [Installation acceptance guide](docs/INSTALLATION_GUIDE.md) for teams evaluating self-hosting or assisted setup.
 
 - Revocable PostgreSQL sessions, HttpOnly cookies, CSRF protection, administrator invitations and password recovery.
 - Role-based access control for administrators, developers, and clients.
@@ -370,7 +381,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) and [PROJECT_SUMMARY.md](PROJECT_SU
 
 ## Roadmap and Future Business Models
 
-Product and engineering improvements are tracked in [docs/ROADMAP.md](docs/ROADMAP.md). Realistic future models are described in [docs/MONETISATION.md](docs/MONETISATION.md), including hosted SaaS, paid deployment/customisation, premium features, and an agency client-portal template.
+Product and engineering improvements are tracked in [docs/ROADMAP.md](docs/ROADMAP.md). The [commercial setup guide](docs/MONETISATION.md) prioritises assisted installation, with managed instances and scoped custom work as later options. It separates external service checkout, optional sponsorship and a future GitHub Marketplace integration.
 
 ## Contributing
 
@@ -378,4 +389,4 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
 
 ## License
 
-ClientOps Tracker is released under the [MIT License](LICENSE).
+ClientOps Tracker is released under the [MIT License](LICENSE). Commercial use, modification and redistribution are permitted with the required copyright and licence notices. Paid service terms cover the agreed work; they do not make the public MIT code exclusive or remove its licence permissions. Third-party dependencies retain their own licences.

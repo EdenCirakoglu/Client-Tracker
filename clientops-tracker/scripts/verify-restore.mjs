@@ -38,6 +38,10 @@ const tables = [
   'ticket_events',
   'releases',
   'triage_suggestions',
+  'delivery_revisions',
+  'delivery_events',
+  'scope_proposals',
+  'progress_summaries',
 ];
 const fingerprintSql = tables
   .map(
@@ -59,6 +63,8 @@ const restoredOrigin = `https://localhost:${port}`;
 const config = JSON.parse(compose(['config', '--format', 'json']));
 config.name = restoreProject;
 config.networks.default.name = `${restoreProject}_default`;
+if (process.env.VERIFY_DISPOSABLE_SUBNET)
+  config.networks.default.ipam = { config: [{ subnet: process.env.VERIFY_DISPOSABLE_SUBNET }] };
 config.volumes.postgres_data.name = `${restoreProject}_postgres_data`;
 config.services.postgres.environment.POSTGRES_DB = restoreDatabase;
 delete config.services.mailpit.ports;
@@ -107,6 +113,19 @@ try {
     200,
   );
   const liveCookie = await api.storageState();
+  const workflowRecords = [];
+  for (const [table, path] of [
+    ['delivery_revisions', (id) => `/api/tickets/${id}/delivery/export`],
+    ['scope_proposals', (id) => `/api/tickets/${id}/scope`],
+    ['progress_summaries', (id) => `/api/summaries/${id}`],
+  ]) {
+    const key = table === 'progress_summaries' ? 'id' : 'ticket_id';
+    const id = query(`SELECT ${key} FROM ${table} ORDER BY created_at DESC, id LIMIT 1`);
+    assert.match(id, /^[a-f0-9-]{36}$/, `Restore requires populated ${table} browser fixtures`);
+    const response = await api.get(path(id));
+    assert.equal(response.status(), 200);
+    workflowRecords.push({ path: path(id), data: (await response.json()).data });
+  }
   const previousMessages = (await mailMessages(email)).map((message) => message.ID);
   assert.equal((await mutation(anonymous, '/api/auth/forgot-password', { email })).status(), 202);
   const liveReset = await mailToken(email, true, '', previousMessages);
@@ -247,6 +266,11 @@ try {
     200,
   );
   assert.throws(() => restored(sanitize), 'A live database must not be sanitised');
+  for (const record of workflowRecords) {
+    const response = await restoredAdmin.get(record.path);
+    assert.equal(response.status(), 200);
+    assert.deepEqual((await response.json()).data, record.data);
+  }
   client = await context(restoredOrigin);
   bluewave = await context(restoredOrigin);
   assert.equal(

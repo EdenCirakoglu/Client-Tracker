@@ -1,5 +1,11 @@
 # Screenshot Evidence
 
+Current feature-release selections, their tested revisions, viewports and inspection
+notes are in [FEATURE_RELEASE_VERIFICATION.md#inspected-captures](FEATURE_RELEASE_VERIFICATION.md#inspected-captures).
+The `assets/screenshots/feature-release/` directories preserve both the combined
+workflow run and the subsequent corrected mobile hierarchy/native-zoom run.
+Earlier captures below remain historical evidence.
+
 ## Release Candidate Acceptance: 2026-09-15
 
 Nine fresh captures below were opened and inspected from clean `92a9b8e785db1784941bca55bcdb57a4dfd9110c`.

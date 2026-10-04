@@ -1,5 +1,11 @@
 import type {
   TicketQueue,
+  DeliveryRecord,
+  DeliveryPlan,
+  ScopeProposal,
+  ScopeProposalInput,
+  ProgressSummary,
+  SummaryInput,
   ActivityPage,
   Client,
   DashboardMetrics,
@@ -140,6 +146,15 @@ export const api = {
     body: Partial<{ name: string; contactEmail: string; phone: string | null }>,
   ) => apiRequest<Client>(`/api/clients/${id}`, { method: 'PATCH', body }),
   projects: () => apiRequest<Project[]>('/api/projects'),
+  summaries: (page = 1) =>
+    apiRequest<{ items: Omit<ProgressSummary, 'sections'>[]; page: number; hasMore: boolean }>(
+      `/api/summaries?page=${page}`,
+    ),
+  summary: (id: string) => apiRequest<ProgressSummary>(`/api/summaries/${id}`),
+  generateSummary: (body: SummaryInput) =>
+    apiRequest<ProgressSummary>('/api/summaries', { method: 'POST', body }),
+  publishSummary: (id: string) =>
+    apiRequest<ProgressSummary>(`/api/summaries/${id}/publish`, { method: 'POST' }),
   createProject: (body: {
     clientId: string;
     name: string;
@@ -154,6 +169,54 @@ export const api = {
   ticketQueue: (query: string = '') => apiRequest<TicketQueue>(`/api/tickets/queue?${query}`),
   activity: (query: string = '') => apiRequest<ActivityPage>(`/api/dashboard/activity?${query}`),
   ticket: (id: string) => apiRequest<Ticket>(`/api/tickets/${id}`),
+  delivery: (id: string) => apiRequest<DeliveryRecord>(`/api/tickets/${id}/delivery`),
+  scopeProposals: (id: string) => apiRequest<ScopeProposal[]>(`/api/tickets/${id}/scope`),
+  proposeScope: (id: string, body: ScopeProposalInput) =>
+    apiRequest<ScopeProposal[]>(`/api/tickets/${id}/scope`, { method: 'POST', body }),
+  decideScope: (
+    id: string,
+    revisionId: string,
+    body: { decision: 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED'; feedback: string },
+  ) =>
+    apiRequest<ScopeProposal[]>(`/api/tickets/${id}/scope/${revisionId}/decision`, {
+      method: 'POST',
+      body,
+    }),
+  deliveryReviewers: (id: string) =>
+    apiRequest<{ id: string; name: string }[]>(`/api/tickets/${id}/delivery/reviewers`),
+  deliveryOwners: (id: string) =>
+    apiRequest<{ id: string; name: string }[]>(`/api/tickets/${id}/delivery/owners`),
+  deliveryPlan: (query = '') => apiRequest<DeliveryPlan>(`/api/dashboard/delivery?${query}`),
+  proposeOutcome: (
+    id: string,
+    body: {
+      expectedRevision: number;
+      reviewerId: string;
+      outcome: string;
+      ownerId?: string;
+      targetDate?: string | null;
+    },
+  ) => apiRequest<DeliveryRecord>(`/api/tickets/${id}/delivery`, { method: 'POST', body }),
+  requestAcceptance: (
+    id: string,
+    revisionId: string,
+    body: { releaseId: string; deliveryNotes: string },
+  ) =>
+    apiRequest<DeliveryRecord>(`/api/tickets/${id}/delivery/${revisionId}/request-acceptance`, {
+      method: 'POST',
+      body,
+    }),
+  decideDelivery: (
+    id: string,
+    revisionId: string,
+    body: { decision: 'AGREED' | 'ACCEPTED' | 'CHANGES_REQUESTED'; feedback: string },
+  ) =>
+    apiRequest<DeliveryRecord>(`/api/tickets/${id}/delivery/${revisionId}/decision`, {
+      method: 'POST',
+      body,
+    }),
+  exportDelivery: (id: string) =>
+    apiRequest<{ filename: string; content: string }>(`/api/tickets/${id}/delivery/export`),
   createTicket: (body: {
     projectId: string;
     title: string;

@@ -2,6 +2,7 @@
   "name": "@clientops/api",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "main": "dist/server.js",
   "files": [

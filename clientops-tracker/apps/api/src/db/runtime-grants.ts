@@ -9,6 +9,10 @@ export const applicationTables = [
   'ticket_events',
   'releases',
   'triage_suggestions',
+  'delivery_revisions',
+  'delivery_events',
+  'scope_proposals',
+  'progress_summaries',
   'web_sessions',
   'auth_sessions',
   'account_tokens',
@@ -30,7 +34,7 @@ export async function grantRuntimeAccess(client: PoolClient | Pool) {
     const operations =
       table === 'bootstrap_state'
         ? 'SELECT'
-        : table === 'ticket_events'
+        : ['ticket_events', 'delivery_events'].includes(table)
           ? 'SELECT, INSERT'
           : [
                 'web_sessions',

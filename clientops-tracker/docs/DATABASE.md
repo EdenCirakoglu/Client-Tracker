@@ -1,5 +1,26 @@
 # Database
 
+Migration `0006_hesitant_nitro.sql` adds optional UTC target dates and internal owner
+identity/name snapshots to delivery revisions, preserving old rows without inventing
+historical commitments. See [delivery planning](DELIVERY_PLANNING.md) for semantics.
+
+## Product Workflow Migrations
+
+Additive migrations `0003` through `0005` retain existing records and add immutable
+original-request fields, `delivery_revisions`, append-only `delivery_events`,
+`scope_proposals` and `progress_summaries`. Delivery and scope revisions belong to a
+ticket; designated reviewers belong to its client organisation. Summaries belong
+to a client and store a reviewed snapshot, not a live aggregation.
+
+Ticket-row locks serialize revision creation and decisions. Unique ticket/revision
+and revision/action constraints prevent duplicate versions and delivery events.
+Client decisions do not change ticket resolution or release publication.
+
+Run `pnpm db:migrate` before starting the updated application; do not reseed an
+existing database. Restricted deployments must also apply the updated runtime
+grant allowlist with migration privileges, following [OPERATOR_CONTROLS.md](OPERATOR_CONTROLS.md).
+See [workflow design](PRODUCT_WORKFLOWS.md) and [local verification](PRODUCT_WORKFLOWS_VERIFICATION.md).
+
 ## Session and Account Migration
 
 The additive `0001_tense_scarlet_witch.sql` migration retains all original business

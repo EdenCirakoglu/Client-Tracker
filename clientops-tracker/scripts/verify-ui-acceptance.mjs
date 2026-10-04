@@ -146,7 +146,14 @@ if (!before) {
       writeFileSync(resolve(directory, `${name}.png`), png);
       evidence.screens.push(name);
     };
-    for (const route of ['/dashboard', '/tickets', '/users', '/account']) {
+    for (const route of [
+      '/dashboard',
+      '/delivery',
+      '/summaries',
+      '/tickets',
+      '/users',
+      '/account',
+    ]) {
       await page.goto(`${origin}${route}`);
       await expect(page.locator('main h1')).toBeVisible();
       await expect(page.getByText(/^(Loading(?: \w+)?|Checking session)\.\.\.$/)).toHaveCount(0);

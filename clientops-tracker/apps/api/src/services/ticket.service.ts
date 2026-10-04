@@ -112,6 +112,8 @@ export async function createTicketForUser(user: AuthenticatedUser, data: CreateT
         assignedToId: data.assignedToId ?? null,
         title: data.title,
         description: data.description,
+        originalTitle: data.title,
+        originalDescription: data.description,
         category: data.category,
         priority: data.priority ?? 'MEDIUM',
         status: 'OPEN',

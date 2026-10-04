@@ -28,6 +28,12 @@ export function formatDateTime(value: string) {
   );
 }
 
+export function formatUtcDate(value: string) {
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeZone: 'UTC' }).format(
+    new Date(value),
+  );
+}
+
 export function titleCase(value: string) {
   return value
     .split('_')

@@ -16,6 +16,9 @@ import {
   webSessions,
   authRateLimits,
   mailOutbox,
+  deliveryRevisions,
+  scopeProposals,
+  progressSummaries,
 } from './schema';
 
 export async function seedDatabase() {
@@ -35,6 +38,9 @@ export async function seedDatabase() {
     await tx.delete(authRateLimits);
     await tx.delete(mailOutbox);
     await tx.delete(triageSuggestions);
+    await tx.delete(deliveryRevisions);
+    await tx.delete(scopeProposals);
+    await tx.delete(progressSummaries);
     await tx.delete(ticketEvents);
     await tx.delete(ticketComments);
     await tx.delete(releases);
