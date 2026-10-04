@@ -40,7 +40,10 @@ export const ticketStatusEnum = pgEnum('ticket_status', [
 
 const timestamps = {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
 };
 
 export const clients = pgTable(
@@ -215,8 +218,7 @@ export const tickets = pgTable(
     category: ticketCategoryEnum('category').notNull(),
     priority: ticketPriorityEnum('priority').notNull().default('MEDIUM'),
     status: ticketStatusEnum('status').notNull().default('OPEN'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    ...timestamps,
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
   },
   (table) => ({
