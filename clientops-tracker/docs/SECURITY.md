@@ -78,11 +78,13 @@ Links use URL fragments, removed on page load; raw tokens do not reach proxy acc
 logs. Passwords require 12 characters and at most 72 UTF-8 bytes to avoid bcrypt
 truncation. Bcrypt cost is 12; unknown login identities also perform a bcrypt check.
 
-Recovery always returns the same 202 response before account lookup/email delivery.
-Delivery failures are logged without addresses or tokens. Delivery is best-effort
-within the API process, not a durable queue; process interruption can lose a recovery
-email. Users can request another link. Durable delivery/retry monitoring is a launch
-requirement, not something verified by local Mailpit tests.
+Recovery returns the same 202 response for known and unknown accounts. Account
+email uses the encrypted PostgreSQL outbox with coordinated workers, bounded
+retries and expiry checks. Delivery failures are logged without addresses or
+tokens. Delivery can be duplicated after a send succeeds but acknowledgement
+fails; single-use links remain server-enforced. Local Mailpit outage/restart tests
+verify these controls, not delivery through a production SMTP provider. See
+[mail delivery](MAIL_DELIVERY.md) for configuration and operational limitations.
 
 `express-rate-limit` caps `/api/auth` traffic at 300 requests/IP/15min before
 session-store access, including requests rejected by CSRF validation. It uses
@@ -117,5 +119,32 @@ remain explicit and forbidden in production. Never enable demo mode on public da
 - Cookies reduce credential exfiltration but do not eliminate XSS, malware or compromised administrator risk. MFA, security-event audit UI and distributed abuse protection remain future work.
 
 ## Reporting
+
+### Reviewed CodeQL CSRF Finding
+
+[Alert #1](https://github.com/EdenCirakoglu/Client-Tracker/security/code-scanning/1)
+(`js/missing-token-validation`) was reviewed on 2026-10-04. It also exists on
+pre-feature main `40e8bfe`; it is not evidence that the new workflow bypasses CSRF.
+The [upstream query](https://github.com/github/codeql/blob/b63c658e3b2c329e34d6bd67c753ba43da6a6587/javascript/ql/src/Security/CWE-352/MissingCsrfMiddleware.ql)
+recognizes several middleware factories but not `csrf-sync`.
+
+In `src/app.ts`, `sessionMiddleware` and `csrfProtection` run on `/api` before
+all business and authentication routers. `csrf-sync` compares the header token
+with the server-side session token, and the wrapper additionally rejects an
+unapproved Origin. There is no configured skip callback. Health and Swagger
+routes mounted earlier do not mutate business data.
+
+`apps/api/tests/csrf.test.ts` exercises all 25 mutation endpoints, including
+delivery decisions, scope approvals and summary publication. Each rejects a
+missing, invalid or different-session token, and a foreign Origin with a valid
+token, with **403 CSRF_INVALID** before route validation/authorization. A valid
+token reaches body validation. All **26 focused tests passed locally**; normal
+regressions exercise successful mutations. Existing session tests cover login
+rotation, logout replay and anonymous login rejection as well.
+
+This evidence supports triaging only alert #1 as a false positive, not disabling
+CodeQL or its CSRF rule. Re-review the finding if router order, unsafe methods,
+middleware configuration or CSRF dependencies change. Keep mutation coverage
+current when adding routes. No application protection was changed for the scanner.
 
 Do not open a public issue for a vulnerability. Follow the reporting instructions in the root [SECURITY.md](../SECURITY.md).
