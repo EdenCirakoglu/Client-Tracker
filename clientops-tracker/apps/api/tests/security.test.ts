@@ -168,16 +168,20 @@ describe('Server sessions and account lifecycle', () => {
   it('limits login attempts with persistent rate buckets', async () => {
     const anonymous = await anonymousSession(app);
     let response;
-    for (let index = 0; index < 21; index++)
+    for (let index = 0; index < 21; index++) {
       response = await request(app)
         .post('/api/auth/login')
         .set(authHeader(anonymous))
         .send({ email: 'missing@accounts.example', password: 'wrong' });
+      expect(response.status).toBe(index < 20 ? 401 : 429);
+    }
     expect(response?.status).toBe(429);
     expect(response?.headers['retry-after']).toBeTruthy();
     expect((await db.select().from(authRateLimits)).length).toBeGreaterThan(0);
     await db.delete(authRateLimits);
-  }, 20000);
+    // Twenty real cost-12 password checks measured 27.3s on the local Windows host.
+    // Keep the real limit and hashing cost; a timed-out test otherwise leaves requests running.
+  }, 60000);
 
   it('restricts invitations and server-enforces organisation assignment', async () => {
     const developer = await loginSession(app, 'developer@example.com');
@@ -203,38 +207,41 @@ describe('Server sessions and account lifecycle', () => {
     }
   });
 
-  it('stores only hashed invitation tokens, consumes concurrently once, and forbids role injection', async () => {
-    const admin = await loginSession(app, 'admin@example.com');
-    const email = 'concurrent-invite@accounts.example';
-    const invite = await request(app)
-      .post('/api/users/invitations')
-      .set(authHeader(admin))
-      .send({ name: 'Invited developer', email, role: 'DEVELOPER', clientId: null })
-      .expect(201);
-    const token = await mailToken(email);
-    const [stored] = await db
-      .select()
-      .from(accountTokens)
-      .where(eq(accountTokens.userId, invite.body.data.id));
-    expect(stored?.tokenHash).toBe(hashToken(token));
-    expect(JSON.stringify(stored)).not.toContain(token);
-    const anonymous = await anonymousSession(app);
-    await request(app)
-      .post('/api/auth/accept-invitation')
-      .set(authHeader(anonymous))
-      .send({ token, password, role: 'ADMIN' })
-      .expect(400);
-    const responses = await Promise.all(
-      [1, 2, 3].map(() =>
-        request(app)
-          .post('/api/auth/accept-invitation')
-          .set(authHeader(anonymous))
-          .send({ token, password }),
-      ),
-    );
-    expect(responses.map((res) => res.status).sort()).toEqual([200, 400, 400]);
-    expect((await loginResponse(app, email, password)).body.data.user.role).toBe('DEVELOPER');
-  });
+  it.each([1, 2, 3])(
+    'stores hashed invitation tokens and consumes concurrently once (round %s)',
+    async (round) => {
+      const admin = await loginSession(app, 'admin@example.com');
+      const email = `concurrent-invite-${round}@accounts.example`;
+      const invite = await request(app)
+        .post('/api/users/invitations')
+        .set(authHeader(admin))
+        .send({ name: 'Invited developer', email, role: 'DEVELOPER', clientId: null })
+        .expect(201);
+      const token = await mailToken(email);
+      const [stored] = await db
+        .select()
+        .from(accountTokens)
+        .where(eq(accountTokens.userId, invite.body.data.id));
+      expect(stored?.tokenHash).toBe(hashToken(token));
+      expect(JSON.stringify(stored)).not.toContain(token);
+      const anonymous = await anonymousSession(app);
+      await request(app)
+        .post('/api/auth/accept-invitation')
+        .set(authHeader(anonymous))
+        .send({ token, password, role: 'ADMIN' })
+        .expect(400);
+      const responses = await Promise.all(
+        [1, 2, 3].map(() =>
+          request(app)
+            .post('/api/auth/accept-invitation')
+            .set(authHeader(anonymous))
+            .send({ token, password }),
+        ),
+      );
+      expect(responses.map((res) => res.status).sort()).toEqual([200, 400, 400]);
+      expect((await loginResponse(app, email, password)).body.data.user.role).toBe('DEVELOPER');
+    },
+  );
 
   it('returns identical recovery responses and rejects expired or reused reset links', async () => {
     const account = await activeAccount('expired-reset');
@@ -267,30 +274,33 @@ describe('Server sessions and account lifecycle', () => {
       .expect(400);
   });
 
-  it('atomically resets once and revokes all sessions, including concurrent reset attempts', async () => {
-    const account = await activeAccount('reset-revocation');
-    const secondSession = await loginSession(app, account.email, password);
-    const anonymous = await anonymousSession(app);
-    await request(app)
-      .post('/api/auth/forgot-password')
-      .set(authHeader(anonymous))
-      .send({ email: account.email })
-      .expect(202);
-    const token = await mailToken(account.email, true);
-    const outcomes = await Promise.all(
-      [1, 2, 3].map(() =>
-        request(app)
-          .post('/api/auth/reset-password')
-          .set(authHeader(anonymous))
-          .send({ token, password: `${password}-new` }),
-      ),
-    );
-    expect(outcomes.map((res) => res.status).sort()).toEqual([200, 400, 400]);
-    for (const session of [account.session, secondSession])
-      await request(app).get('/api/auth/me').set(authHeader(session)).expect(401);
-    expect((await loginResponse(app, account.email, password)).status).toBe(401);
-    expect((await loginResponse(app, account.email, `${password}-new`)).status).toBe(200);
-  });
+  it.each([1, 2, 3])(
+    'atomically resets once and revokes all sessions (concurrent round %s)',
+    async (round) => {
+      const account = await activeAccount(`reset-revocation-${round}`);
+      const secondSession = await loginSession(app, account.email, password);
+      const anonymous = await anonymousSession(app);
+      await request(app)
+        .post('/api/auth/forgot-password')
+        .set(authHeader(anonymous))
+        .send({ email: account.email })
+        .expect(202);
+      const token = await mailToken(account.email, true);
+      const outcomes = await Promise.all(
+        [1, 2, 3].map(() =>
+          request(app)
+            .post('/api/auth/reset-password')
+            .set(authHeader(anonymous))
+            .send({ token, password: `${password}-new` }),
+        ),
+      );
+      expect(outcomes.map((res) => res.status).sort()).toEqual([200, 400, 400]);
+      for (const session of [account.session, secondSession])
+        await request(app).get('/api/auth/me').set(authHeader(session)).expect(401);
+      expect((await loginResponse(app, account.email, password)).status).toBe(401);
+      expect((await loginResponse(app, account.email, `${password}-new`)).status).toBe(200);
+    },
+  );
 
   it('password change revokes other sessions and requires the existing password', async () => {
     const account = await activeAccount('password-change');

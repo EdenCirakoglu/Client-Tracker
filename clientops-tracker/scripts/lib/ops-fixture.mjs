@@ -5,23 +5,28 @@ import { readMailboxJson } from './mailbox-read.mjs';
 
 export const local = process.argv.includes('--ops');
 export const followup = process.argv.includes('--followup');
+export const feature = process.argv.includes('--feature');
 export const published = process.argv.includes('--published=7eba339');
-export const project = published
-  ? 'clientops-release-7eba339'
-  : followup
-    ? 'clientops-followup'
-    : local
-      ? 'clientops-ops'
-      : 'clientops-hardening';
-export const database = published
-  ? 'clientops_release_7eba339_demo'
-  : followup
-    ? 'clientops_followup_demo'
-    : local
-      ? 'clientops_ops_demo'
-      : 'clientops_hardening_demo';
-export const origin = `https://localhost:${published ? 8454 : followup ? 8456 : local ? 8452 : 8443}`;
-export const mailbox = `http://localhost:${published ? 8034 : followup ? 8036 : local ? 8032 : 8025}`;
+export const project = feature
+  ? 'clientops-feature-release'
+  : published
+    ? 'clientops-release-7eba339'
+    : followup
+      ? 'clientops-followup'
+      : local
+        ? 'clientops-ops'
+        : 'clientops-hardening';
+export const database = feature
+  ? 'clientops_feature_release_demo'
+  : published
+    ? 'clientops_release_7eba339_demo'
+    : followup
+      ? 'clientops_followup_demo'
+      : local
+        ? 'clientops_ops_demo'
+        : 'clientops_hardening_demo';
+export const origin = `https://localhost:${feature ? 8458 : published ? 8454 : followup ? 8456 : local ? 8452 : 8443}`;
+export const mailbox = `http://localhost:${feature ? 8038 : published ? 8034 : followup ? 8036 : local ? 8032 : 8025}`;
 export const keys = published
   ? {
       session: readFileSync('test-results/tls/release-7eba339/session-secret', 'utf8'),
@@ -31,8 +36,8 @@ export const keys = published
 export const environment = {
   ...process.env,
   HARDENING_DATABASE: database,
-  HTTPS_PORT: followup ? '8456' : local ? '8452' : '8443',
-  MAIL_PORT: followup ? '8036' : local ? '8032' : '8025',
+  HTTPS_PORT: feature ? '8458' : followup ? '8456' : local ? '8452' : '8443',
+  MAIL_PORT: feature ? '8038' : followup ? '8036' : local ? '8032' : '8025',
   ...(keys.runtime
     ? {
         RUNTIME_DATABASE_URL: `postgresql://clientops_runtime:${keys.runtime}@postgres:5432/${database}`,

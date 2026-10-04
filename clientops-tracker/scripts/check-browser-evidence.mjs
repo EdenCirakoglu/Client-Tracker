@@ -1,29 +1,44 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
-const file = process.argv[2] ?? 'test-results/browser-results.json';
-
-// Check if the file exists; if e2e tests didn't run, skip validation
-if (!existsSync(file)) {
-  console.log('Browser test results file not found. E2E tests may not have run.');
-  process.exit(0);
+export function validateBrowserEvidence(text, revision, ci = false) {
+  const report = JSON.parse(text);
+  if (!report.config?.metadata || !report.stats || !Array.isArray(report.suites)) {
+    throw new Error('Missing browser report metadata, statistics or suites.');
+  }
+  if (report.config.metadata.gitCommit || report.config.metadata.gitDiff) {
+    throw new Error('Browser report includes automatic Git identity/diff metadata. Do not upload.');
+  }
+  if (ci && /[A-Z]:[\\/]Users[\\/]/i.test(text)) {
+    throw new Error('Browser report includes a personal Windows path. Do not upload.');
+  }
+  if (
+    !/^[a-f0-9]{40}$/.test(report.config.metadata.revision) ||
+    report.config.metadata.revision !== revision
+  ) {
+    throw new Error('Browser evidence must retain the explicit tested revision.');
+  }
+  if (ci && report.config.metadata.workingTreeDirty !== false) {
+    throw new Error('Hosted browser evidence must come from a clean checkout.');
+  }
+  if (!(report.stats.expected + report.stats.unexpected > 0) || report.suites.length === 0) {
+    throw new Error('No executed browser scenarios in report.');
+  }
+  if (/clientops\.sid=s(?:%3A|:)|#token=[a-f0-9]{64}/i.test(text)) {
+    throw new Error(
+      'Browser evidence includes a session cookie or account-link token. Do not upload.',
+    );
+  }
 }
 
-const text = readFileSync(file, 'utf8');
-const report = JSON.parse(text);
-if (report.config.metadata.gitCommit || report.config.metadata.gitDiff) {
-  throw new Error('Browser report includes automatic Git identity/diff metadata. Do not upload.');
-}
-if (process.env.CI && /[A-Z]:[\\/]Users[\\/]/i.test(text)) {
-  throw new Error('Browser report includes a personal Windows path. Do not upload.');
-}
-if (!/^[a-f0-9]{40}$/.test(report.config.metadata.revision)) {
-  throw new Error('Browser evidence must retain the explicit tested revision.');
-}
-if (/clientops\.sid=s(?:%3A|:)|#token=[a-f0-9]{64}/i.test(text)) {
-  throw new Error(
-    'Browser evidence includes a session cookie or account-link token. Do not upload.',
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const file = process.argv[2] ?? 'test-results/browser-results.json';
+  // Missing or malformed reports fail closed; never authorize uploads without evidence.
+  validateBrowserEvidence(
+    readFileSync(file, 'utf8'),
+    execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+    !!process.env.CI,
   );
+  console.log('Browser evidence retains the tested revision without private authentication data.');
 }
-console.log(
-  'Browser evidence retains revision provenance without automatic Git identity metadata.',
-);

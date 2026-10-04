@@ -16,7 +16,7 @@ import {
 } from '../db/schema';
 import type { AuthenticatedUser } from '../types/auth';
 import { ApiError } from '../utils/http';
-import { requireInternal } from './workflow-access';
+import { requireInternal, requireCurrentWorkflowActor } from './workflow-access';
 import { deliveryDateBounds } from './delivery-plan.service';
 
 const linkedNote = z
@@ -52,6 +52,7 @@ export async function generateSummary(user: AuthenticatedUser, data: z.infer<typ
   requireInternal(user);
   return db.transaction(
     async (tx) => {
+      await requireCurrentWorkflowActor(tx, user);
       const [client] = await tx.select().from(clients).where(eq(clients.id, data.clientId));
       if (!client) throw new ApiError(404, 'CLIENT_NOT_FOUND', 'Client was not found.');
       const start = new Date(`${data.weekStart}T00:00:00Z`);
@@ -341,6 +342,7 @@ export async function getSummary(user: AuthenticatedUser, id: string) {
 export async function publishSummary(user: AuthenticatedUser, id: string) {
   requireInternal(user);
   await db.transaction(async (tx) => {
+    await requireCurrentWorkflowActor(tx, user);
     const [summary] = await tx
       .select()
       .from(progressSummaries)

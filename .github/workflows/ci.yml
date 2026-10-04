@@ -153,6 +153,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: browser-evidence-${{ github.event.pull_request.head.sha || github.sha }}
+          if-no-files-found: error
           path: |
             clientops-tracker/test-results/
             clientops-tracker/playwright-report/
