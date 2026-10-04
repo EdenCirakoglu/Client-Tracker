@@ -159,7 +159,7 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
   }
 
   return (
-    <Card id="delivery" className="scroll-mt-24">
+    <Card id="delivery" aria-busy={loading} className="scroll-mt-24">
       <CardHeader title="Delivery and acceptance" />
       <div className="space-y-5 p-5">
         {loading ? (

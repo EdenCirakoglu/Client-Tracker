@@ -174,6 +174,10 @@ test('dated delivery agreement, factual dashboard, project links and mobile deci
     await expect(
       customer.getByRole('heading', { name: 'Delivery and acceptance', exact: true }),
     ).toBeInViewport();
+    await customer.reload();
+    await expect(
+      customer.getByRole('heading', { name: 'Delivery and acceptance', exact: true }),
+    ).toBeInViewport();
     await expect(
       customer.getByRole('button', { name: 'Agree outcome', exact: true }),
     ).toBeVisible();

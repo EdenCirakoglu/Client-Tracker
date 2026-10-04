@@ -90,7 +90,7 @@ export function ScopeChange({ ticketId, category }: ScopeChangeProps) {
   }
   if (!loading && !error && !current && category !== 'FEATURE_REQUEST') return null;
   return (
-    <Card id="scope" className="scroll-mt-24">
+    <Card id="scope" aria-busy={loading} className="scroll-mt-24">
       <CardHeader title="Scope change" />
       <div className="space-y-4 p-5">
         {loading ? (

@@ -1,14 +1,10 @@
 export function Card({
   children,
   className = '',
-  id,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  id?: string;
-}) {
+  ...props
+}: React.ComponentPropsWithoutRef<'section'>) {
   return (
-    <section id={id} className={`min-w-0 rounded-lg border border-border bg-panel ${className}`}>
+    <section {...props} className={`min-w-0 rounded-lg border border-border bg-panel ${className}`}>
       {children}
     </section>
   );

@@ -81,6 +81,41 @@ export default function TicketDetailPage() {
     if (user) void loadTicket();
   }, [ticketId, user?.id]);
 
+  useEffect(() => {
+    if (loading) return;
+    const root = document.getElementById('main-content');
+    if (!root) return;
+    let frame = 0;
+    // Both records load independently; an earlier section can move the anchor below the viewport.
+    const observer = new MutationObserver(jumpToRecord);
+    function jumpToRecord() {
+      const id = window.location.hash.slice(1);
+      if (!['delivery', 'scope'].includes(id)) return;
+      if (root!.querySelector('#scope[aria-busy="true"], #delivery[aria-busy="true"]')) return;
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() =>
+        document.getElementById(id)?.scrollIntoView({ block: 'start' }),
+      );
+    }
+    function watchRecord() {
+      observer.observe(root!, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['aria-busy'],
+      });
+      jumpToRecord();
+    }
+    watchRecord();
+    window.addEventListener('hashchange', watchRecord);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener('hashchange', watchRecord);
+    };
+  }, [loading, ticketId]);
+
   async function updateTicket(body: Partial<Pick<Ticket, 'status' | 'priority' | 'category'>>) {
     setSaving(true);
     setActionError(null);
