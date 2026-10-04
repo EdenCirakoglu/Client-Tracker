@@ -29,6 +29,13 @@ The web application calls Express with cookie sessions and synchronizer CSRF tok
 
 ## Testing and CI
 
+The [delivery-workflow feature review](docs/FEATURE_RELEASE_VERIFICATION.md) records
+111 API tests, combined 12-scenario browser coverage, native 200% zoom, populated
+upgrade/restore and deployment failure recovery. Application revision `33391a7`
+passed [hosted CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37216620255).
+Later evidence/privacy-only commits retain their own checks on
+[PR #16](https://github.com/EdenCirakoglu/Client-Tracker/pull/16).
+
 The [release-candidate handoff](docs/RELEASE_CANDIDATE.md) adds one deployment
 sequence for manual/SSH updates, explicit role conversion, verified backups,
 failure recovery and certificate-hook acceptance. External-service and
@@ -40,8 +47,9 @@ initially passed [hosted CI at `cf6d0f4`](https://github.com/EdenCirakoglu/Clien
 plus native 200% zoom, restricted database roles, DB/SMTP outages, encrypted backup
 failure detection, populated restore and pinned legacy rollback. Its [evidence](docs/FOLLOWUP_READINESS.md)
 and [screenshots](docs/SCREENSHOTS.md) distinguish local operator fixtures from external
-services still awaiting configuration. The PR remains unmerged; its images have not
-been published. The published `7eba339` pair was separately verified without rebuilding.
+services still awaiting configuration. PR #5 was later merged as `bcbb953`; these
+earlier results are not relabelled as verification of that merge or later images.
+The published `7eba339` pair was separately verified without rebuilding.
 Later deployment/certificate corrections and 21 helper regressions are documented
 in the release-candidate handoff. The PR records the final tested head and its own
 CI, rather than relabelling historical successful or failed runs.
@@ -68,7 +76,7 @@ The older main commit (`611ca061`) contained the placeholder frontend. PR #1 pre
 
 ## Future Improvements
 
-Cookie sessions, recovery, invitations and PostgreSQL-backed authentication rate limits were merged in `bdc7494`. Its [UI refinement](docs/UI_REFINEMENT.md) adds role-specific work queues, database-backed pagination, exact metric links, private activity and consistent accessible themes. The subsequent operations work is now merged and published as [`7eba339`](docs/RELEASE_7EBA339.md): readiness, encrypted durable email, restore/rollback rehearsal and privacy safeguards. That exact published pair passed separate local verification. The new [operator-controls and usability follow-up](docs/OPERATOR_CONTROLS.md) remains under review. Trusted external TLS, SMTP, off-host storage and actual alert delivery still require operator acceptance. MFA, pagination of remaining legacy collections, integrations and an optional provider-backed triage adapter remain future improvements.
+Cookie sessions, recovery, invitations and PostgreSQL-backed authentication rate limits were merged in `bdc7494`. Its [UI refinement](docs/UI_REFINEMENT.md) adds role-specific work queues, database-backed pagination, exact metric links, private activity and consistent accessible themes. The subsequent operations work was merged and published as [`7eba339`](docs/RELEASE_7EBA339.md): readiness, encrypted durable email, restore/rollback rehearsal and privacy safeguards. That exact published pair passed separate local verification. The [operator-controls and usability follow-up](docs/OPERATOR_CONTROLS.md) was subsequently merged in PR #5. Trusted external TLS, SMTP, off-host storage and actual alert delivery still require operator acceptance. MFA, pagination of remaining legacy collections, integrations and an optional provider-backed triage adapter remain future improvements.
 
 ## Links
 

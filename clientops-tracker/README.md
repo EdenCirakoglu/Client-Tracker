@@ -15,7 +15,7 @@ Booking and checkout are **not yet configured**. These links currently lead to s
 
 > See [screenshots](docs/SCREENSHOTS.md) and [release verification evidence](docs/RELEASE_READINESS.md). Local verification, hosted CI and public deployment are reported separately.
 
-The current published release is [`7eba339`](docs/RELEASE_7EBA339.md), including database readiness and durable account email. Both registry images were verified locally without rebuilding. The unmerged [release candidate](docs/RELEASE_CANDIDATE.md) adds operator controls and focused usability improvements; its latest head/CI and real-environment handoff are tracked in [PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5). It is not a publicly deployed release.
+The historical [`7eba339` published-image verification](docs/RELEASE_7EBA339.md) remains evidence for that image pair only. [PR #5](https://github.com/EdenCirakoglu/Client-Tracker/pull/5) was subsequently merged as `bcbb953`, adding operator controls and usability improvements. Current delivery workflows, source-revision CI, isolated upgrade/recovery checks and preview instructions are recorded in [feature release verification](docs/FEATURE_RELEASE_VERIFICATION.md) and [PR #16](https://github.com/EdenCirakoglu/Client-Tracker/pull/16). Source-built container checks do not verify a later published image. Public deployment is not claimed.
 
 ![Administrator dashboard from an isolated CI container stack using fictional data](docs/assets/screenshots/ui/after/ui-admin-dashboard.png)
 

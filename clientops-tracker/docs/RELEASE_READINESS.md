@@ -1,12 +1,25 @@
 # Release Readiness Evidence
 
-## Current Published Release
+## Current Feature Review
 
-PR #5's final deployment-sequence review and real-environment acceptance handoff
-are tracked in [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md). This does not change
-the published release or relabel prior evidence.
+The request-to-acceptance, scope approval, progress summary and delivery-planning
+work is preserved in [PR #16](https://github.com/EdenCirakoglu/Client-Tracker/pull/16).
+Application revision `33391a705a5a086a3cd0754345f81682448f9935` passed
+[complete CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37216620255):
+111 API tests, 25 helper tests, 12 combined browser scenarios, native 200% zoom,
+populated upgrade/restore and deployment failure recovery. The later evidence
+privacy regression brings helper coverage to 26. Exact revisions, artifact hash,
+local results and preview commands are in [FEATURE_RELEASE_VERIFICATION.md](FEATURE_RELEASE_VERIFICATION.md).
+Subsequent PR-head/main CI and automatic publication have their own runs; these
+source-built results are not new published-image runtime verification.
 
-PR #4 is merged as `7eba339b37a2aa948ef4f6ed019d268816d4ec99`. Main CI and image publication passed. Both published digest-pinned images passed separate local verification without rebuilding, including nine browser scenarios, database outage recovery, durable email retry and persistence. See [exact release evidence and commands](RELEASE_7EBA339.md). Public deployment has not occurred. [Draft PR #5 follow-up evidence](FOLLOWUP_READINESS.md) covers the separate usability and operator-control review; it is not a new published release.
+## Historical Published-Image Evidence
+
+PR #5 was merged as `bcbb95311a3ab9384eabbc5ed8134b86cb419985`. Its historical
+deployment-sequence review and real-environment handoff remain in
+[RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md) and [FOLLOWUP_READINESS.md](FOLLOWUP_READINESS.md).
+
+PR #4 merged as `7eba339b37a2aa948ef4f6ed019d268816d4ec99`. Main CI and image publication passed. Both published digest-pinned images passed separate local verification without rebuilding, including nine browser scenarios, database outage recovery, durable email retry and persistence. See [exact release evidence and commands](RELEASE_7EBA339.md). This evidence remains for that revision only. Public deployment has not occurred.
 
 ## Operations UI and Account Hardening: Historical PR Evidence
 

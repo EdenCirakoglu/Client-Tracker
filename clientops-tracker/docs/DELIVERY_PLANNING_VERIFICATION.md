@@ -1,5 +1,8 @@
 # Delivery Planning Verification
 
+Historical working-tree evidence from the prior session. Current committed revisions,
+combined browser results and hosted CI are in [feature release verification](FEATURE_RELEASE_VERIFICATION.md).
+
 ## Revision
 
 Local work on `feature/request-acceptance`, based on

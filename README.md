@@ -28,6 +28,7 @@ Booking and checkout are **not yet configured**. These links currently explain t
 - [Architecture](clientops-tracker/docs/ARCHITECTURE.md)
 - [API reference](clientops-tracker/docs/API.md)
 - [Agency delivery workflows](clientops-tracker/docs/PRODUCT_WORKFLOWS.md) and [delivery planning](clientops-tracker/docs/DELIVERY_PLANNING.md)
+- [Feature release verification and preview](clientops-tracker/docs/FEATURE_RELEASE_VERIFICATION.md)
 - [Buyer-facing installation and acceptance guide](clientops-tracker/docs/INSTALLATION_GUIDE.md)
 - [Secure sessions and account setup](clientops-tracker/docs/SESSION_HARDENING.md)
 - [Role-based operations UI and verification](clientops-tracker/docs/UI_REFINEMENT.md)

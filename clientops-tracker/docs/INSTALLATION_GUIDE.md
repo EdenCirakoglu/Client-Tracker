@@ -1,6 +1,6 @@
 # ClientOps Installation and Acceptance Guide
 
-For this feature increment's actual checks and pending release gates, see
+For this feature increment's revision-specific checks and release gates, see
 [feature-release verification](FEATURE_RELEASE_VERIFICATION.md). A passing local
 fixture does not establish acceptance of a customer's production services.
 
@@ -32,7 +32,7 @@ certificates or configure real mail delivery automatically.
 ## Installation and Upgrade Path
 
 1. Select a reviewed source revision and its **verified published** API/web image digests.
-   Local uncommitted delivery-planning work is not a published release. Do not assume a
+   A feature checkpoint or passing source-built fixture is not a published image. Do not assume a
    `latest` tag contains it or reuse earlier release evidence for a later revision.
 2. Follow [OPERATOR_CONTROLS.md](OPERATOR_CONTROLS.md) for the executable prepare/apply
    sequence. Its `install`, `convert` and `update` modes have different prerequisites.

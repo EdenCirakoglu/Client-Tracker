@@ -1,5 +1,8 @@
 # Product Workflow Verification
 
+Historical working-tree evidence from the prior session. Current committed revisions,
+combined browser results and hosted CI are in [feature release verification](FEATURE_RELEASE_VERIFICATION.md).
+
 ## Revision and Scope
 
 Verified locally on 2026-09-23. Feature branch: `feature/request-acceptance`, based on `40e8bfe038573ebfe40de818b7e21e6359d6e3d3` plus the uncommitted product-workflow changes. This is **not** verification of the unchanged base commit or of a published image. No historical PR, CI, registry or deployment evidence is relabelled.

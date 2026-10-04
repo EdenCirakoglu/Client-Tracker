@@ -30,6 +30,14 @@ rate buckets`, exceeding its 20,000ms timeout. All concurrent token tests passed
   ingress limit. These are not evidence of a workflow permission defect. This
   verification uses a separately named container stack with container DNS and
   fresh authentication state; no blanket retries or relaxed limits are added.
+- Hosted runs at `61c0336` and `863f483` reproduced a delivery deep-link defect:
+  asynchronous ticket sections moved `#delivery` outside the viewport. Commit
+  `e9db61b` waits for both workflow sections to settle before scrolling, including
+  after refresh; the browser viewport assertions remain intact.
+- Run `37216116705` at `69ca377` passed all 12 combined browser scenarios but failed
+  the separate first-action viewport check. This also failed locally: delivery
+  follow-up displaced the mobile ticket action. `33391a7` restores Needs attention
+  ahead of delivery follow-up. No accessibility assertion was removed.
 
 ## Commands
 
@@ -74,7 +82,27 @@ node scripts/verify-database-roles.mjs --feature
 node scripts/verify-operations.mjs --feature
 node scripts/verify-controls.mjs --feature
 node scripts/verify-restore.mjs --feature
+node scripts/verify-deployment.mjs --feature
 ```
+
+This machine's old Docker networks exhausted its automatic address pools. No
+network was pruned. After checking Docker IPAM and host routes for overlap, only
+the two new fixture networks were explicitly allocated:
+
+```powershell
+docker network create --driver bridge --subnet 10.240.40.0/24 --label com.docker.compose.project=clientops-feature-release --label com.docker.compose.network=default clientops-feature-release_default
+docker network create --driver bridge --subnet 10.240.41.0/24 --label com.docker.compose.project=clientops-feature-release-accounts --label com.docker.compose.network=default clientops-feature-release-accounts_default
+$env:VERIFY_DISPOSABLE_SUBNET='10.240.42.0/24'
+node scripts/verify-restore.mjs --feature
+$env:VERIFY_DISPOSABLE_SUBNET='10.240.43.0/24'
+node scripts/verify-deployment.mjs --feature
+Remove-Item Env:VERIFY_DISPOSABLE_SUBNET
+```
+
+Only use those ranges if unused on your machine; otherwise select unused private
+subnets. Docker rejects overlaps. These are optional disposable-fixture settings,
+not production networking requirements. For intercepted registry TLS, provide the
+trusted CA bundle using `BUILD_CA_FILE`; never disable TLS verification.
 
 The fixture upgrades populated legacy data without reseeding existing databases.
 Only the new nullable original-request columns are excluded from pre/post upgrade
@@ -84,16 +112,42 @@ migrations or support the new workflow; rollback must follow the reviewed runboo
 
 ## Results
 
-Verification in progress. Do not treat this checkpoint as a verified release.
-API source revision `61c033623618ad0a790fcfc9d11bdfbac3ab14bf`: full local
-suite **111 passed across 14 files**, 214.36s. Focused security/workflow run:
-**24 passed**, 107.52s, including three invitation and three reset concurrency
-rounds. Lint, typecheck and formatting passed. The old intermittent 503 did not
-recur; its original database error was not retained, so no precise cause is claimed.
-Frozen installation and checkpoint patch/history secret scans passed. Browser
-report validation now fails for missing, malformed, empty, stale or private
-reports; failed test reports can still be retained safely without making CI pass.
-The 25 verification helper tests passed after adding these checks.
+Application revision **`33391a705a5a086a3cd0754345f81682448f9935`** passed the
+complete [hosted CI run 37216620255](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37216620255)
+from a fresh checkout. Review and subsequent exact-head checks:
+[PR #16](https://github.com/EdenCirakoglu/Client-Tracker/pull/16).
+
+| Gate                        | Actual result and revision                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local API                   | `61c0336`: 111 passed / 14 files, 214.36s; focused security/workflow 24 passed, 107.52s. API source unchanged through `33391a7`.                                                                                                                                                                                                                                                               |
+| Repeated concurrency        | Three invitation and three reset-consumption rounds, contradictory delivery/scope decisions and stale-account contexts passed. The historical intermittent 503 did not recur; its original database error was not retained, so no exact cause is claimed.                                                                                                                                      |
+| Local source checks         | Frozen installation, lint, typecheck, formatting and both workspace builds passed; both container builds also passed. Final dashboard correction built successfully in Docker.                                                                                                                                                                                                                 |
+| Hosted source checks        | `33391a7`: lint, typecheck, formatting, 111 API tests, 25 helper tests, both builds and both Compose validations passed.                                                                                                                                                                                                                                                                       |
+| Combined local browser      | Clean `69ca377`: 12 passed, no failures/skips/flaky tests, 295.045s. Its later separate mobile-action failure is recorded above, not hidden by this result.                                                                                                                                                                                                                                    |
+| Combined hosted browser     | Clean `33391a7`: 12 passed, no failures/skips/flaky tests, 113.675s; includes previous portal/account scenarios plus delivery planning and the complete scope/acceptance/summary journey.                                                                                                                                                                                                      |
+| Final UI acceptance         | `33391a7`, local and hosted: keyboard/axe, visible first mobile action and native 200% zoom passed. Local Chrome 154 used a new isolated profile: device pixel ratio 1 to 2, CSS width 1422 to 711 at unchanged outer width 1440. Delivery and summaries included.                                                                                                                             |
+| Populated upgrade           | Clean `863f483` local fixture: all eight pre-feature business-table fingerprints matched after migrations 0003-0006 without reseeding. The original result was preserved as `feature-upgrade-863f483.json`; later fixture starts are idempotent, not new legacy upgrades. Fresh hosted fixture at `33391a7` also passed.                                                                       |
+| Restricted roles/outages    | `33391a7`, local and hosted: runtime DDL/deletion/escalation denied, backup role read-only; DB readiness 503, liveness 200, authenticated requests safely unavailable, recovery 200. SMTP retry/restart/concurrent workers, stale links, revocation and log redaction passed.                                                                                                                  |
+| Encrypted populated restore | `33391a7`, local and hosted: all 12 business/workflow tables preserved, with API equality checks for saved delivery exports, scope records and summaries. Sessions/links invalidated; login and tenant boundaries passed; source unchanged. Local dump 5.312s, recovery 35.015s; hosted recovery 17.689s. These are small-fixture timings, not an SLA.                                         |
+| Deployment/rollback         | `33391a7`, local and hosted: first install, published `7eba339` role conversion, verified backups, injected SQL/startup failures, explicit recovery, later update and private-CA renewal/reload failure handling passed. Pinned session-era `bdc7494` rollback preserved data with account changes blocked; it does not support new workflows, readiness or durable mail. No schema downgrade. |
+| Public/registry release     | These gates use source-built fixtures and existing digest-pinned legacy images. They do not prove runtime verification of a new published pair. Main CI and automatic publication, if subsequently merged, are separate runs recorded on the PR. No public deployment.                                                                                                                         |
+
+`b9160ea` subsequently strengthens the evidence-only privacy gate by inspecting
+decoded JSON fields, including escaped Windows paths. **26 local helper tests**
+pass. Missing, malformed, empty, stale or private reports fail closed; failed
+test reports may be retained safely without making CI pass. This change and the
+following documentation commit require their own complete PR-head CI.
+
+Checkpoint patch/history secret scans passed. Nodemailer/Morgan dependency PRs
+remain separate; GitHub's existing dependency alerts are not claimed resolved by
+this feature work.
+
+The [downloaded hosted artifact](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37216620255/artifacts/11309160987)
+records clean `33391a7`. SHA-256:
+`f38ddd7ff4c5e9b5dd58d3be9f5518c1873a2a90ce3728344c766549257416c6`.
+No `.pem`, `.key` or `.dump` files were present. The explicit `metadata.revision`
+is the checked-out PR head; GitHub's automatically supplied `metadata.ci.commitHash`
+refers to its synthetic PR merge and is not substituted for the tested revision.
 
 Reports: `playwright-report/index.html`, `test-results/browser-results.json`,
 `test-results/feature-upgrade.json`, operations/restore JSON under `test-results/`.
@@ -101,5 +155,34 @@ Private keys, captured account links, database dumps and backup credentials rema
 under ignored `test-results/tls/`, excluded from publication. Historical reports
 remain attributed to their earlier revisions.
 
-Real screen-reader acceptance remains outstanding. Portal summaries are not email
-delivery. Service-information links are not live booking or checkout services.
+## Inspected Captures
+
+Ten selected fictional-data screenshots were visually inspected and retained in
+[assets/screenshots/feature-release](assets/screenshots/feature-release/), without
+overwriting historical captures:
+
+| Directory / filenames                                           | Scenario / viewport                                                                                    |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `69ca377/delivery-awaiting-client.png`, `delivery-accepted.png` | Same-project release, scope approval, accepted revision while ticket stays open; 1280 x 900, full page |
+| `69ca377/client-decision-mobile.png`                            | Designated reviewer, criteria, owner/date, decisions and export; 390 x 844, section capture            |
+| `69ca377/delivery-plan-desktop.png`                             | Factual dated plan, filters, reasons and record links; 1440 x 1000                                     |
+| `69ca377/summary-preview.png`                                   | Private draft and explicit publication checkbox; 1440 x 1000, full page                                |
+| `69ca377/summary-client-mobile.png`                             | Published client-safe fixed snapshot; 390 x 844, full page                                             |
+| `33391a7/admin-dashboard.png`, `developer-dashboard.png`        | Corrected queue-first hierarchy and distinct scope; 1440 x 1000, full page                             |
+| `33391a7/client-mobile-dashboard.png`                           | First reply action visible, no staff workload; 390 x 844                                               |
+| `33391a7/native-200-delivery.png`                               | Real browser zoom, readable filters and no horizontal page overflow; outer width 1440, 200%            |
+
+## Remaining Acceptance
+
+- Real screen-reader acceptance is outstanding. With NVDA/VoiceOver, navigate
+  login and validation messages; read the delivery reviewer/outcome; operate
+  agreement/feedback and scope decision radios; inspect revision history; then
+  review summary sections and the publication checkbox. Confirm labels, state
+  announcements, focus order and return navigation. Automated axe is not this test.
+- Trusted public HTTPS, actual SMTP recipients, off-host storage, external alerts,
+  recovery ownership and operational sign-off still require the installation guide.
+- Portal summaries are not email delivery. Service-information links are not live
+  booking or checkout services. Validate the product hypotheses with agencies.
+- Earlier edited ticket wording cannot be reconstructed before original-request
+  capture. Backup RPO is the dump snapshot; later writes are not included, and
+  WAL/PITR is not configured. Future schemas need a fresh compatibility review.
