@@ -126,8 +126,8 @@ export default function DashboardPage() {
           </div>
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
             <div className="min-w-0 space-y-8">
-              <DeliveryFollowUp refresh={refresh} />
               {user ? <NeedsAttention role={user.role} refresh={refresh} /> : null}
+              <DeliveryFollowUp refresh={refresh} />
               <div className="grid gap-6 md:grid-cols-2">
                 <Distribution
                   title="Tickets by status"
