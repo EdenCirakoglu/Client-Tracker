@@ -22,6 +22,34 @@
       "when": 1789320188021,
       "tag": "0002_tired_gladiator",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790167081332,
+      "tag": "0003_powerful_morph",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790167596466,
+      "tag": "0004_tiny_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790167752049,
+      "tag": "0005_spotty_kylun",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790177934703,
+      "tag": "0006_hesitant_nitro",
+      "breakpoints": true
     }
   ]
 }

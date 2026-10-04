@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Bot, MessageSquare, RefreshCw, WandSparkles } from 'lucide-react';
 
 import { ProtectedPage } from '../../../components/app-shell';
+import { TicketDeliveryRecord } from '../../../components/tickets/delivery-record';
+import { ScopeChange } from '../../../components/tickets/scope-change';
 import { PageHeader } from '../../../components/page-header';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
@@ -274,6 +276,12 @@ export default function TicketDetailPage() {
               </Card>
             ) : null}
 
+            <ScopeChange ticketId={ticket.id} category={ticket.category} />
+            <TicketDeliveryRecord
+              key={ticket.id}
+              ticketId={ticket.id}
+              projectId={ticket.projectId}
+            />
             <Card>
               <CardHeader title="Comments" />
               <div className="divide-y divide-border">

@@ -38,6 +38,10 @@ const tables = [
   'ticket_events',
   'releases',
   'triage_suggestions',
+  'delivery_revisions',
+  'delivery_events',
+  'scope_proposals',
+  'progress_summaries',
 ];
 const fingerprintSql = tables
   .map(

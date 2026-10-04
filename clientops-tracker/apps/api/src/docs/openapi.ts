@@ -1,4 +1,5 @@
 import { env } from '../config/env';
+import { productWorkflowPaths } from './product-workflows';
 export const openApiDocument = {
   openapi: '3.0.3',
   info: {
@@ -180,6 +181,65 @@ export const openApiDocument = {
     },
   },
   paths: {
+    ...productWorkflowPaths,
+    '/api/tickets/{id}/delivery': {
+      get: deliveryOperation('Get client-safe delivery history'),
+      post: deliveryOperation(
+        'Propose a versioned outcome (ADMIN/DEVELOPER)',
+        {
+          expectedRevision: { type: 'integer', minimum: 0, maximum: 99 },
+          reviewerId: { type: 'string', format: 'uuid' },
+          outcome: { type: 'string', minLength: 10, maxLength: 6000 },
+          targetDate: {
+            type: 'string',
+            format: 'date',
+            nullable: true,
+            description: 'Optional UTC calendar date; part of this outcome revision, not an SLA.',
+          },
+          ownerId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'Active internal user; defaults to the acting staff member.',
+          },
+        },
+        false,
+        ['targetDate', 'ownerId'],
+      ),
+    },
+    '/api/tickets/{id}/delivery/reviewers': {
+      get: deliveryOperation('List active client reviewers for this ticket (ADMIN/DEVELOPER)'),
+    },
+    '/api/tickets/{id}/delivery/owners': {
+      get: deliveryOperation('List up to 100 active internal delivery owners (ADMIN/DEVELOPER)'),
+    },
+    '/api/tickets/{id}/delivery/export': {
+      get: deliveryOperation('Export client-safe plain text: data.filename and data.content'),
+    },
+    '/api/tickets/{id}/delivery/{revisionId}/request-acceptance': {
+      post: deliveryOperation(
+        'Link delivery to a release and request client acceptance (ADMIN/DEVELOPER)',
+        {
+          releaseId: { type: 'string', format: 'uuid' },
+          deliveryNotes: { type: 'string', minLength: 10, maxLength: 6000 },
+        },
+        true,
+      ),
+    },
+    '/api/tickets/{id}/delivery/{revisionId}/decision': {
+      post: deliveryOperation(
+        'Record the designated CLIENT reviewer decision',
+        {
+          decision: { type: 'string', enum: ['AGREED', 'ACCEPTED', 'CHANGES_REQUESTED'] },
+          feedback: {
+            type: 'string',
+            maxLength: 4000,
+            description:
+              'At least 10 characters required when requesting changes; otherwise may be empty.',
+          },
+        },
+        true,
+      ),
+    },
     '/api/health/ready': {
       get: {
         summary: 'Bounded database readiness (also /health/ready)',
@@ -615,6 +675,62 @@ function accountOperation(summary: string, properties: Record<string, unknown>) 
       '409': { description: 'Account conflict' },
       '429': { description: 'Rate limited' },
       '503': { description: 'Mail or authentication service unavailable' },
+    },
+  };
+}
+
+function deliveryOperation(
+  summary: string,
+  properties?: Record<string, unknown>,
+  revision = false,
+  optional: string[] = [],
+) {
+  return {
+    summary,
+    tags: ['Delivery'],
+    security: [{ cookieAuth: [] }],
+    description:
+      'Same-organisation visibility. Only the designated active client reviewer can agree or accept. Release publication, ticket resolution and acceptance are independent. Mutations require X-CSRF-Token. Decisions on superseded revisions return 409. Identical decision retries have no duplicate effect. All delivery text is client-visible.',
+    parameters: [
+      { in: 'path', name: 'id', required: true, schema: { type: 'string', format: 'uuid' } },
+      ...(revision
+        ? [
+            {
+              in: 'path',
+              name: 'revisionId',
+              required: true,
+              schema: { type: 'string', format: 'uuid' },
+            },
+          ]
+        : []),
+    ],
+    ...(properties
+      ? {
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  additionalProperties: false,
+                  required: Object.keys(properties).filter((key) => !optional.includes(key)),
+                  properties,
+                },
+              },
+            },
+          },
+        }
+      : {}),
+    responses: {
+      '200': {
+        description: 'data envelope containing client-safe record, reviewers, or plain-text export',
+      },
+      '201': { description: 'New outcome revision; data envelope contains updated record' },
+      '400': { description: 'Invalid reviewer, release or input' },
+      '401': { description: 'Session required' },
+      '403': { description: 'Role/reviewer or CSRF permission denied' },
+      '404': { description: 'Ticket not found in authorised organisation' },
+      '409': { description: 'Superseded revision or invalid state transition; reload record' },
     },
   };
 }

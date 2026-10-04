@@ -16,6 +16,7 @@ import { projectsRouter } from './routes/projects';
 import { releasesRouter } from './routes/releases';
 import { ticketsRouter } from './routes/tickets';
 import { usersRouter } from './routes/users';
+import { summariesRouter } from './routes/summaries';
 import { csrfProtection, sessionMiddleware } from './middleware/session';
 import { requestLog } from './middleware/request-log';
 
@@ -100,6 +101,7 @@ export function createApp() {
   app.use('/api/releases', authenticate, releasesRouter);
   app.use('/api/dashboard', authenticate, dashboardRouter);
   app.use('/api/users', authenticate, usersRouter);
+  app.use('/api/summaries', authenticate, summariesRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

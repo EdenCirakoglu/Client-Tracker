@@ -141,3 +141,128 @@ export type LoginResponse = {
   csrfToken: string;
   user: User;
 };
+
+export interface DeliveryEvent {
+  id: string;
+  actorName: string;
+  action: string;
+  feedback: string | null;
+  createdAt: string;
+}
+export interface DeliveryRevision {
+  id: string;
+  revision: number;
+  outcome: string;
+  targetDate: string | null;
+  ownerId: string | null;
+  ownerName: string | null;
+  reviewerId: string;
+  reviewerName: string;
+  state: 'PROPOSED' | 'AGREED' | 'AWAITING_ACCEPTANCE' | 'ACCEPTED' | 'CHANGES_REQUESTED';
+  releaseVersion: string | null;
+  deliveryNotes: string | null;
+  createdAt: string;
+  events: DeliveryEvent[];
+}
+export interface DeliveryRecord {
+  ticketId: string;
+  project: string;
+  title: string;
+  originalRequest: string;
+  originalCaptured: boolean;
+  ticketStatus: TicketStatus;
+  revisions: DeliveryRevision[];
+}
+
+export interface ScopeProposal {
+  id: string;
+  ticketId: string;
+  revision: number;
+  scope: string;
+  exclusions: string;
+  estimate: string;
+  deliveryImplications: string;
+  externalReference: string | null;
+  approverId: string;
+  approverName: string;
+  proposedBy: string;
+  state: 'PROPOSED' | 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED';
+  feedback: string | null;
+  decidedBy: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+}
+export interface ScopeProposalInput {
+  expectedRevision: number;
+  approverId: string;
+  scope: string;
+  exclusions: string;
+  estimate: string;
+  deliveryImplications: string;
+  externalReference: string;
+}
+
+export interface SummarySection {
+  key: string;
+  label: string;
+  items: { title: string; href: string; detail: string; recordedAt: string | null }[];
+  truncated: boolean;
+}
+export interface ProgressSummary {
+  id: string;
+  clientId: string;
+  clientName: string;
+  periodStart: string;
+  periodEnd: string;
+  createdBy: string;
+  createdAt: string;
+  publishedBy: string | null;
+  publishedAt: string | null;
+  sections: SummarySection[];
+}
+export interface SummaryInput {
+  clientId: string;
+  weekStart: string;
+  upcoming: { ticketId: string; note: string }[];
+  blocked: { ticketId: string; note: string }[];
+}
+
+export type DeliveryView =
+  | 'followup'
+  | 'overdue'
+  | 'upcoming'
+  | 'agreement'
+  | 'acceptance'
+  | 'changes'
+  | 'scope'
+  | 'all';
+export interface DeliveryPlanItem {
+  id: string;
+  source: 'delivery' | 'scope';
+  ticketId: string;
+  title: string;
+  projectId: string;
+  projectName: string;
+  clientName: string;
+  revision: number;
+  state: string;
+  targetDate: string | null;
+  ownerName: string | null;
+  reviewerId: string;
+  reviewerName: string;
+  releaseVersion: string | null;
+  createdAt: string;
+  reason: string;
+  yourDecision: boolean;
+  href: string;
+}
+export interface DeliveryPlan {
+  items: DeliveryPlanItem[];
+  counts: Record<DeliveryView, number>;
+  total: number;
+  page: number;
+  limit: number;
+  asOf: string;
+  today: string;
+  through: string;
+}

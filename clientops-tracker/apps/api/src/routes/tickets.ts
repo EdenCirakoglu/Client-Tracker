@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { deliveryRouter } from './delivery';
+import { scopeRouter } from './scope';
 import { getTicketQueue, queueQuerySchema } from '../services/queue.service';
 import { asyncHandler, requireUser, sendSuccess } from '../utils/http';
 
@@ -22,6 +24,8 @@ import {
 } from '../validators/api';
 
 export const ticketsRouter = Router();
+ticketsRouter.use('/:id/delivery', deliveryRouter);
+ticketsRouter.use('/:id/scope', scopeRouter);
 
 ticketsRouter.get('/', listTicketsController);
 ticketsRouter.get(

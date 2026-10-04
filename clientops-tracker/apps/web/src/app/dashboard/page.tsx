@@ -16,6 +16,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { ErrorState, LoadingState } from '../../components/ui/states';
 import { NeedsAttention } from '../../components/dashboard/needs-attention';
+import { DeliveryFollowUp } from '../../components/dashboard/delivery-follow-up';
 import { RecentActivity, RecentReleases } from '../../components/dashboard/recent-activity';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -125,6 +126,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
             <div className="min-w-0 space-y-8">
+              <DeliveryFollowUp refresh={refresh} />
               {user ? <NeedsAttention role={user.role} refresh={refresh} /> : null}
               <div className="grid gap-6 md:grid-cols-2">
                 <Distribution

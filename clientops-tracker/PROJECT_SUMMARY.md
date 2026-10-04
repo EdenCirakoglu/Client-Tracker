@@ -18,6 +18,8 @@ The project was built to demonstrate production-minded full-stack engineering th
 - Zod validation and centralized JSON error handling.
 - Swagger/OpenAPI documentation for the API contract.
 - Rule-based triage service with persisted suggestions and ticket event history.
+- [Client delivery workflows](docs/PRODUCT_WORKFLOWS.md): versioned scope approval, explicit client acceptance, privacy-safe delivery exports and reviewed portal summaries. These remain product hypotheses; [local verification](docs/PRODUCT_WORKFLOWS_VERIFICATION.md) is separate from historical hosted release evidence.
+- [Delivery planning](docs/DELIVERY_PLANNING.md): named internal responsibility, versioned target dates agreed by a client reviewer, bounded project plans and reason-labelled follow-up. Proposed dates, delivery, acceptance and resolution remain separate facts.
 - Vitest and Supertest coverage for authentication, authorization, CRUD, metrics, and triage behavior.
 - Dockerfiles, Docker Compose, GitHub Actions CI, GHCR publishing, and an optional manual VPS deployment workflow.
 

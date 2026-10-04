@@ -1,12 +1,14 @@
 export function Card({
   children,
   className = '',
+  id,
 }: {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
-    <section className={`min-w-0 rounded-lg border border-border bg-panel ${className}`}>
+    <section id={id} className={`min-w-0 rounded-lg border border-border bg-panel ${className}`}>
       {children}
     </section>
   );
