@@ -22,30 +22,41 @@ export async function requireCurrentWorkflowActor(
   }
 }
 
-// Delivery and scope revisions share the ticket lock, including with ordinary ticket updates.
+// Call after locking the actor. SHARE keeps project ownership stable until commit.
+export async function lockProjectForUser(
+  tx: WorkflowTransaction,
+  user: AuthenticatedUser,
+  projectId: string,
+) {
+  const [project] = await tx
+    .select()
+    .from(projects)
+    .where(
+      and(
+        eq(projects.id, projectId),
+        user.role === 'CLIENT'
+          ? eq(projects.clientId, user.clientId ?? '00000000-0000-0000-0000-000000000000')
+          : undefined,
+      ),
+    )
+    .for('share');
+  return project;
+}
+
+// Existing-ticket mutations lock actor, ticket, then project before authorizing a write.
 export async function accessibleTicket(
   tx: WorkflowTransaction,
   user: AuthenticatedUser,
   ticketId: string,
 ) {
   await requireCurrentWorkflowActor(tx, user);
-  const [row] = await tx
-    .select({ ticket: tickets, project: projects })
-    .from(tickets)
-    .innerJoin(projects, eq(tickets.projectId, projects.id))
-    .where(
-      and(
-        eq(tickets.id, ticketId),
-        user.role === 'CLIENT'
-          ? eq(projects.clientId, user.clientId ?? '00000000-0000-0000-0000-000000000000')
-          : undefined,
-      ),
-    )
-    .for('update', { of: tickets });
-  if (!row) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
-  return row;
+  const [ticket] = await tx.select().from(tickets).where(eq(tickets.id, ticketId)).for('update');
+  if (!ticket) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+  const project = await lockProjectForUser(tx, user, ticket.projectId);
+  if (!project) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+  return { ticket, project };
 }
 export function requireInternal(user: AuthenticatedUser) {
   if (user.role === 'CLIENT')
-    throw new ApiError(403, 'FORBIDDEN', 'Only internal staff can propose or deliver work.');
+    throw new ApiError(403, 'FORBIDDEN', 'Only internal staff can perform this action.');
 }
