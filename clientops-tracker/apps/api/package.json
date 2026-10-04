@@ -36,7 +36,7 @@
     "express-session": "^1.19.0",
     "helmet": "^8.0.0",
     "morgan": "^1.12.1",
-    "nodemailer": "^10.0.3",
+    "nodemailer": "^10.0.9",
     "pg": "^8.13.1",
     "rate-limiter-flexible": "^11.2.0",
     "swagger-ui-express": "^5.0.1",
