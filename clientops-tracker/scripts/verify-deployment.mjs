@@ -95,6 +95,8 @@ const operatorImage = JSON.parse(
 config.name = project;
 config['x-clientops-release'] = revision;
 config.networks.default.name = `${project}_default`;
+if (process.env.VERIFY_DISPOSABLE_SUBNET)
+  config.networks.default.ipam = { config: [{ subnet: process.env.VERIFY_DISPOSABLE_SUBNET }] };
 config.volumes = Object.fromEntries(
   ['postgres_data', 'operations_state', 'backup_secrets', 'repository'].map((name) => [
     name,

@@ -63,6 +63,8 @@ const restoredOrigin = `https://localhost:${port}`;
 const config = JSON.parse(compose(['config', '--format', 'json']));
 config.name = restoreProject;
 config.networks.default.name = `${restoreProject}_default`;
+if (process.env.VERIFY_DISPOSABLE_SUBNET)
+  config.networks.default.ipam = { config: [{ subnet: process.env.VERIFY_DISPOSABLE_SUBNET }] };
 config.volumes.postgres_data.name = `${restoreProject}_postgres_data`;
 config.services.postgres.environment.POSTGRES_DB = restoreDatabase;
 delete config.services.mailpit.ports;
