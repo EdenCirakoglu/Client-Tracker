@@ -1,5 +1,9 @@
 # ClientOps Installation and Acceptance Guide
 
+For this feature increment's actual checks and pending release gates, see
+[feature-release verification](FEATURE_RELEASE_VERIFICATION.md). A passing local
+fixture does not establish acceptance of a customer's production services.
+
 For teams evaluating self-hosting or assisted installation. The public code remains MIT
 licensed; optional paid installation is a service, not exclusive access to the repository.
 [Booking and checkout are not yet configured](SERVICES.md). Do not send payment or private

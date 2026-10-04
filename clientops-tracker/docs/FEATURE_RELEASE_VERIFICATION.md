@@ -68,6 +68,7 @@ $env:BROWSER_CHANNEL='chrome'
 $env:E2E_SCREENSHOT_DIR='test-results/feature-release-screenshots'
 pnpm test:e2e
 node scripts/check-browser-evidence.mjs
+$env:VERIFY_PROJECT='clientops-feature-release'
 node scripts/verify-ui-acceptance.mjs
 node scripts/verify-database-roles.mjs --feature
 node scripts/verify-operations.mjs --feature
@@ -84,6 +85,11 @@ migrations or support the new workflow; rollback must follow the reviewed runboo
 ## Results
 
 Verification in progress. Do not treat this checkpoint as a verified release.
+API source revision `61c033623618ad0a790fcfc9d11bdfbac3ab14bf`: full local
+suite **111 passed across 14 files**, 214.36s. Focused security/workflow run:
+**24 passed**, 107.52s, including three invitation and three reset concurrency
+rounds. Lint, typecheck and formatting passed. The old intermittent 503 did not
+recur; its original database error was not retained, so no precise cause is claimed.
 Frozen installation and checkpoint patch/history secret scans passed. Browser
 report validation now fails for missing, malformed, empty, stale or private
 reports; failed test reports can still be retained safely without making CI pass.

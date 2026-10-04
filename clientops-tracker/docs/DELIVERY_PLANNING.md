@@ -121,3 +121,7 @@ production migration with live writers. See [installation acceptance](INSTALLATI
    browser 200% zoom. A real screen-reader walkthrough remains separate manual acceptance.
 
 Results and capture locations: [delivery planning verification](DELIVERY_PLANNING_VERIFICATION.md).
+
+The subsequent combined feature-release verification is recorded in
+[FEATURE_RELEASE_VERIFICATION.md](FEATURE_RELEASE_VERIFICATION.md); prior local
+results are not relabelled as evidence for a later revision.

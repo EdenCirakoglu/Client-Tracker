@@ -75,6 +75,11 @@ Swagger at `/api/docs/` documents bodies, roles, conflicts and CSRF. `GET /api/t
 
 ## Acceptance and Verification
 
+Current feature-release checks and reproduction commands are tracked separately in
+[FEATURE_RELEASE_VERIFICATION.md](FEATURE_RELEASE_VERIFICATION.md). Membership is
+rechecked and held stable inside decision transactions, so disablement or a role or
+organisation change after request authentication cannot retain decision authority.
+
 API regressions: `apps/api/tests/delivery.test.ts` and `product-workflows.test.ts`. Browser journey: `e2e/product-workflows.spec.ts`. Use a newly designated disposable database, not the active demonstration or development database. See [BROWSER_TESTS.md](BROWSER_TESTS.md) and the [verification record](PRODUCT_WORKFLOWS_VERIFICATION.md) for the actual environment and results.
 
 Manual checks:
