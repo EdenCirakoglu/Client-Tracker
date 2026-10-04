@@ -24,6 +24,13 @@ test('valid passing and failing reports retain exact revision provenance', () =>
   failed.stats = { expected: 0, unexpected: 1 };
   validateBrowserEvidence(JSON.stringify(failed), revision, true);
 });
+
+test('decoded nested Windows paths are rejected in hosted artifacts', () => {
+  for (const path of ['C:\\Users\\Fixture\\project', 'C:/Users/Fixture/project']) {
+    const text = JSON.stringify({ ...report(), errors: [{ stack: path }] });
+    assert.throws(() => validateBrowserEvidence(text, revision, true), /personal Windows path/);
+  }
+});
 test('stale, dirty, empty, malformed and private browser reports are rejected', () => {
   assert.throws(() => validateBrowserEvidence('{}', revision, true));
   assert.throws(() => validateBrowserEvidence(JSON.stringify(report()), 'b'.repeat(40), true));
