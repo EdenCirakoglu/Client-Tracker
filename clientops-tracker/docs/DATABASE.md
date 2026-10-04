@@ -156,8 +156,12 @@ pnpm db:studio
 
 Tests require `TEST_DATABASE_URL` and `DISPOSABLE_DATABASE_NAME` matching a dedicated
 `clientops_*test` database. Missing or unsafe configuration fails before fixtures
-run. `docker-compose.test.yml` uses a separate PostgreSQL cluster and tmpfs storage
-on loopback port 55433. There is no development `.env` fallback.
+run. `pnpm db:test:up` starts `docker-compose.hardening-test.yml`: a separate
+PostgreSQL cluster with tmpfs storage on loopback port **55434**, plus local
+Mailpit on SMTP **11025** and HTTP **18025**. Use `apps/api/.env.test.example`
+as the configuration reference. The older `docker-compose.test.yml` on 55433
+does not start the account-email fixture and is not the full-suite setup.
+There is no development `.env` fallback.
 
 The fictional demo contains two organisations, four demo users (one client for each
 organisation), three projects, eight tickets, comments, events, two releases and
@@ -172,3 +176,23 @@ commands in [the README](../README.md) and [deployment guide](DEPLOYMENT.md).
 `pnpm --filter @clientops/api db:fingerprint` performs a read-only, repeatable-read
 snapshot and prints only per-table row counts and a SHA-256 content fingerprint.
 It can demonstrate that running tests leaves demo data unchanged without exposing rows.
+
+## Mutation Authorization and Timestamps
+
+Ticket creation, updates, comments, triage, delivery and scope writes revalidate
+the acting user's active status, role and organisation inside their transaction.
+A shared user-row lock prevents concurrent permission changes while the write
+is being authorized. Existing-ticket mutations then lock the ticket for update
+and its project for share; creation locks the project before insertion. Project
+ownership and assignee eligibility are checked under row locks. Changes committed
+before these locks are acquired are rechecked; changes waiting on these locks
+take effect after the authorized transaction commits. Rejected writes leave
+ticket, comment, suggestion and event records unchanged.
+
+The shared Drizzle timestamp definition supplies `updatedAt` for ORM updates
+to users, clients, projects, tickets, comments and releases when a caller omits it.
+Explicit historical values remain supported for imports/fixtures. This is an
+[ORM runtime hook](https://orm.drizzle.team/docs/latest-releases/drizzle-orm-v0305),
+not a PostgreSQL trigger or schema migration: operator-written raw SQL must still
+set `updated_at` explicitly. No history is backfilled, and an internal comment
+does not touch its parent ticket's timestamp or create client-visible activity.

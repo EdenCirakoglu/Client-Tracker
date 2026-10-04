@@ -338,6 +338,12 @@ if (!(Test-Path apps/api/.env.test)) { Copy-Item apps/api/.env.test.example apps
 pnpm db:test:up
 ```
 
+If an existing `apps/api/.env.test` still points to port `55433`, update its test
+URL and database name from the example. The current disposable stack uses
+`localhost:55434/clientops_hardening_test`, SMTP `11025` and Mailpit `18025`.
+Custom `TEST_PG_PORT`, `TEST_SMTP_PORT` or `TEST_MAIL_PORT` overrides must match
+the corresponding test URL/SMTP settings. Do not point tests at the demo database.
+
 ```powershell
 pnpm lint
 pnpm typecheck

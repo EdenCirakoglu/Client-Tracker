@@ -3,6 +3,7 @@ import nextPlugin from '@next/eslint-plugin-next';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import { fileURLToPath } from 'node:url';
 
 export default tseslint.config(
   {
@@ -15,6 +16,9 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/next-env.d.ts',
     ],
+  },
+  {
+    plugins: { '@next/next': nextPlugin },
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -50,16 +54,13 @@ export default tseslint.config(
   },
   {
     files: ['apps/web/**/*.{ts,tsx}'],
-    plugins: {
-      '@next/next': nextPlugin,
-    },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
     },
     settings: {
       next: {
-        rootDir: ['apps/web/'],
+        rootDir: [fileURLToPath(new URL('./apps/web/', import.meta.url))],
       },
     },
   },

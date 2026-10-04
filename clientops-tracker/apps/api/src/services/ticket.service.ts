@@ -5,7 +5,12 @@ import { projects, ticketComments, ticketEvents, tickets, users } from '../db/sc
 import type { AuthenticatedUser } from '../types/auth';
 import { ApiError } from '../utils/http';
 import { generateInitialTriageSuggestion, getLatestTriageSuggestion } from './triage.service';
-import { findDeveloperById } from './user.service';
+import {
+  accessibleTicket,
+  lockProjectForUser,
+  requireCurrentWorkflowActor,
+  requireInternal,
+} from './workflow-access';
 
 type TicketRecord = typeof tickets.$inferSelect;
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -89,21 +94,14 @@ export async function getTicketForUser(user: AuthenticatedUser, ticketId: string
 }
 
 export async function createTicketForUser(user: AuthenticatedUser, data: CreateTicketInput) {
-  const project = await findProject(data.projectId);
-
-  if (!project || (user.role === 'CLIENT' && project.clientId !== user.clientId)) {
-    throw new ApiError(404, 'PROJECT_NOT_FOUND', 'Project was not found.');
-  }
-
-  if (user.role === 'CLIENT' && data.assignedToId) {
-    throw new ApiError(403, 'FORBIDDEN', 'Clients cannot assign tickets.');
-  }
-
-  if (data.assignedToId) {
-    await assertDeveloperExists(data.assignedToId);
-  }
-
   const createdId = await db.transaction(async (tx) => {
+    await requireCurrentWorkflowActor(tx, user);
+    const project = await lockProjectForUser(tx, user, data.projectId);
+    if (!project) throw new ApiError(404, 'PROJECT_NOT_FOUND', 'Project was not found.');
+    if (user.role === 'CLIENT' && data.assignedToId) {
+      throw new ApiError(403, 'FORBIDDEN', 'Clients cannot assign tickets.');
+    }
+    if (data.assignedToId) await assertDeveloperExists(data.assignedToId, tx);
     const [ticket] = await tx
       .insert(tickets)
       .values({
@@ -142,20 +140,10 @@ export async function updateTicketForUser(
   ticketId: string,
   data: UpdateTicketInput,
 ) {
-  await getTicketForUser(user, ticketId);
-
-  if (data.assignedToId) {
-    await assertDeveloperExists(data.assignedToId);
-  }
-
   await db.transaction(async (tx) => {
-    // Read the current state under the same lock used by triage application.
-    const [existing] = await tx
-      .select()
-      .from(tickets)
-      .where(eq(tickets.id, ticketId))
-      .for('update');
-    if (!existing) throw new ApiError(404, 'TICKET_NOT_FOUND', 'Ticket was not found.');
+    const { ticket: existing } = await accessibleTicket(tx, user, ticketId);
+    requireInternal(user);
+    if (data.assignedToId) await assertDeveloperExists(data.assignedToId, tx);
     const updateData: Partial<typeof tickets.$inferInsert> = {
       updatedAt: new Date(),
     };
@@ -232,13 +220,11 @@ export async function createTicketCommentForUser(
   ticketId: string,
   data: CreateCommentInput,
 ) {
-  await getTicketForUser(user, ticketId);
-
-  if (user.role === 'CLIENT' && data.isInternal) {
-    throw new ApiError(403, 'FORBIDDEN', 'Clients cannot create internal comments.');
-  }
-
   return db.transaction(async (tx) => {
+    await accessibleTicket(tx, user, ticketId);
+    if (user.role === 'CLIENT' && data.isInternal) {
+      throw new ApiError(403, 'FORBIDDEN', 'Clients cannot create internal comments.');
+    }
     const [comment] = await tx
       .insert(ticketComments)
       .values({
@@ -276,11 +262,6 @@ async function findTicketWithProject(ticketId: string) {
   return row ? toTicketWithProject(row) : null;
 }
 
-async function findProject(projectId: string) {
-  const [project] = await db.select().from(projects).where(eq(projects.id, projectId)).limit(1);
-  return project ?? null;
-}
-
 function toTicketWithProject(row: {
   ticket: TicketRecord;
   project: ProjectRecord;
@@ -297,8 +278,14 @@ function canAccessTicket(user: AuthenticatedUser, ticket: TicketWithProject) {
   return user.role !== 'CLIENT' || ticket.project.clientId === user.clientId;
 }
 
-async function assertDeveloperExists(userId: string) {
-  const developer = await findDeveloperById(userId);
+async function assertDeveloperExists(userId: string, tx: Transaction) {
+  const [developer] = await tx
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(eq(users.id, userId), eq(users.role, 'DEVELOPER'), eq(users.accountStatus, 'ACTIVE')),
+    )
+    .for('share');
 
   if (!developer) {
     throw new ApiError(400, 'INVALID_ASSIGNEE', 'Assigned user must be a developer.');
