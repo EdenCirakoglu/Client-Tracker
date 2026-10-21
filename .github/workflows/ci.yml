@@ -74,6 +74,9 @@ jobs:
       - name: Public information and secret scan
         run: node scripts/secret-scan.mjs
 
+      - name: Runtime dependency advisories
+        run: pnpm audit --prod
+
       - name: Lint
         run: pnpm lint
 
