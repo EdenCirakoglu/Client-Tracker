@@ -8,7 +8,8 @@ Both worktrees started at `bc7eeaf131a606da39470ef9aec406a661eb7b08`; the main
 worktree was clean and fetched main had not advanced. No stash, reset, history
 rewrite, branch synchronization or database deletion was needed.
 
-The maintenance candidate is on `release/launch-maintenance-2026-10-21`.
+The maintenance candidate is [draft PR #19](https://github.com/EdenCirakoglu/Client-Tracker/pull/19)
+on `release/launch-maintenance-2026-10-21`.
 Dependency commit: `658aef7a5a8cf5bf57211a6efb87c3b345adec84`.
 Its final tested commit and hosted checks are recorded on its PR and in the
 review handoff. It is not a public deployment or customer-accepted release.
@@ -66,10 +67,19 @@ outage, restricted-role, backup, restore and deployment-failure suite.
 The pinned secret scan found no leaks in 79 reachable commits before this
 candidate was committed. Its first sandboxed attempt could not access Docker;
 the same command passed with Docker access. The hosted scan will include the
-new commits. No scanner rule, fixture exception, test assertion or timeout was
-changed. Existing historical personal-attribution exposure is documented in
+new commits. No test assertion or timeout was changed. Existing historical personal-attribution exposure is documented in
 [PUBLIC_INFORMATION.md](PUBLIC_INFORMATION.md); absence of detected credentials does not
 erase public historical metadata.
+
+The first candidate CI, [39603537785](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39603537785)
+at `fffd46b3998b1ba208ab96c521b3a72754effe6e`, failed the secret gate before running
+application checks. The same scan reproduced locally: `generic-api-key` matched
+the public main SHA in the GHCR API image reference below. Its value is the
+already-public Git revision, not an authentication secret. A narrowly scoped
+allowlist requires both this exact document path and that exact SHA; no generic
+SHA, file, directory or rule exclusion was added. Historical scanning remains
+enabled. The missing browser report correctly failed the artifact-upload gate.
+The subsequent PR run must pass independently; this failed run is not test evidence.
 
 ### Reproduce the Isolated API Baseline
 
