@@ -61,7 +61,6 @@ export default function DashboardPage() {
           </div>
         }
       />
-      {user?.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
       {loading && !data ? (
         <LoadingState label="Loading overview..." />
       ) : error ? (
@@ -148,6 +147,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <aside className="min-w-0 space-y-8" aria-label="Supporting information">
+              {user?.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
               {!client && data.developerWorkload ? (
                 <section>
                   <h2 className="text-lg font-semibold">Developer workload</h2>
