@@ -1,6 +1,47 @@
 # Roadmap
 
-The roadmap keeps future work focused on operational value, production safety, and a viable hosted product.
+## Current First-Customer Launch Checklist
+
+Updated 2026-10-21. This is the single current launch checklist. The initial offer
+is assisted installation for one agency, not shared multi-agency SaaS. Public MIT
+code remains available without buying a service. Status means only the evidence
+listed: source CI, published-image runtime, real-service acceptance and customer
+acceptance are separate gates.
+
+| Task                               | Status                                                                                                               | Tested revision / evidence                                                                                                                                                      | Next action                                                                                                                                                | Owner                           |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 1. Establish and maintain baseline | In progress: unchanged baseline locally verified; maintenance candidate prepared                                     | Main `bc7eeaf131a606da39470ef9aec406a661eb7b08`; [baseline and security classifications](LAUNCH_BASELINE.md), [historical authorization review](TICKET_AUTHORIZATION_REVIEW.md) | Finish patched-head CI and review the maintenance PR; resolve remaining launch-blocking dependency work separately                                         | Maintainer                      |
+| 2. Buyer-facing workflow           | Existing delivery, scope, summaries and planning merged; onboarding and workflow notifications not implemented       | [PR #16 evidence](FEATURE_RELEASE_VERIFICATION.md), [workflow contract](PRODUCT_WORKFLOWS.md)                                                                                   | Separate product PR: walk through all three roles; add administrator checklist and permission-rechecked durable workflow notifications, using Mailpit only | Maintainer                      |
+| 3. Release candidate               | Historical CI/publication verified; current pair has registry metadata but no new published-image runtime acceptance | [Release evidence](RELEASE_READINESS.md), [installation guide](INSTALLATION_GUIDE.md)                                                                                           | Full product CI, approved merge, digest-pinned image verification, populated upgrade/restore and versioned handoff                                         | Maintainer + repository owner   |
+| 4. Real staging                    | Not accepted; fixture tests are not external-service evidence                                                        | [Operator controls](OPERATOR_CONTROLS.md), [deployment guide](DEPLOYMENT.md)                                                                                                    | Supply operator inputs below privately; approve separated staging and perform actual acceptance                                                            | Operator                        |
+| 5. Purchasable installation offer  | Service information only; no configured booking or checkout                                                          | [Services](SERVICES.md), [commercial options](MONETISATION.md)                                                                                                                  | Agree scope, effort/cost worksheet, price, terms and capacity; configure genuine destinations and test-mode purchase before approval to activate           | Repository owner                |
+| 6. Controlled agency pilot         | Not started; no customer evidence                                                                                    | [Installation acceptance](INSTALLATION_GUIDE.md)                                                                                                                                | Prepare interview/demo/feedback pack, then obtain permission to contact one agency; record usability, support effort and willingness to pay                | Repository owner + pilot agency |
+
+### Operator Inputs (One Outstanding List)
+
+Do not put secret values in issues, chat, screenshots or commits. Supply them
+through private operator configuration when the relevant action is approved.
+
+- Domain/DNS and host access; approved hosting/provider budget.
+- Independent staging/production secrets and separate database, volume, deployment-state and backup namespaces.
+- Authenticated SMTP, verified sender and explicitly approved test recipients.
+- Off-host backup destination and encryption-key escrow independent of the host.
+- External monitoring, alert recipient, missing-heartbeat policy and security-log retention.
+- Named recovery owner, recovery-time target and acceptable data loss.
+- Booking/checkout account, approved offer/price/terms/support capacity, and permission for a pilot contact.
+
+No merge, public deployment, spending, live checkout or real-recipient email is
+performed by this checklist. Earlier authorization completed PR #17; new launch
+candidates remain reviewable before further approval.
+
+## Historical Planning Backlog
+
+The sections below preserve earlier ideas, not a second active checklist. Several
+items were subsequently implemented (sessions, durable account email, bounded
+queries, backup/restore, monitoring fixtures and migration packaging). Their
+actual status is recorded above and in the linked evidence. Subscriptions,
+multi-agency SaaS, AI providers, Marketplace integration and broad redesign are
+deferred from this launch.
 
 ## MVP Polish
 
@@ -12,7 +53,7 @@ The roadmap keeps future work focused on operational value, production safety, a
 
 ## Production Hardening
 
-- Review and merge the implemented secure-session/account-provisioning branch after its current CI passes.
+- Historical item, completed by earlier merges: review the secure-session/account-provisioning implementation. See [release evidence](RELEASE_READINESS.md).
 - Configure real TLS/domain/renewal, SMTP sender verification and secret lifecycle; local HTTPS and captured mail are not production services.
 - Add durable email delivery, account-security audit retention, structured logging, and request correlation IDs.
 - Add automated dependency scanning, backups, restore drills, and health monitoring.

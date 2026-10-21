@@ -1,6 +1,16 @@
 # Release Readiness Evidence
 
-## Current Feature Review
+## Current Launch Baseline
+
+As rechecked on 2026-10-21, main is `bc7eeaf131a606da39470ef9aec406a661eb7b08`.
+PR #16 and PR #17 are merged. Main [CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37227250895)
+and [API/web image publication](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37228239554)
+passed. [LAUNCH_BASELINE.md](LAUNCH_BASELINE.md) records the new unchanged-baseline
+checks, registry digests, security findings and maintenance candidate. This does
+not relabel earlier screenshots or prove runtime acceptance of this image pair.
+The single current progress checklist is [ROADMAP.md](ROADMAP.md).
+
+## Historical Feature Review
 
 The request-to-acceptance, scope approval, progress summary and delivery-planning
 work is preserved in [PR #16](https://github.com/EdenCirakoglu/Client-Tracker/pull/16).

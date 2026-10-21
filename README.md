@@ -5,6 +5,10 @@
 
 Open-source support and delivery operations platform for small software teams.
 
+**Current launch work:** [first-customer checklist](clientops-tracker/docs/ROADMAP.md)
+and [baseline/maintenance evidence](clientops-tracker/docs/LAUNCH_BASELINE.md).
+Assisted installation is the initial offer. Passing CI is not staging or customer acceptance.
+
 Manage client projects, support tickets, comments, releases, and advisory rule-based triage through a role-aware Next.js dashboard and an Express REST API backed by PostgreSQL and Drizzle.
 
 Connect requests to agreed outcomes, named delivery owners, target dates, release-linked

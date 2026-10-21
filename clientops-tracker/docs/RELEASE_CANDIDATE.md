@@ -1,5 +1,10 @@
 # PR #5 Release Candidate Handoff
 
+> Historical checkpoint: PR #5 was subsequently merged as
+> `bcbb95311a3ab9384eabbc5ed8134b86cb419985`. The unmerged wording and results below
+> describe that earlier review only. See [current release status](RELEASE_READINESS.md)
+> and the [launch checklist](ROADMAP.md); do not apply these results to later revisions.
+
 This is the follow-up to checked revision `10241678b095578f44c9e399887d66b7ebb0a13d`
 and its [passing CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/34860356599).
 That evidence remains historical. New deployment-sequence and certificate-hook
