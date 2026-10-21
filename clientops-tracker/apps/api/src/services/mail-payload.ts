@@ -5,6 +5,24 @@ import { db } from '../db/client';
 import { mailOutbox } from '../db/schema';
 
 const payloadSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('WORKFLOW'),
+      event: z.enum([
+        'SCOPE_REVIEW',
+        'SCOPE_DECISION',
+        'OUTCOME_REVIEW',
+        'DELIVERY_REVIEW',
+        'DELIVERY_DECISION',
+        'SUMMARY_PUBLISHED',
+      ]),
+      recipientId: z.string().uuid(),
+      clientId: z.string().uuid(),
+      recordId: z.string().uuid(),
+      ticketId: z.string().uuid().nullable(),
+      expectedState: z.string().max(32),
+    })
+    .strict(),
   z.object({ kind: z.literal('RECOVERY_REQUEST'), email: z.string().email() }).strict(),
   z
     .object({
@@ -15,6 +33,7 @@ const payloadSchema = z.discriminatedUnion('kind', [
     .strict(),
 ]);
 export type MailPayload = z.infer<typeof payloadSchema>;
+export type WorkflowMailPayload = Extract<MailPayload, { kind: 'WORKFLOW' }>;
 export type MailTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 const key = env.MAIL_ENCRYPTION_KEY
   ? Buffer.from(env.MAIL_ENCRYPTION_KEY, 'hex')
@@ -64,4 +83,25 @@ export async function enqueueMail(
     .insert(mailOutbox)
     .values({ id, kind: payload.kind, payload: encryptMail(id, payload), expiresAt, tokenId });
   return id;
+}
+
+export async function enqueueWorkflowMail(tx: MailTransaction, payload: WorkflowMailPayload) {
+  const id = randomUUID();
+  await tx
+    .insert(mailOutbox)
+    .values({
+      id,
+      kind: payload.kind,
+      payload: encryptMail(id, payload),
+      expiresAt: new Date(Date.now() + 7 * 86400000),
+      recipientId: payload.recipientId,
+      notificationEvent: payload.event,
+      deduplicationKey: [
+        payload.event,
+        payload.recordId,
+        payload.expectedState,
+        payload.recipientId,
+      ].join(':'),
+    })
+    .onConflictDoNothing({ target: mailOutbox.deduplicationKey });
 }
