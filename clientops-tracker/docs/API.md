@@ -1,5 +1,23 @@
 # API Reference
 
+## Workflow Notification Additions
+
+- `GET /api/dashboard/onboarding`: ADMIN-only real-record setup checklist.
+- `GET/PATCH /api/auth/notification-preferences`: own preference; PATCH accepts
+  `{"workflowNotifications":false}` and requires the session/CSRF token.
+  Account recovery and invitations are unaffected.
+- `GET /api/summaries/:id/recipients`: ADMIN/DEVELOPER contact picker, current
+  active CLIENT contacts in that summary's organisation, maximum 100.
+- `POST /api/summaries/:id/publish`: optional `{"recipientIds":["<uuid>"]}`,
+  maximum 50; omit or pass an empty list for portal-only publication. Invalid,
+  moved, disabled or opted-out selected contacts reject the entire operation.
+  Publication and deduplicated notices commit in the same transaction.
+- Existing scope/delivery requests and decisions enqueue role-appropriate generic
+  portal notices. This does not alter decision authority or ticket status.
+- `GET /api/users/deliveries` remains ADMIN-only. Workflow rows include safe event,
+  recipient name and terminal/suppression reason; never ciphertext, tokens or mail
+  contents. See [workflow contract](PRODUCT_WORKFLOWS.md) for retries and expiry.
+
 The API runs locally at `http://localhost:8080`. Production uses the configured HTTPS origin. Interactive docs are at [`/api/docs`](http://localhost:8080/api/docs), or `https://localhost:8443/api/docs/` in the isolated HTTPS fixture.
 
 Swagger UI publishes the contract without authentication, not application data. Its request interceptor obtains CSRF tokens and sends cookies for mutations; sign in through the login operation first. Restrict `/api/docs` at the edge for a sensitive production system.
