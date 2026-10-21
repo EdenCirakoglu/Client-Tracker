@@ -33,8 +33,10 @@ Historically, the original remediation was based on then-unmerged PR #19's teste
 that evidence remains historical and is not evidence for the remediation head.
 The new PR handoff identifies its own exact tested SHA, checks and artifacts.
 PRs #14/#18 stay open until a replacement is actually merged. No merge is authorized
-for milestone 1B. Next implementation increment: administrator onboarding and
-permission-rechecked workflow notifications, after dependency review.
+for milestone 1B. The originally scoped next increment, administrator onboarding
+and permission-rechecked workflow notifications, is now implemented in dependent
+[draft PR #22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22). Its own
+[verification record](LAUNCH_PRODUCT.md) is separate from maintenance evidence.
 
 ## Historical Milestone 1A Record
 

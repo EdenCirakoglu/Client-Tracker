@@ -8,6 +8,12 @@ separate draft against main. Review this product increment against #20, not as a
 replacement for its dependency changes. No merge, publication, public deployment,
 checkout activation or real-recipient email is authorized by this record.
 
+Product review: [draft PR #22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22),
+[incremental files](https://github.com/EdenCirakoglu/Client-Tracker/pull/22/files).
+After an approved #20 merge, retarget #22 to main, inspect the new diff and run
+fresh CI and CodeQL for that candidate. No product CodeQL result is inferred from
+#20's analysis. PRs #14/#18 have not been closed.
+
 Historical #19 evidence at `7693de8131d9ea11dcff30dbd695219c64a4170d` and
 #20 evidence at `d9099b6febd6ac5f682649ae4d109909d9215d30` remain unchanged.
 The four development-tool risk decisions in [the inventory](DEPENDENCY_REMEDIATION.md)
@@ -27,6 +33,59 @@ are proposed, not approved. Full audit findings remain visible.
 The full recipient, locking, retry, retention and compatibility contract is in
 [PRODUCT_WORKFLOWS.md](PRODUCT_WORKFLOWS.md#onboarding-and-workflow-notices).
 The current progress checklist remains in [ROADMAP.md](ROADMAP.md).
+
+## Revision-Specific Verification
+
+Application source and complete local verification:
+`99e698a002e302cfa88249f17469138b5112a0dc`.
+[Its full hosted CI run](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39630754092)
+uses an explicit PR-head checkout, not the base branch's results. The PR review
+summary records the final capture/documentation head, its separate full CI result,
+artifact identifier and checksum; these do not relabel the results below.
+
+| Check at 99e698a                              | Actual local result / evidence                                                                                                                             |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Typecheck; verification helper tests          | Passed; 26 helper tests                                                                                                                                    |
+| API tests on the separate launch test cluster | 182 passed across 20 files; includes transactional enqueue rollback, authorization locks, stale revisions, preferences and duplicate processing            |
+| Complete combined browser suite               | 13 passed; administrator/developer/client, scope revisions, delivery changes, client-safe export, captured workflow notices and account recovery           |
+| Native zoom, keyboard and axe                 | Passed; `test-results/launch-ui-99e698a/acceptance.json`, actual Chrome settings at 200%, isolated profile, clean source checkout                          |
+| Restricted database permissions               | Passed; runtime DDL, truncation, business/history deletion and escalation rejected; backup role read-only                                                  |
+| PostgreSQL outage and recovery                | Passed; readiness 503 in 767 ms, authenticated request 503 in 6014 ms, liveness 200; readiness/authentication recovered to 200                             |
+| SMTP fixture failure/retry and restart        | Passed; persisted retry, concurrent workers, stale reset rejection, session revocation and redacted logs in `test-results/operations-runtime.json`         |
+| Encrypted backup and failure detection        | Passed; readback, wrong-key rejection, maintenance and six captured local alerts; `test-results/operator-controls.json`                                    |
+| Separate populated restore                    | Passed; 12 business-table fingerprints/relationships preserved, source unchanged, restored sessions/links invalidated; `test-results/restore-runtime.json` |
+| Recovery timing                               | 4.199 s dump, 27.707 s small-fixture recovery; not a production SLA. Snapshot RPO only; no WAL/PITR                                                        |
+| Dependency audit                              | Same lockfile; production npm audit clean, full audit still four proposed tooling decisions (one high, two moderate, one low)                              |
+| Secrets                                       | Existing redacted scanner passed across 97 reachable commits; no suppressions added                                                                        |
+
+Frozen installs, lint, formatting, both builds, migration generation/application,
+Compose validation and the retained deployment-failure rehearsal are also required
+by the linked hosted suite. Local containers are locally built verification
+images, **not newly published GHCR release images**. Local upgrade snapshots
+preserve populated data without reseeding; hosted fixtures additionally start
+from the pinned historical populated image. Do not confuse the historical
+rollback images pulled during recovery tests with publication of this product.
+
+The session-era pinned rollback rehearsal preserves basic ticket/comment records
+with account changes paused and restored mail cleared. It is not approval to run
+an older worker against active `WORKFLOW` jobs: older images cannot process those
+payloads and lack the new workflow routes. Drain/stop writers before migration;
+prefer a compatible repair-forward plan and rehearse any actual rollback against
+the proposed schema and queued work.
+
+Earlier failures remain failures: 546628a exposed ambiguous account feedback;
+f8781af passed 13 browser scenarios but its hosted viewport assertion caught the
+onboarding block pushing the first mobile ticket action down. The fixes are
+separate commits f8781af and 1c100e3. No viewport assertion or rate limit was
+removed. Repeated local browser runs exhausted fixture auth limits; failed reports
+were retained, the disposable API counter was restarted between runs and the
+clean 13-scenario run passed. Do not reset customer rate-limit state to run tests.
+
+Capture-only follow-up `d129bd2e6b41e5ea5724ca4fef3fdd5cdec7d939` passed the
+focused workflow browser scenario and e2e typecheck. It expands the checklist and
+captures the complete decision panel, without changing application behavior.
+The native 390 x 844 action check remains; the panel capture uses 390 x 1100.
+Human screen-reader acceptance and real-service acceptance remain outstanding.
 
 ## Reproduction
 
@@ -63,6 +122,15 @@ node scripts/verify-operations.mjs --launch
 node scripts/verify-controls.mjs --launch
 node scripts/verify-restore.mjs --launch
 ```
+
+Run suites sequentially against these fixtures. Repeated browser runs inside the
+15-minute authentication window can legitimately return 429; wait for the window
+or restart only the disposable fixture API for its in-memory counter. Persistent
+route limits still apply. Never increase production limits to make tests pass.
+If Docker's default address pools are exhausted, inspect existing networks and
+assign an unused subnet to the new fixture only. `VERIFY_DISPOSABLE_SUBNET` can
+select an unused restore network; this run used `10.240.55.0/24`. Do not prune
+other projects or reuse a subnet that is already allocated.
 
 Use Playwright's installed Chromium instead by leaving `BROWSER_CHANNEL` unset.
 Browser report: `playwright-report/index.html`; machine-readable exact revision,
@@ -106,10 +174,10 @@ dashboard images from other scenarios:
 
 | Capture                                   | Scenario                                          | Viewport    |
 | ----------------------------------------- | ------------------------------------------------- | ----------- |
-| launch-admin-onboarding.png               | Administrator setup and operational overview      | 1440 x 1000 |
+| launch-admin-onboarding.png               | Expanded setup checklist and operational overview | 1440 x 1000 |
 | launch-developer-dashboard.png            | Developer personal queue and team context         | 1440 x 1000 |
 | launch-client-dashboard.png               | Organisation-scoped client overview               | 1280 x 900  |
-| launch-pending-decision-mobile.png        | Current client outcome agreement, complete panel  | 390 x 844   |
+| launch-pending-decision-mobile.png        | Current client outcome agreement, complete panel  | 390 x 1100  |
 | launch-summary-notification-outcome.png   | Explicit selected contacts, queued feedback       | 1440 x 1000 |
 | launch-summary-client-mobile.png          | Published snapshot, decisions first               | 390 x 844   |
 | launch-notification-preference-mobile.png | Persisted workflow opt-out, account mail separate | 390 x 844   |
@@ -119,6 +187,13 @@ Capture manifests/browser metadata must identify the tested revision. Do not
 publish raw mail bodies, session cookies, reset links, keys or database dumps.
 Screenshots contain fictional contacts only. A screenshot is not evidence of
 external mail receipt, hosted image publication or customer acceptance.
+
+Local inspected sets: `test-results/launch-product-99e698a/` and the corrected
+`test-results/launch-product-d129bd2/` captures. Prefer the final hosted artifact's
+eight `launch-*` images for review: its fresh fictional fixture avoids accumulated
+records from repeated local runs. Do not include duplicate dashboard captures
+from the other browser scenarios in the selected review set. The artifact also
+retains the browser report and the native-zoom manifest for traceability.
 
 ## Manual Acceptance Still Required
 
