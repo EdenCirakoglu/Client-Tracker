@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/button';
 import { ErrorState, LoadingState } from '../../components/ui/states';
 import { NeedsAttention } from '../../components/dashboard/needs-attention';
 import { DeliveryFollowUp } from '../../components/dashboard/delivery-follow-up';
+import { OnboardingChecklist } from '../../components/dashboard/onboarding-checklist';
 import { RecentActivity, RecentReleases } from '../../components/dashboard/recent-activity';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -146,6 +147,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <aside className="min-w-0 space-y-8" aria-label="Supporting information">
+              {user?.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
               {!client && data.developerWorkload ? (
                 <section>
                   <h2 className="text-lg font-semibold">Developer workload</h2>

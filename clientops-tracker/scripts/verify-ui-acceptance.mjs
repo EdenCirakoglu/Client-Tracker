@@ -146,12 +146,14 @@ if (!before) {
       writeFileSync(resolve(directory, `${name}.png`), png);
       evidence.screens.push(name);
     };
+    const summaries = (await (await page.request.get(`${origin}/api/summaries`)).json()).data.items;
     for (const route of [
       '/dashboard',
       '/delivery',
       '/summaries',
       '/tickets',
       '/users',
+      ...(summaries.length ? [`/summaries/${summaries[0].id}`] : []),
       '/account',
     ]) {
       await page.goto(`${origin}${route}`);
@@ -166,7 +168,13 @@ if (!before) {
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
         .analyze();
       expect(results.violations).toEqual([]);
-      await nativeCapture(`native-200-${route.slice(1)}`);
+      if (route.startsWith('/summaries/'))
+        await expect(
+          page.getByRole('heading', { name: 'Client decisions and replies' }),
+        ).toBeVisible();
+      await nativeCapture(
+        `native-200-${route.startsWith('/summaries/') ? 'summary-detail' : route.slice(1)}`,
+      );
     }
     await page.getByLabel('Current password', { exact: true }).focus();
     const field = await page.getByLabel('Current password', { exact: true }).boundingBox();
