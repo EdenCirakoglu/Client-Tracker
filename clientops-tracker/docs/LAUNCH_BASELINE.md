@@ -1,5 +1,14 @@
 # First-Customer Launch Baseline
 
+## Maintenance Follow-up
+
+PR #19 is merged at `70246650a1ef80096fe74b08213d62d19323e787`; PR #20 is now a
+draft against main, not against the former maintenance branch. Its verified
+`d9099b6febd6ac5f682649ae4d109909d9215d30` results remain tied to that revision.
+See [proposed tooling decisions](DEPENDENCY_REMEDIATION.md#follow-up-review-decisions):
+none has owner acceptance yet. Fresh candidate CI and CodeQL are required; no
+merge or subsequent image publication is claimed here.
+
 ## Current Milestone 1B
 
 The [dependency remediation inventory](DEPENDENCY_REMEDIATION.md) records the

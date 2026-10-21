@@ -1,5 +1,31 @@
 # Dependency Remediation: Milestone 1B
 
+## Follow-up Review Decisions
+
+PR #19 is now merged into main at `70246650a1ef80096fe74b08213d62d19323e787`.
+PR #20 was retargeted to main without merging it. The successful checks and
+screenshots at `d9099b6febd6ac5f682649ae4d109909d9215d30` remain evidence for that
+exact revision; subsequent parser changes require new checks.
+
+These are **proposed temporary acceptances, not approved acceptances**. Owner for
+each: repository maintainer; approval authority: repository owner. Proposed review
+deadline for every decision: **2026-11-04 or before the first customer installation,
+whichever is earlier**. Approval must name the advisory, controls, expiry and
+reviewer in the PR. Silence and passing tests are not acceptance.
+
+| Advisory and exact dependency path                                                                                                                                                                                                                                   | Affected invocation and actual exposure                                                                                                                                                                          | Controls and supported remediation                                                                                                                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99): `apps/api > drizzle-kit@0.31.11 > @esbuild-kit/esm-loader@2.6.5 > @esbuild-kit/core-utils@3.3.2 > esbuild@0.18.20`                                                                         | `pnpm db:generate` / `pnpm db:studio` load the tooling chain. The advisory concerns esbuild development-server access; this application does not invoke its serve API. Kit is absent from the API runtime image. | Generate only from reviewed source; never expose Studio/development servers publicly. Prefer a supported Kit release replacing/upgrading the legacy loader when available. Its current range does not support patched esbuild >=0.25.0. Do not force that major. Proposed acceptance is limited to this CLI use. |
+| [GHSA-g7r4-m6w7-qqqr](https://github.com/advisories/GHSA-g7r4-m6w7-qqqr): `apps/api > tsup@8.5.1 > esbuild@0.27.7`, also `tsup > bundle-require@5.1.0 > esbuild@0.27.7`                                                                                              | `pnpm --filter @clientops/api build` invokes the bundler. The affected invocation is the Windows esbuild development server, not the build invocation used here.                                                 | Keep inputs trusted and tooling out of runtime images. A separately reviewed tsup 9 migration selects esbuild ^0.28.2 (patch >=0.28.1); verify all CLI entry points/packaging rather than overriding tsup 8.                                                                                                     |
+| [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf): `apps/web > tailwindcss@3.4.19 > postcss-selector-parser@6.1.4`, also `tailwindcss > postcss-nested@6.2.0 > postcss-selector-parser@6.1.4`                                                 | `pnpm --filter @clientops/web build` and development CSS compilation parse repository CSS. There is no customer-supplied CSS endpoint; malicious selectors must enter trusted build inputs.                      | Review CSS/config changes, isolate builds, prohibit untrusted stylesheet compilation. Patched parser >=7.1.6 is outside the parent range and changes traversal behavior. Plan explicit parent/parser compatibility work, not a forced major.                                                                     |
+| [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm): root `@next/eslint-plugin-next@15.5.28 > fast-glob@3.3.1 > micromatch@4.0.8 > braces@3.0.3`; web `tailwindcss@3.4.19 > chokidar@3.6.0 / fast-glob@3.3.3 / micromatch@4.0.8 > braces@3.0.3` | `pnpm lint`, web build and development watching expand configured patterns. No request parameter enters this glob chain. The installed version remains affected.                                                 | Review configuration/globs; never compile user-supplied patterns. No patch is listed; monitor the advisory and supported parent releases. Do not add an audit ignore or claim an unavailable fix.                                                                                                                |
+
+Keep `pnpm audit --json` visible: it still exits nonzero for four findings.
+`pnpm audit --prod` covers known advisories in production npm dependency paths,
+**not container OS packages, application logic, deployment configuration, secrets
+or operator controls**. Secret, CodeQL, application and operational checks remain
+separate requirements. No alert was suppressed or dismissed.
+
 ## Provenance
 
 Reviewed 2026-10-21. Base: PR #19 head
