@@ -92,6 +92,12 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await expect(
       admin.getByRole('heading', { name: 'Get your first client started' }),
     ).toBeVisible();
+    const checklist = admin.getByRole('region', { name: 'Get your first client started' });
+    if ((await checklist.locator('details').getAttribute('open')) === null)
+      await checklist.getByText('Setup checklist', { exact: true }).click();
+    await expect(
+      checklist.getByRole('link', { name: /Add client organisation details/ }),
+    ).toBeVisible();
     await accessible(admin);
     await capture(admin, 'admin-onboarding');
     await login(client, 'Client');
@@ -155,9 +161,12 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await expect(client.getByRole('button', { name: 'Agree outcome', exact: true })).toBeVisible();
     const directory = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'test-results/launch-product');
     await mkdir(directory, { recursive: true });
+    // Retain the 390 x 844 usability check above; give the complete panel room in the capture.
+    await client.setViewportSize({ width: 390, height: 1100 });
     await client
       .locator('#delivery')
       .screenshot({ path: resolve(directory, 'launch-pending-decision-mobile.png') });
+    await client.setViewportSize({ width: 390, height: 844 });
     await accessible(client);
     const summary = await mutation(staff, '/api/summaries', {
       clientId: contact.clientId,
