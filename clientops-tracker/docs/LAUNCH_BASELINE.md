@@ -7,6 +7,9 @@ candidate-lockfile advisories, exact paths, fixes, compatibility checks and
 remaining decisions. Express/body-parser/qs and Drizzle are patched. Compatible
 tooling updates and a narrow Next/PostCSS override reduce the full audit from
 31 distinct GHSAs to four build-only findings; the production audit is clean.
+The ORM upgrade also required bounded nested-error inspection to preserve the
+existing 409 response for duplicate release versions; a failing-then-passing
+database regression records that compatibility correction.
 Residual tooling risk and the two open CodeQL classifications require owner
 review. They are not dismissed or described as fixed.
 

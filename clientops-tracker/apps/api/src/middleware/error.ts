@@ -81,6 +81,9 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   });
 };
 
-function isDatabaseUniqueViolation(error: unknown) {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505';
+function isDatabaseUniqueViolation(error: unknown, depth = 0): boolean {
+  if (!error || typeof error !== 'object' || depth > 4) return false;
+  // Drizzle wraps the PostgreSQL error; never expose its query or parameters.
+  const value = error as { code?: string; cause?: unknown };
+  return value.code === '23505' || isDatabaseUniqueViolation(value.cause, depth + 1);
 }

@@ -280,6 +280,17 @@ Exact PR #19 audit paths; only path separators normalized and repeated entries r
   the existing sanitized generic 500 envelope; improving those HTTP status
   semantics is separate API contract work.
 
+### Reproduced ORM Compatibility Fix
+
+A final review found that Drizzle 0.45 wraps PostgreSQL errors in `cause`.
+The previous top-level-only unique-violation handler therefore returned 500 for
+a duplicate release version instead of the established 409 conflict envelope.
+The new real-database regression failed before the correction and passed after
+bounded cause inspection was added. A cyclic-cause test verifies bounded traversal
+and generic errors remain sanitized. No SQL, parameters or constraint details
+enter responses. This is an upgrade compatibility fix, not a changed API contract.
+The full suite now contains 168 tests; final-head results are in PR #20.
+
 ## Remaining Decisions (Not Fixed)
 
 Owner for all four: repository maintainer. **Customer launch remains gated on
@@ -374,7 +385,8 @@ Clean-checkout hosted results are tracked against the actual head of
 Require every retained check to pass at the reviewed SHA; the PR handoff links
 the exact run, report archive and screenshots after completion. Local full-suite
 verification corresponds to code at `edbb2d8317eb22a7ee93d238150e6f6bcaa6f078`;
-subsequent evidence-only edits do not alter those runtime results.
+The later conflict-handler compatibility fix is additional work; the earlier
+166-test result does not prove that fix. Require the final 168-test head's CI.
 
 Additional local restore check at that revision: restricted runtime role checks
 passed; ticket_events stayed append-only; a 59,871-byte in-memory pg_dump was
