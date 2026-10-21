@@ -50,7 +50,7 @@ path index below; peer duplicates do not represent separate issues.
 | [GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr) | brace-expansion          | 1.1.15, 5.0.6    | <1.1.21; >=4.0.0 <5.0.12 | >=1.1.21; >=5.0.12  | 1.1.21 / 5.0.12                                 | ESLint/minimatch repository globbing.                                                         |
 | [GHSA-qhr7-859c-m2p7](https://github.com/advisories/GHSA-qhr7-859c-m2p7) | brace-expansion          | 1.1.15, 5.0.6    | <1.1.20; >=4.0.0 <5.0.11 | >=1.1.20; >=5.0.11  | 1.1.21 / 5.0.12                                 | ESLint/minimatch repository globbing.                                                         |
 | [GHSA-6j4f-fj2g-mc7p](https://github.com/advisories/GHSA-6j4f-fj2g-mc7p) | brace-expansion          | 1.1.15, 5.0.6    | <1.1.19; >=4.0.0 <5.0.10 | >=1.1.19; >=5.0.10  | 1.1.21 / 5.0.12                                 | ESLint/minimatch repository globbing.                                                         |
-| [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) | braces                   | 3.0.3            | <=3.0.3                  | <0.0.0              | 3.0.3 remains                                   | Next ESLint/Tailwind build globbing; unpatched.                                               |
+| [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) | braces                   | 3.0.3            | <=3.0.3                  | None                | 3.0.3 remains                                   | Next ESLint/Tailwind build globbing; unpatched.                                               |
 | [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) | source-map-js            | 1.2.1            | >=1.0.0 <1.2.2           | >=1.2.2             | 1.2.2                                           | PostCSS source-map compilation; no user source-map endpoint.                                  |
 | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) | postcss-selector-parser  | 6.1.4            | <7.1.6                   | >=7.1.6             | 6.1.4 remains                                   | Tailwind/postcss-nested repository CSS compilation.                                           |
 | [GHSA-pqg4-j6r4-53mv](https://github.com/advisories/GHSA-pqg4-j6r4-53mv) | shell-quote              | 1.8.4            | >=1.8.4 <1.11.0          | >=1.11.0            | 1.12.0                                          | Gel optional tooling dependency; no app shell handler.                                        |
@@ -369,5 +369,25 @@ delimiter escaping and value parameters. Existing race, decision, tenant and
 workflow tests verify real queries. Locally: 166 API tests, 26 helpers, lint,
 typecheck, both builds and frozen install passed before the review checkpoint.
 
-Hosted CI and its clean installation are pending until the new PR head completes.
+Clean-checkout hosted results are tracked against the actual head of
+[draft PR #20](https://github.com/EdenCirakoglu/Client-Tracker/pull/20).
+Require every retained check to pass at the reviewed SHA; the PR handoff links
+the exact run, report archive and screenshots after completion. Local full-suite
+verification corresponds to code at `edbb2d8317eb22a7ee93d238150e6f6bcaa6f078`;
+subsequent evidence-only edits do not alter those runtime results.
+
+Additional local restore check at that revision: restricted runtime role checks
+passed; ticket_events stayed append-only; a 59,871-byte in-memory pg_dump was
+restored into new `clientops_dependency_restore_test` in the isolated cluster.
+All application-table hashes matched before sanitization:
+`d99d34face80ccd746c68e5b386c0ba406494058b2da2a16a1983dcdebcc9cce`.
+The built restore-sanitize command then cleared sessions, account links and
+queued mail; 8 tickets and 5 comments remained. No dump file was published.
+The repeatable, broader equivalent is the existing hosted `verify-restore.mjs`
+suite, which also verifies full workflow records and pinned rollback.
+
+Managed CodeQL remains configured (weekly, JavaScript/TypeScript and Actions).
+GitHub did not schedule a new managed analysis for the non-main stacked PR base.
+Do not label PR #19's analysis as this head's result; require fresh CodeQL when
+retargeting to main after the prerequisite PR is approved and merged.
 No new image publication, customer/public deployment or real-recipient email.
