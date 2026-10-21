@@ -20,17 +20,28 @@ reviewer in the PR. Silence and passing tests are not acceptance.
 | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf): `apps/web > tailwindcss@3.4.19 > postcss-selector-parser@6.1.4`, also `tailwindcss > postcss-nested@6.2.0 > postcss-selector-parser@6.1.4`                                                 | `pnpm --filter @clientops/web build` and development CSS compilation parse repository CSS. There is no customer-supplied CSS endpoint; malicious selectors must enter trusted build inputs.                      | Review CSS/config changes, isolate builds, prohibit untrusted stylesheet compilation. Patched parser >=7.1.6 is outside the parent range and changes traversal behavior. Plan explicit parent/parser compatibility work, not a forced major.                                                                     |
 | [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm): root `@next/eslint-plugin-next@15.5.28 > fast-glob@3.3.1 > micromatch@4.0.8 > braces@3.0.3`; web `tailwindcss@3.4.19 > chokidar@3.6.0 / fast-glob@3.3.3 / micromatch@4.0.8 > braces@3.0.3` | `pnpm lint`, web build and development watching expand configured patterns. No request parameter enters this glob chain. The installed version remains affected.                                                 | Review configuration/globs; never compile user-supplied patterns. No patch is listed; monitor the advisory and supported parent releases. Do not add an audit ignore or claim an unavailable fix.                                                                                                                |
 
+The abbreviated alternative chains above expand to these exact additional paths
+in the unchanged product lockfile:
+
+- `apps/api > tsup@8.5.1 > bundle-require@5.1.0 > esbuild@0.27.7`
+- `apps/web > tailwindcss@3.4.19 > postcss-nested@6.2.0 > postcss-selector-parser@6.1.4`
+- `. > @next/eslint-plugin-next@15.5.28 > fast-glob@3.3.1 > micromatch@4.0.8 > braces@3.0.3`
+- `apps/web > tailwindcss@3.4.19 > chokidar@3.6.0 > braces@3.0.3`
+- `apps/web > tailwindcss@3.4.19 > fast-glob@3.3.3 > micromatch@4.0.8 > braces@3.0.3`
+- `apps/web > tailwindcss@3.4.19 > micromatch@4.0.8 > braces@3.0.3`
+
+These paths are duplicate occurrences of the four advisories, not six new issues.
 Keep `pnpm audit --json` visible: it still exits nonzero for four findings.
 `pnpm audit --prod` covers known advisories in production npm dependency paths,
 **not container OS packages, application logic, deployment configuration, secrets
 or operator controls**. Secret, CodeQL, application and operational checks remain
 separate requirements. No alert was suppressed or dismissed.
 
-## Provenance
+## Historical Provenance (Original PR #20 Review)
 
 Reviewed 2026-10-21. Base: PR #19 head
 `7693de8131d9ea11dcff30dbd695219c64a4170d`, still draft/unmerged when checked.
-Main remains `bc7eeaf131a606da39470ef9aec406a661eb7b08`.
+Main at that check was `bc7eeaf131a606da39470ef9aec406a661eb7b08`.
 This dependent review is not a release or deployment. PR #19's
 [CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39603815386)
 and screenshots remain evidence only for that head.
