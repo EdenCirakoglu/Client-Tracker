@@ -169,7 +169,9 @@ test('administrator checklist, review notices, explicit summary delivery and pre
         'I have reviewed the records and confirmed all notes are suitable for this client.',
       )
       .check();
-    await staff.getByLabel('Northstar Demo Contact', { exact: true }).check();
+    await staff.getByLabel('Northstar Demo Contact', { exact: true }).focus();
+    await staff.keyboard.press('Space');
+    await expect(staff.getByLabel('Northstar Demo Contact', { exact: true })).toBeChecked();
     await staff.getByRole('button', { name: 'Publish and notify contacts', exact: true }).click();
     await expect(staff.getByRole('status', { name: 'Summary update' })).toContainText(
       'Email notices queued',
@@ -196,13 +198,18 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     );
     await client.goto('/account');
     await client.getByLabel('Receive workflow emails', { exact: true }).uncheck();
-    await expect(client.getByRole('status')).toContainText('Workflow emails turned off');
+    await expect(client.getByRole('status', { name: 'Email preference update' })).toContainText(
+      'Workflow emails turned off',
+    );
     await client.reload();
     await expect(client.getByLabel('Receive workflow emails')).not.toBeChecked();
     await accessible(client);
     await capture(client, 'notification-preference-mobile');
-    await client.getByLabel('Receive workflow emails').check();
-    await expect(client.getByRole('status')).toContainText('Workflow emails enabled');
+    await client.getByLabel('Receive workflow emails').focus();
+    await client.keyboard.press('Space');
+    await expect(client.getByRole('status', { name: 'Email preference update' })).toContainText(
+      'Workflow emails enabled',
+    );
     await admin.goto('/users');
     await expect(admin.getByText('Accepted by mail server').first()).toBeVisible();
     await capture(admin, 'notification-delivery-status');

@@ -17,8 +17,8 @@ export function NotificationPreferences() {
     setError('');
     setMessage('');
     try {
-      await api.updateNotificationPreferences(enabled);
-      state.reload();
+      const saved = await api.updateNotificationPreferences(enabled);
+      setSelection(saved.workflowNotifications);
       setMessage(
         enabled
           ? 'Workflow emails enabled.'
@@ -65,9 +65,11 @@ export function NotificationPreferences() {
           {error}
         </p>
       ) : null}
-      <p role="status" className="text-sm text-brand-700">
-        {busy ? 'Saving preference...' : message}
-      </p>
+      {busy || message ? (
+        <p role="status" aria-label="Email preference update" className="text-sm text-brand-700">
+          {busy ? 'Saving preference...' : message}
+        </p>
+      ) : null}
     </section>
   );
 }

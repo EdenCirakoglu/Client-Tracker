@@ -12,8 +12,9 @@ import { PasswordInput } from './ui/password-input';
 
 interface AccountFormProps {
   mode: 'forgot' | 'invitation' | 'reset' | 'change';
+  onPasswordChanged?: () => void;
 }
-export function AccountForm({ mode }: AccountFormProps) {
+export function AccountForm({ mode, onPasswordChanged }: AccountFormProps) {
   const { refreshUser } = useAuth();
   const token = useRef('');
   const [ready, setReady] = useState(false);
@@ -96,6 +97,7 @@ export function AccountForm({ mode }: AccountFormProps) {
             ? await api.changePassword(current, password)
             : await api.setPassword(token.current, password, mode === 'invitation');
       setMessage(result.message);
+      if (mode === 'change') onPasswordChanged?.();
       setPassword('');
       setConfirmation('');
       setCurrent('');
