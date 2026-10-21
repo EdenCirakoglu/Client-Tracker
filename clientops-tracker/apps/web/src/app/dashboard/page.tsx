@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/button';
 import { ErrorState, LoadingState } from '../../components/ui/states';
 import { NeedsAttention } from '../../components/dashboard/needs-attention';
 import { DeliveryFollowUp } from '../../components/dashboard/delivery-follow-up';
+import { OnboardingChecklist } from '../../components/dashboard/onboarding-checklist';
 import { RecentActivity, RecentReleases } from '../../components/dashboard/recent-activity';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -60,6 +61,7 @@ export default function DashboardPage() {
           </div>
         }
       />
+      {user?.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
       {loading && !data ? (
         <LoadingState label="Loading overview..." />
       ) : error ? (

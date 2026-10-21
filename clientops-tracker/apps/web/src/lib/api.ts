@@ -101,6 +101,14 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}) {
 }
 
 export const api = {
+  onboarding: () => apiRequest<OnboardingChecklist>('/api/dashboard/onboarding'),
+  notificationPreferences: () =>
+    apiRequest<NotificationPreferences>('/api/auth/notification-preferences'),
+  updateNotificationPreferences: (workflowNotifications: boolean) =>
+    apiRequest<NotificationPreferences>('/api/auth/notification-preferences', {
+      method: 'PATCH',
+      body: { workflowNotifications },
+    }),
   login: async (email: string, password: string) => {
     const result = await apiRequest<LoginResponse>('/api/auth/login', {
       method: 'POST',
@@ -153,8 +161,13 @@ export const api = {
   summary: (id: string) => apiRequest<ProgressSummary>(`/api/summaries/${id}`),
   generateSummary: (body: SummaryInput) =>
     apiRequest<ProgressSummary>('/api/summaries', { method: 'POST', body }),
-  publishSummary: (id: string) =>
-    apiRequest<ProgressSummary>(`/api/summaries/${id}/publish`, { method: 'POST' }),
+  summaryRecipients: (id: string) =>
+    apiRequest<SummaryRecipient[]>(`/api/summaries/${id}/recipients`),
+  publishSummary: (id: string, recipientIds: string[] = []) =>
+    apiRequest<ProgressSummary>(`/api/summaries/${id}/publish`, {
+      method: 'POST',
+      body: { recipientIds },
+    }),
   createProject: (body: {
     clientId: string;
     name: string;
@@ -265,6 +278,8 @@ export interface MailDeliveryStatus {
   recent: {
     id: string;
     kind: string;
+    recipientName: string | null;
+    notificationEvent: string | null;
     status: string;
     attempts: number;
     createdAt: string;
@@ -272,4 +287,18 @@ export interface MailDeliveryStatus {
     completedAt: string | null;
     lastError: string | null;
   }[];
+}
+
+export interface OnboardingChecklist {
+  scope: string;
+  completed: number;
+  steps: { key: string; title: string; href: string; complete: boolean }[];
+}
+export interface NotificationPreferences {
+  workflowNotifications: boolean;
+}
+export interface SummaryRecipient {
+  id: string;
+  name: string;
+  workflowNotifications: boolean;
 }
