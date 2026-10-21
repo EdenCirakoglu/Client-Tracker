@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app';
 import { pool } from '../src/db/client';
 import { seedDatabase } from '../src/db/seed';
+import { errorHandler } from '../src/middleware/error';
 import { authHeader, loginSession, type SessionAuth } from './helpers/auth';
 
 // Exercise Express's resolved transitive parser, not an unrelated direct dependency.
@@ -58,18 +59,47 @@ describe('Request parsing dependency regressions', () => {
     expect(Object.prototype).not.toHaveProperty('polluted');
   });
 
-  it('retains the 1 MiB JSON bound and sanitized parser-error envelope', async () => {
-    for (const body of ['{"broken":', JSON.stringify({ value: 'x'.repeat(1024 * 1024) })]) {
+  it('returns sanitized 400/413 responses and retains the 1 MiB JSON bound', async () => {
+    const cases = [
+      {
+        body: '{"private":',
+        status: 400,
+        code: 'INVALID_JSON',
+        message: 'Request body must contain valid JSON.',
+      },
+      {
+        body: JSON.stringify({ value: 'x'.repeat(1024 * 1024) }),
+        status: 413,
+        code: 'PAYLOAD_TOO_LARGE',
+        message: 'Request body exceeds the allowed size.',
+      },
+    ];
+    for (const { body, status, code, message } of cases) {
       const response = await request(app)
         .post('/api/auth/login')
         .set('Content-Type', 'application/json')
         .send(body)
-        .expect(500);
-      // Existing parser failures use the generic error handler; never echo submitted bodies.
+        .expect(status);
+      expect(response.body).toEqual({ error: { code, message } });
+    }
+    await request(app).get('/health').expect(200);
+  });
+
+  it('does not trust arbitrary statuses or unrecognized parser-shaped errors', async () => {
+    for (const fields of [
+      { status: 400 },
+      { status: 413, statusCode: 413 },
+      { type: 'entity.parse.failed', status: 400, statusCode: 400 },
+      { type: 'entity.too.large', status: 500, statusCode: 500 },
+    ]) {
+      const failure = Object.assign(new Error('Private submitted body, SQL or credential'), fields);
+      const isolated = express();
+      isolated.get('/', (_req, _res, next) => next(failure));
+      isolated.use(errorHandler);
+      const response = await request(isolated).get('/').expect(500);
       expect(response.body).toEqual({
         error: { code: 'INTERNAL_SERVER_ERROR', message: 'Unexpected server error.' },
       });
     }
-    await request(app).get('/health').expect(200);
   });
 });
