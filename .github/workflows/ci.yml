@@ -86,6 +86,9 @@ jobs:
       - name: Migrate database
         run: pnpm db:migrate
 
+      - name: Migration generation compatibility
+        run: node scripts/check-migration-generation.mjs
+
       - name: Test
         run: pnpm test
 
