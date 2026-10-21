@@ -1,5 +1,41 @@
 # First-Customer Launch Baseline
 
+## Maintenance Follow-up
+
+PR #19 is merged at `70246650a1ef80096fe74b08213d62d19323e787`; PR #20 is now a
+draft against main, not against the former maintenance branch. Its verified
+`d9099b6febd6ac5f682649ae4d109909d9215d30` results remain tied to that revision.
+See [proposed tooling decisions](DEPENDENCY_REMEDIATION.md#follow-up-review-decisions):
+none has owner acceptance yet. Fresh candidate CI and CodeQL are required; no
+merge or subsequent image publication is claimed here.
+
+## Current Milestone 1B
+
+The [dependency remediation inventory](DEPENDENCY_REMEDIATION.md) records the
+candidate-lockfile advisories, exact paths, fixes, compatibility checks and
+remaining decisions. Express/body-parser/qs and Drizzle are patched. Compatible
+tooling updates and a narrow Next/PostCSS override reduce the full audit from
+31 distinct GHSAs to four build-only findings; the production audit is clean.
+The ORM upgrade also required bounded nested-error inspection to preserve the
+existing 409 response for duplicate release versions; a failing-then-passing
+database regression records that compatibility correction.
+Residual tooling risk and the two open CodeQL classifications require owner
+review. They are not dismissed or described as fixed.
+
+This follow-up is based on unmerged PR #19's tested head
+`7693de8131d9ea11dcff30dbd695219c64a4170d`.
+[Its CI passed](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39603815386);
+that evidence remains historical and is not evidence for the remediation head.
+The new PR handoff identifies its own exact tested SHA, checks and artifacts.
+PRs #14/#18 stay open until a replacement is actually merged. No merge is authorized
+for milestone 1B. Next implementation increment: administrator onboarding and
+permission-rechecked workflow notifications, after dependency review.
+
+## Historical Milestone 1A Record
+
+The sections below preserve the original PR #19 investigation and dated findings.
+Use the current inventory above for remediation status, not the old alert table.
+
 ## Scope and Provenance
 
 Rechecked on 2026-10-21. Git root and workspace are separate: workflows live in

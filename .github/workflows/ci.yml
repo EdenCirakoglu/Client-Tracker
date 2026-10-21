@@ -74,6 +74,9 @@ jobs:
       - name: Public information and secret scan
         run: node scripts/secret-scan.mjs
 
+      - name: Runtime dependency advisories
+        run: pnpm audit --prod
+
       - name: Lint
         run: pnpm lint
 
@@ -85,6 +88,9 @@ jobs:
 
       - name: Migrate database
         run: pnpm db:migrate
+
+      - name: Migration generation compatibility
+        run: node scripts/check-migration-generation.mjs
 
       - name: Test
         run: pnpm test
