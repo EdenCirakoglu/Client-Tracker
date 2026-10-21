@@ -20,3 +20,9 @@ description = "Exact public merge-SHA image tag in the 7eba339 release runbook, 
 condition = "AND"
 paths = ['''^clientops-tracker/docs/RELEASE_7EBA339\.md$''']
 regexes = ['''^7eba339b37a2aa948ef4f6ed019d268816d4ec99$''']
+
+[[allowlists]]
+description = "Exact public main-SHA image tag in the launch baseline, not a credential"
+condition = "AND"
+paths = ['''^clientops-tracker/docs/LAUNCH_BASELINE\.md$''']
+regexes = ['''^bc7eeaf131a606da39470ef9aec406a661eb7b08$''']
