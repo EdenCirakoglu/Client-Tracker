@@ -9,6 +9,10 @@ stacked on PR #20 at `27c7dbb35a7fa855a87ad7ae05ef5034a663c4ec`, itself targetin
 main `70246650a1ef80096fe74b08213d62d19323e787`. Neither draft was merged.
 After an approved #20 merge, retarget #22 to main, inspect the incremental diff,
 and obtain fresh CI/CodeQL. No #20 CodeQL result substitutes for this product head.
+The October 28 security patch currently belongs to #22, not #20. Do not treat #20's
+older passing audit as current: review how to land that separate security commit
+before authorizing a release. No CodeQL analysis for the stacked #22 head was
+returned by the current checks API; fresh analysis remains a merge-review gate.
 
 Historical PR #22 head `81012cb42a54a2bff8863cb5b11f07c893e8ee55`, its
 [CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39632730129) and
@@ -59,11 +63,12 @@ a separately rehearsed restore, not simply choosing an older image.
 
 ## Verification Records
 
-| Revision                                   | Actual result                                                                                                                                                                                                                                                                          |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0f567fd4cf8b71dbd2e64d1c00b180884281dbcc` | [Hosted CI passed](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/40679536296), including retained operational checks. Security migration evidence only.                                                                                                                 |
-| `326f97edbfe80336b6f5c09a456b60f3edcb752b` | Local lint/typecheck/format passed; 190 API tests across 21 files, 28 helper tests, both container builds and populated upgrade fingerprint preservation passed.                                                                                                                       |
-| `3761726f013aa1aa6029d59f25e4549384e30f87` | Focused captured-email browser scenario passed. Sixteen light/dark journal states passed axe and overflow checks. Native Chrome 200% zoom, mobile first action and keyboard checks passed. Application images contain unchanged `326f97e` code; intervening commits only change tests. |
+| Revision                                   | Actual result                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0f567fd4cf8b71dbd2e64d1c00b180884281dbcc` | [Hosted CI passed](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/40679536296), including retained operational checks. Security migration evidence only.                                                                                                                                                                                                                             |
+| `326f97edbfe80336b6f5c09a456b60f3edcb752b` | Local lint/typecheck/format passed; 190 API tests across 21 files, 28 helper tests, both container builds and populated upgrade fingerprint preservation passed.                                                                                                                                                                                                                                   |
+| `3761726f013aa1aa6029d59f25e4549384e30f87` | Focused captured-email browser scenario passed. Sixteen light/dark journal states passed axe and overflow checks. Native Chrome 200% zoom, mobile first action and keyboard checks passed. Application images contain unchanged `326f97e` code; intervening commits only change tests.                                                                                                             |
+| `d3b66ab6b29bf29e492782ebb2eeeb024b84c261` | Clean local combined browser run: 14 passed, 0 failed/skipped/flaky (306.9 seconds). Lint/typecheck/format, native 200% zoom, keyboard/axe and report privacy checks passed. Runtime audit: zero known findings; full audit: two documented findings (exit 1). [Hosted run](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/40687006172), whose final result must be read separately. |
 
 The final PR review comment records the final tested head, its CI/artifact links,
 checksum and complete commit-pinned file inventory. Do not infer success for a new
@@ -110,6 +115,9 @@ pnpm audit
 The last command intentionally reports the two documented tooling findings.
 If a trusted local network CA is required, supply its private PEM path through
 `NODE_EXTRA_CA_CERTS` and `BUILD_CA_FILE`; never disable registry TLS verification.
+On Node 24, `$env:NODE_OPTIONS="--use-system-ca"` can use the installed trusted
+system CA store. This resolved the local registry certificate-chain failure;
+the failed connection itself was not counted as an audit result.
 
 ```powershell
 $env:VERIFY_URL="https://localhost:8460"
@@ -131,6 +139,8 @@ These use a local self-signed fixture certificate, not trusted public HTTPS.
 Browser report: `playwright-report/index.html`; structured results:
 `test-results/browser-results.json`. Do not upload local reports containing personal
 filesystem metadata; hosted CI runs the existing privacy gate before uploading.
+The clean local `d3b66ab` run used `test-results/journal-browser-d3b66ab` for captures
+and `test-results/journal-native-d3b66ab/acceptance.json` for native zoom results.
 
 The combined 14-scenario suite exceeded the unchanged 300 auth requests/IP/15 minutes
 at revision `0ba6079` (13 passed, final email-navigation scenario returned 429). That
