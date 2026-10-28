@@ -100,7 +100,10 @@ export async function context(baseURL = origin) {
   return request.newContext({ baseURL, ignoreHTTPSErrors: true, timeout: 12000 });
 }
 export async function mutation(api, path, data, method = 'post') {
-  const csrf = (await (await api.get('/api/auth/csrf')).json()).data.csrfToken;
+  const response = await api.get('/api/auth/csrf');
+  if (response.status() !== 200)
+    throw new Error(`Fixture CSRF request failed with HTTP ${response.status()}.`);
+  const csrf = (await response.json()).data.csrfToken;
   return api[method](path, { data, headers: { 'X-CSRF-Token': csrf } });
 }
 export async function waitFor(check, message, timeout = 120000) {

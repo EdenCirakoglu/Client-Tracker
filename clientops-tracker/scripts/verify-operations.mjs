@@ -210,10 +210,19 @@ try {
   console.log(
     'Database outage/recovery, real SMTP outage/retry, restart, concurrent workers and stale-link checks passed.',
   );
-} catch {
+} catch (error) {
   console.error(
     `Outage/retry acceptance failed at ${phase}. Request headers and private configuration are intentionally omitted.`,
   );
+  if (
+    error?.code === 'ERR_ASSERTION' &&
+    typeof error.actual === 'number' &&
+    typeof error.expected === 'number'
+  ) {
+    console.error(`Numeric assertion: received ${error.actual}, expected ${error.expected}.`);
+  }
+  if (/^Fixture CSRF request failed with HTTP \d{3}\.$/.test(error?.message ?? ''))
+    console.error(error.message);
   process.exitCode = 1;
 } finally {
   if (paused) compose(['unpause', 'postgres']);
