@@ -1,6 +1,51 @@
 # Dependency Remediation: Milestone 1B
 
-## Follow-up Review Decisions
+## Current Recheck: 2026-10-28
+
+The product candidate at `81012cb42a54a2bff8863cb5b11f07c893e8ee55` acquired
+new advisory matches after its recorded checks. Those earlier checks remain
+historical evidence, not a current clean-audit claim. The owner explicitly
+authorized a scoped Zod 4 security migration and compatible patches; no merge,
+deployment, alert dismissal or residual-risk acceptance was authorized.
+
+| Advisory                                                                                                                                           | Exact candidate path before                                                                                                                | Patched version / selected version | Exposure and action                                                                                                                                                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)                                                                           | `apps/api > zod@3.25.76`                                                                                                                   | >=4.6.6 / 4.6.7                    | Runtime request/environment validation. Migrate to Zod 4, retain strict validation and request bounds, test bounded oversized collections and the API error envelope.                                                    |
+| [GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)                                                                           | `apps/api > express@4.22.3 > body-parser@1.20.8`                                                                                           | >=1.20.9 / 1.20.9                  | Runtime compressed JSON parsing. Resolve within Express's existing range and test a small compressed frame with trailing garbage plus subsequent availability. Peer copies are duplicate paths, not separate advisories. |
+| [GHSA-rxp7-6hxx-x8q5](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5)                                                                           | `apps/api > express-rate-limit@8.7.0 > ip-address@10.7.2`                                                                                  | >=10.7.4 / 10.7.5                  | Runtime address parsing used by rate limiting. Supported transitive patch; preserve proxy/IP handling and rate-limit regressions.                                                                                        |
+| [GHSA-qxg6-89mg-rqv8](https://github.com/advisories/GHSA-qxg6-89mg-rqv8), [GHSA-xp26-3454-mjgp](https://github.com/advisories/GHSA-xp26-3454-mjgp) | `apps/api > vitest@4.1.11 > @vitest/mocker@4.1.11`                                                                                         | >=4.1.12 / 4.1.12                  | Two distinct development mock-server issues. Update the supported Vitest patch and matching internals; retain all tests, no public test server.                                                                          |
+| [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf)                                                                           | `apps/web > tailwindcss@3.4.19 > postcss-selector-parser@6.1.4`; also `tailwindcss > postcss-nested@6.2.0 > postcss-selector-parser@6.1.4` | Backport >=6.1.5 / 6.1.5           | Repository CSS compilation. Newly available same-major patch fits both parents; no forced parser 7 or Tailwind upgrade.                                                                                                  |
+
+No new override or database migration. The existing Next/PostCSS override is
+unchanged. Zod 4 defaults use parsed output values, so the two transformed boolean
+defaults are now `false`, not `'false'`. Request middleware declares the schema's
+output type for Express parameters/query. Field-associated error envelopes remain.
+See the [Zod migration guide](https://zod.dev/v4/changelog). Other lockfile changes
+are Vitest's matching internals and its supported chai/std-env/tinyrainbow resolutions.
+
+Before: eight distinct full-audit advisories (three runtime). After: zero known
+production npm findings; **two development advisories remain**, and the full audit
+still exits 1. [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+was withdrawn by the advisory publisher on 2026-10-23; this is not a package fix,
+maintainer risk acceptance or manual alert dismissal.
+
+### Remaining Owner Decisions
+
+Both decisions below are **proposed, not approved**, owned by the maintainer with
+repository-owner approval required by **2026-11-04 or first customer installation,
+whichever comes first**. No audit ignore or gate weakening is introduced.
+
+| Advisory / exact path                                                                                                                                                                                  | Invocation, exposure and controls                                                                                                                                                                      | Supported next action                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99), moderate: `apps/api > drizzle-kit@0.31.11 > @esbuild-kit/esm-loader@2.6.5 > @esbuild-kit/core-utils@3.3.2 > esbuild@0.18.20` | Kit generation/Studio loads this chain; vulnerable esbuild serve mode is not invoked by the application. Reviewed source only, no public Studio/development server; tooling excluded from API runtime. | Prefer a supported Kit/loader migration to esbuild >=0.25.0. No compatible patch in this legacy chain; request bounded CLI-only acceptance or separately test the parent migration before installation. |
+| [GHSA-g7r4-m6w7-qqqr](https://github.com/advisories/GHSA-g7r4-m6w7-qqqr), low: `apps/api > tsup@8.5.1 > esbuild@0.27.7`; also `tsup > bundle-require@5.1.0 > esbuild@0.27.7`                           | Windows development-server issue; the project invokes build, not serve. Trusted configuration/input and isolated builds; no tooling in API runtime.                                                    | Separately review tsup 9 with esbuild ^0.28.2 (patch >=0.28.1), checking all packaged entry points, or explicitly approve the bounded build-only disposition.                                           |
+
+Passing the production npm audit does not cover OS packages, application logic,
+CodeQL alerts or deployment configuration. Those checks and the historical
+CodeQL classifications below remain separate and enabled. Current verification
+is recorded in the PR head's CI; historical counts below must not be relabelled.
+
+## Historical Follow-up Review Decisions (2026-10-21)
 
 PR #19 is now merged into main at `70246650a1ef80096fe74b08213d62d19323e787`.
 PR #20 was retargeted to main without merging it. The successful checks and

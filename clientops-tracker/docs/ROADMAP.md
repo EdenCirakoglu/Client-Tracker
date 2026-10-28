@@ -2,11 +2,27 @@
 
 ## Current First-Customer Launch Checklist
 
-Updated 2026-10-21. This is the single current launch checklist. The initial offer
+Updated 2026-10-28. This is the single current launch checklist. The initial offer
 is assisted installation for one agency, not shared multi-agency SaaS. Public MIT
 code remains available without buying a service. Status means only the evidence
 listed: source CI, published-image runtime, real-service acceptance and customer
 acceptance are separate gates.
+
+Current maintenance follow-up on PR #22: the owner authorized the scoped Zod 4
+migration after newly published advisories affected the previously tested lockfile.
+See the [dated dependency recheck](DEPENDENCY_REMEDIATION.md#current-recheck-2026-10-28).
+The production npm audit is now clean; two esbuild development advisories remain
+unapproved decisions due 2026-11-04 or before installation. The former parser
+finding has a compatible backport; the braces advisory was withdrawn by its
+publisher. The four-decision count in the earlier checklist evidence below is
+historical, not the current inventory. PR #20 remains unmerged, and PR #22 remains
+stacked on it; neither is authorized to merge in this increment.
+
+The customer-journey increment is in progress: email-to-record navigation and
+truthful enqueue outcomes first, then personal decisions, revision comparison and
+the delivery-journal visual slice. Captured-mail reproduction at `81012cb` confirms
+destination loss; baseline screenshots are not evidence for a completed fix.
+Real screen-reader and external-service acceptance remain pending.
 
 | Task                               | Status                                                                                                               | Tested revision / evidence                                                                                                                                                                                                                                                  | Next action                                                                                                                                                           | Owner                           |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
