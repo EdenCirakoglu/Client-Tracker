@@ -286,8 +286,25 @@ if (action === 'snapshot') {
   console.log(JSON.stringify(snapshot(), null, 2));
   process.exit(0);
 }
+if (action === 'restart-demo-api') {
+  compose(false, [
+    'exec',
+    '-T',
+    'api',
+    'node',
+    '-e',
+    "if (process.env.DEMO_MODE !== 'true' || process.env.DISPOSABLE_DATABASE_NAME !== new URL(process.env.DATABASE_URL).pathname.slice(1)) process.exit(1)",
+  ]);
+  const before = snapshot();
+  compose(false, ['restart', 'api']);
+  compose(false, ['up', '-d', '--no-build', '--no-deps', '--no-recreate', '--wait', 'api']);
+  if (JSON.stringify(before) !== JSON.stringify(snapshot()))
+    throw new Error('API restart changed existing business records.');
+  console.log('Disposable API restarted; business records and persistent rate limits retained.');
+  process.exit(0);
+}
 if (action !== 'start')
-  throw new Error('Use start, stop or snapshot. No reset command is provided.');
+  throw new Error('Use start, stop, snapshot or restart-demo-api. No reset command is provided.');
 const openssl =
   process.env.OPENSSL_PATH ??
   (process.platform === 'win32' ? 'C:\\Program Files\\Git\\usr\\bin\\openssl.exe' : 'openssl');

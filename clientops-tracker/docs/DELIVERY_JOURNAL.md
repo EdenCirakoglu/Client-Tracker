@@ -118,6 +118,7 @@ $env:ACCOUNT_SETUP_URL="https://localhost:8461"
 $env:ACCOUNT_MAIL_URL="http://localhost:8041"
 $env:E2E_ALLOW_DISPOSABLE_DEMO="true"
 $env:BROWSER_CHANNEL="chrome"
+$env:E2E_SCREENSHOT_DIR="test-results/journal-browser-screenshots"
 pnpm test:e2e
 $env:VERIFY_PROJECT="clientops-launch-demo"
 $env:UI_EVIDENCE_DIR="test-results/journal-native"
@@ -130,6 +131,13 @@ These use a local self-signed fixture certificate, not trusted public HTTPS.
 Browser report: `playwright-report/index.html`; structured results:
 `test-results/browser-results.json`. Do not upload local reports containing personal
 filesystem metadata; hosted CI runs the existing privacy gate before uploading.
+
+The combined 14-scenario suite exceeded the unchanged 300 auth requests/IP/15 minutes
+at revision `0ba6079` (13 passed, final email-navigation scenario returned 429). That
+scenario now uses an explicit `hardening-stack.mjs restart-demo-api` boundary on the
+named disposable fixture. It retains database records and persistent route limits,
+asserts that both pre-restart sessions still work, and then runs every navigation
+assertion once. It does not raise limits, reset databases or retry failed assertions.
 
 ## Matched Capture Conditions
 

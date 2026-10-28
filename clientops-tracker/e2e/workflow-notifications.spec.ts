@@ -1,5 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -254,6 +255,27 @@ test('captured workflow emails retain the record and section through sign-in wit
   try {
     await login(staff, 'Developer');
     await login(client, 'Client');
+    const target = new URL(baseURL);
+    if (
+      !['localhost', '127.0.0.1'].includes(target.hostname) ||
+      !['8443', '8460'].includes(target.port)
+    )
+      throw new Error(
+        'Email navigation requires the named hardening or launch disposable fixture.',
+      );
+    // This independent scenario must not inherit the prior suite's in-memory IP budget.
+    // Restart only the fixture API, retaining sessions, records and database-backed limits.
+    execFileSync(
+      process.execPath,
+      [
+        'scripts/hardening-stack.mjs',
+        'restart-demo-api',
+        ...(target.port === '8460' ? ['--launch'] : []),
+      ],
+      { stdio: 'inherit' },
+    );
+    expect((await staff.request.get('/api/auth/me')).ok()).toBe(true);
+    expect((await client.request.get('/api/auth/me')).ok()).toBe(true);
     const person = (await (await client.request.get('/api/auth/me')).json()).data;
     await mutation(
       client,
