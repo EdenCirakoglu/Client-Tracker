@@ -1,5 +1,12 @@
 # Launch Product Increment
 
+## Current Follow-up
+
+The 2026-10-28 [delivery-journal increment](DELIVERY_JOURNAL.md) continues this
+same draft PR. The results below remain evidence for their named historical
+revisions, not for the new head. The current dependency inventory has two
+unapproved tooling decisions, not the four recorded on 2026-10-21.
+
 ## Review Boundary
 
 Branch: `feature/agency-onboarding-notifications`, based on reviewed PR #20 head
