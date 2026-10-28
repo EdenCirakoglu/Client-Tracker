@@ -1,6 +1,32 @@
 # Delivery Journal Review
 
-## Boundary and Provenance
+## Controlled Release Follow-up
+
+Main was rechecked at `38b6ef17f2a2399c5d444da153081167e2b9feae` on October 28.
+PR #20 is receiving an adapted security refresh without product-only schemas or
+features. PR #22 remains stacked on the maintenance branch; it must not merge
+there when the intended release target is main. After separately approved #20
+merge, retarget #22 to main, reconcile duplicate security changes and regenerate
+the lockfile, then obtain fresh actual-head CI and both CodeQL analyses again.
+
+The owner approved protection against force pushes/deletion on the maintenance
+branch so managed CodeQL can cover this stacked PR. Default setup, both languages
+and existing alert classifications remain enabled. This documentation-only
+checkpoint requests fresh analysis; the final PR handoff records its actual
+result, not an inferred success from historical checks.
+
+Preserve `2834effd8ec5890506dc707356bcbe467c9ad2d4` and its
+[verified CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/40688079673):
+190 API tests, 28 helpers and 14 browser scenarios with no skipped, unexpected or
+flaky browser results. Artifact SHA-256:
+`feaab14ee1c8590a2ef8e4f5c1e617e96fc8ea5711ba15593ed44364c854e406`.
+The external reviewer verified that archive and four screenshots, not the laptop
+runtime or every changed line. No product behavior or historical capture is
+changed by this checkpoint. Two esbuild dispositions remain proposed, unapproved,
+due November 4 or first installation. Human screen-reader and real-service
+acceptance remain outstanding. No merge or publication is authorized here.
+
+## Historical Boundary and Provenance
 
 Reviewed 2026-10-28 on `feature/agency-onboarding-notifications`.
 [Draft PR #22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22)
