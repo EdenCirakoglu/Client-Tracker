@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # The pnpm workspace and pnpm-lock.yaml live in clientops-tracker/, not the repo root.
+  - package-ecosystem: "npm"
+    directory: "/clientops-tracker"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
