@@ -32,6 +32,11 @@
     "db:seed": "pnpm --filter @clientops/api db:seed",
     "db:studio": "pnpm --filter @clientops/api db:studio"
   },
+  "pnpm": {
+    "overrides": {
+      "next@15.5.28>postcss": "8.5.31"
+    }
+  },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.18.0",

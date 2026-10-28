@@ -30,6 +30,14 @@ Errors use an `error` envelope:
 
 Common statuses are `401` for missing or invalid authentication, `403` for insufficient permissions, `404` for missing or inaccessible resources, and `400` for validation failures.
 
+JSON bodies retain the 1 MiB limit. Recognized invalid-JSON parser errors return
+`400` with code `INVALID_JSON` and message `Request body must contain valid JSON.`
+Recognized oversized bodies return `413` with code `PAYLOAD_TOO_LARGE` and message
+`Request body exceeds the allowed size.` Responses never include parser messages
+or submitted bodies. Arbitrary error status fields are not trusted. Unexpected
+failures remain sanitized `500`; uniqueness conflicts remain `409` and database
+unavailability remains `503` with `Retry-After: 5`.
+
 ## Authentication
 
 ```http
