@@ -101,13 +101,19 @@ provide acceptance. OS-package and external-service security remain separate.
 2. After approved #20 merge, record resulting main SHA, main CI and both publishing
    jobs for that exact SHA. Pull digest-pinned images without rebuilding and run
    isolated startup, migration, parser/account, outage and persistence checks.
-3. Retarget #22 to main, inspect the incremental diff and reconcile duplicate
+3. Separately review the refreshed #31 candidate, which now targets maintenance
+   only to expose its incremental tooling diff. After #20 merges, retarget #31
+   to main and recheck its final head/base. Its supported tsup 9 / esbuild 0.28.2
+   combination removes the tsup advisory in that candidate, not in #20. Require
+   packaged-executable and container evidence before separate merge/publication
+   approval. Verify resulting main images independently. Kit remains unresolved.
+4. Retarget #22 to main, inspect the incremental diff and reconcile duplicate
    Zod/security changes. Regenerate the lockfile; do not take an old lockfile
    wholesale. Retain both maintenance schema tests and product recipient tests.
    Obtain fresh CI and both CodeQL analyses at its actual final head/base.
-4. Request #22's separate merge/publication approval. Never merge #22 into the
+5. Request #22's separate merge/publication approval. Never merge #22 into the
    maintenance branch. Verify resulting main images by digest independently.
-5. Refresh #31 as a separate priority tooling candidate; then #24-27 individually.
+6. Refresh #24-27 individually against the resulting main.
    Close superseded #14/#21/#32 only with authorization and a merged replacement.
    Defer #23/#28, #29 and #30 as described above.
 
@@ -158,6 +164,40 @@ Full audit intentionally returns nonzero while findings remain. On the reviewed
 workstation Docker's default address pool was exhausted: after checking allocated
 subnets, the new project's network was assigned 10.240.56.0/24. No pruning or
 existing database reuse occurred. Choose an unused local subnet if necessary.
+
+For an independent local browser/outage reproduction, `--review` uses only
+`clientops-review-demo` and `clientops-review-accounts`, their own volumes and
+databases, HTTPS ports 8462/8463 and captured-mail ports 8042/8043. The first
+startup seeds only the new disposable demo fixture; subsequent starts preserve
+its populated records. Never substitute production configuration.
+
+```powershell
+node scripts/hardening-stack.mjs start --review
+$env:VERIFY_URL='https://localhost:8462'
+$env:ACCOUNT_SETUP_URL='https://localhost:8463'
+$env:ACCOUNT_MAIL_URL='http://localhost:8043'
+$env:E2E_ALLOW_DISPOSABLE_DEMO='true'
+$env:BROWSER_CHANNEL='chrome'
+$env:E2E_SCREENSHOT_DIR='test-results/release-review-local'
+pnpm test:e2e
+$env:VERIFY_PROJECT='clientops-review-demo'
+$env:UI_EVIDENCE_DIR='test-results/release-review-ui'
+node scripts/verify-ui-acceptance.mjs
+node scripts/verify-operations.mjs --review
+```
+
+Use installed Chrome (fresh automation profiles) or install the repository's
+Playwright Chromium. Corporate CA installations may also require a private
+`BUILD_CA_FILE` build secret; never disable registry TLS validation. Local
+certificates and credentials remain ignored under `test-results/tls`.
+
+The first refreshed CI at `50683127174272ead9f0a4cbf640e353fbdf054f`
+[failed in invitation acceptance during outage verification](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/40712956431).
+The verifier previously discarded the assertion detail. It now emits only
+numeric expected/actual values or a sanitized CSRF HTTP status, never request
+bodies, tokens or private headers. This is diagnostic improvement, not proof of
+a fixed application defect. Retain that failure alongside subsequent evidence;
+do not skip the assertion or add blanket retries.
 
 Hosted CI must retain its fresh-checkout install, secret scan, restricted grants,
 browser/axe/keyboard/native zoom, database/SMTP outages, encrypted-backup fixtures,

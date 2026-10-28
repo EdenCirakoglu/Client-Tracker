@@ -138,6 +138,7 @@ try {
     ).status(),
     200,
   );
+  phase = 'newly invited member login';
   assert.equal(
     (
       await mutation(member, '/api/auth/login', { email, password: 'Local-delivery-passphrase-42' })
@@ -223,6 +224,8 @@ try {
   }
   if (/^Fixture CSRF request failed with HTTP \d{3}\.$/.test(error?.message ?? ''))
     console.error(error.message);
+  if (['Error', 'TimeoutError', 'AssertionError'].includes(error?.name))
+    console.error(`Failure type: ${error.name}.`);
   process.exitCode = 1;
 } finally {
   if (paused) compose(['unpause', 'postgres']);
