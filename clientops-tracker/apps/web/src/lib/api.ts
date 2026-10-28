@@ -5,6 +5,7 @@ import type {
   ScopeProposal,
   ScopeProposalInput,
   ProgressSummary,
+  SummaryPublicationResult,
   SummaryInput,
   ActivityPage,
   Client,
@@ -164,7 +165,7 @@ export const api = {
   summaryRecipients: (id: string) =>
     apiRequest<SummaryRecipient[]>(`/api/summaries/${id}/recipients`),
   publishSummary: (id: string, recipientIds: string[] = []) =>
-    apiRequest<ProgressSummary>(`/api/summaries/${id}/publish`, {
+    apiRequest<SummaryPublicationResult>(`/api/summaries/${id}/publish`, {
       method: 'POST',
       body: { recipientIds },
     }),

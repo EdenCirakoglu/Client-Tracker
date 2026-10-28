@@ -174,7 +174,7 @@ export const productWorkflowPaths = {
           items: uuid,
           default: [],
           description:
-            'Explicit active CLIENT contacts in this organisation with workflow emails enabled. Omitted/empty means portal publication only. Repeated recipients/event do not create new jobs.',
+            'Explicit active CLIENT contacts in this organisation with workflow emails enabled. Omitted/empty means portal publication only. Any ineligible contact rejects the entire operation (400), without publication change or partial enqueue. Success returns the summary plus notifications {queued, alreadyRequested, notQueued:0, recipients:[{recipientId,outcome:QUEUED|ALREADY_REQUESTED}]}. Counts are actual inserts/deduplication outcomes, not delivery confirmations. Existing jobs, including accepted/failed/suppressed jobs, are not requeued.',
         },
       },
       ['recipientIds'],

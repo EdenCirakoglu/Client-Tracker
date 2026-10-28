@@ -227,6 +227,15 @@ export interface SummaryInput {
   blocked: { ticketId: string; note: string }[];
 }
 
+export interface SummaryPublicationResult extends ProgressSummary {
+  notifications: {
+    queued: number;
+    alreadyRequested: number;
+    notQueued: number;
+    recipients: { recipientId: string; outcome: 'QUEUED' | 'ALREADY_REQUESTED' }[];
+  };
+}
+
 export type DeliveryView =
   | 'followup'
   | 'overdue'

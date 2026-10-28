@@ -4,7 +4,14 @@ import { afterAll, beforeEach, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app';
 import { db, pool } from '../src/db/client';
 import { seedDatabase } from '../src/db/seed';
-import { mailOutbox, projects, scopeProposals, tickets, users } from '../src/db/schema';
+import {
+  mailOutbox,
+  progressSummaries,
+  projects,
+  scopeProposals,
+  tickets,
+  users,
+} from '../src/db/schema';
 import { proposeScope, decideScope } from '../src/services/scope.service';
 import { proposeOutcome, decideDelivery } from '../src/services/delivery.service';
 import {
@@ -240,8 +247,14 @@ it('requires explicit permitted summary recipients and deduplicates publication 
   await expect(publishSummary(staff, summary.id, [other.id])).rejects.toThrow();
   await publishSummary(staff, summary.id);
   expect(await db.select().from(mailOutbox)).toHaveLength(0);
-  await publishSummary(staff, summary.id, [client.id, client.id]);
-  await publishSummary(staff, summary.id, [client.id]);
+  expect(
+    (await publishSummary(staff, summary.id, [client.id, client.id])).notifications,
+  ).toMatchObject({ queued: 1, alreadyRequested: 0, notQueued: 0 });
+  expect((await publishSummary(staff, summary.id, [client.id])).notifications).toMatchObject({
+    queued: 0,
+    alreadyRequested: 1,
+    notQueued: 0,
+  });
   expect(await db.select().from(mailOutbox)).toHaveLength(1);
   const send = vi.fn().mockResolvedValue(undefined);
   await drainMail(5, vi.fn(), send);
@@ -250,6 +263,86 @@ it('requires explicit permitted summary recipients and deduplicates publication 
     `/summaries/${summary.id}`,
     'SUMMARY_PUBLISHED',
   );
+  expect((await publishSummary(staff, summary.id, [client.id])).notifications).toMatchObject({
+    queued: 0,
+    alreadyRequested: 1,
+  });
+  expect(await db.select().from(mailOutbox)).toHaveLength(1);
+});
+
+async function draftSummary() {
+  return generateSummary(staff, {
+    clientId: client.clientId!,
+    weekStart: '2026-10-19',
+    upcoming: [],
+    blocked: [],
+  });
+}
+
+it('counts mixed new/existing recipients accurately and serializes concurrent publication', async () => {
+  const [second] = await db
+    .insert(users)
+    .values({
+      name: 'Second fictional contact',
+      email: 'second@contacts.example',
+      passwordHash: 'not-a-login-hash',
+      role: 'CLIENT',
+      clientId: client.clientId,
+      accountStatus: 'ACTIVE',
+    })
+    .returning();
+  const summary = await draftSummary();
+  const first = await publishSummary(staff, summary.id, [client.id]);
+  const outcomes = await Promise.all([
+    publishSummary(staff, summary.id, [client.id, second!.id]),
+    publishSummary(staff, summary.id, [client.id, second!.id]),
+  ]);
+  expect(outcomes.map((r) => r.notifications.queued).sort()).toEqual([0, 1]);
+  expect(outcomes.map((r) => r.notifications.alreadyRequested).sort()).toEqual([1, 2]);
+  expect(outcomes.every((r) => r.notifications.notQueued === 0)).toBe(true);
+  expect(outcomes.every((r) => r.publishedAt!.getTime() === first.publishedAt!.getTime())).toBe(
+    true,
+  );
+  expect(await db.select().from(mailOutbox)).toHaveLength(2);
+});
+
+it('rejects mixed eligible/ineligible contacts atomically and rechecks eligibility on repeats', async () => {
+  const summary = await draftSummary();
+  await expect(publishSummary(staff, summary.id, [client.id, other.id])).rejects.toMatchObject({
+    code: 'INVALID_RECIPIENTS',
+  });
+  expect(await db.select().from(mailOutbox)).toHaveLength(0);
+  expect(
+    (await db.select().from(progressSummaries).where(eq(progressSummaries.id, summary.id)))[0]!
+      .publishedAt,
+  ).toBeNull();
+  await publishSummary(staff, summary.id, [client.id]);
+  await notificationPreferences(client, false);
+  await expect(publishSummary(staff, summary.id, [client.id])).rejects.toMatchObject({
+    code: 'INVALID_RECIPIENTS',
+  });
+  const send = vi.fn();
+  await drainMail(5, vi.fn(), send);
+  expect(send).not.toHaveBeenCalled();
+  expect(await queued()).toMatchObject({ status: 'EXPIRED' });
+  await notificationPreferences(client, true);
+  expect((await publishSummary(staff, summary.id, [client.id])).notifications).toMatchObject({
+    queued: 0,
+    alreadyRequested: 1,
+  });
+});
+
+it('does not silently retry a failed delivery when publication is requested again', async () => {
+  const summary = await draftSummary();
+  await publishSummary(staff, summary.id, [client.id]);
+  await db.update(mailOutbox).set({ attempts: 8 });
+  expect(await claimMail()).toBeNull();
+  expect(await queued()).toMatchObject({ status: 'FAILED' });
+  expect((await publishSummary(staff, summary.id, [client.id])).notifications).toMatchObject({
+    queued: 0,
+    alreadyRequested: 1,
+  });
+  expect(await db.select().from(mailOutbox)).toHaveLength(1);
 });
 
 it('persists self-service preferences, enforces CSRF, and keeps onboarding administrator-only', async () => {

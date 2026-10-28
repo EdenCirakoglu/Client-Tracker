@@ -87,7 +87,7 @@ export async function enqueueMail(
 
 export async function enqueueWorkflowMail(tx: MailTransaction, payload: WorkflowMailPayload) {
   const id = randomUUID();
-  await tx
+  const inserted = await tx
     .insert(mailOutbox)
     .values({
       id,
@@ -103,5 +103,7 @@ export async function enqueueWorkflowMail(tx: MailTransaction, payload: Workflow
         payload.recipientId,
       ].join(':'),
     })
-    .onConflictDoNothing({ target: mailOutbox.deduplicationKey });
+    .onConflictDoNothing({ target: mailOutbox.deduplicationKey })
+    .returning({ id: mailOutbox.id });
+  return inserted.length ? ('QUEUED' as const) : ('ALREADY_REQUESTED' as const);
 }

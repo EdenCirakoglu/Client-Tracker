@@ -35,10 +35,17 @@ async function accessible(page: Page) {
   expect(result.violations.map((v) => v.id)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
-async function capturedNotice(page: Page, recipient: string, subject: string, recordId: string) {
+async function capturedNotice(
+  page: Page,
+  recipient: string,
+  subject: string,
+  recordId: string,
+  anchor = '',
+) {
   const mailbox = process.env.WORKFLOW_MAIL_URL ?? 'http://localhost:8025';
   if (!['localhost', '127.0.0.1'].includes(new URL(mailbox).hostname))
     throw new Error('Workflow verification only permits local captured mail.');
+  let destination = '';
   await expect
     .poll(
       async () => {
@@ -52,9 +59,13 @@ async function capturedNotice(page: Page, recipient: string, subject: string, re
           const message = await (
             await page.request.get(`${mailbox}/api/v1/message/${item.ID}`)
           ).json();
-          if (message.Text.includes(recordId)) {
+          const link = (message.Text as string)
+            .match(/https?:\/\/[^\s]+/g)
+            ?.find((url) => url.includes(recordId) && (!anchor || url.endsWith(`#${anchor}`)));
+          if (link) {
             expect(message.Text).not.toContain('#token=');
             expect(message.Text).not.toContain('Archived dispatch lookup');
+            destination = link;
             return true;
           }
         }
@@ -63,6 +74,7 @@ async function capturedNotice(page: Page, recipient: string, subject: string, re
       { timeout: 20000, message: 'Expected a generic portal notice in local Mailpit' },
     )
     .toBe(true);
+  return destination;
 }
 
 test('administrator checklist, review notices, explicit summary delivery and preferences', async ({
@@ -183,7 +195,7 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await expect(staff.getByLabel('Northstar Demo Contact', { exact: true })).toBeChecked();
     await staff.getByRole('button', { name: 'Publish and notify contacts', exact: true }).click();
     await expect(staff.getByRole('status', { name: 'Summary update' })).toContainText(
-      'Email notices queued',
+      '1 newly queued, 0 already requested, 0 not queued',
     );
     await capturedNotice(
       client,
@@ -192,6 +204,11 @@ test('administrator checklist, review notices, explicit summary delivery and pre
       summary.id,
     );
     await capture(staff, 'summary-notification-outcome');
+    await staff.getByLabel('Northstar Demo Contact', { exact: true }).check();
+    await staff.getByRole('button', { name: 'Notify selected contacts', exact: true }).click();
+    await expect(staff.getByRole('status', { name: 'Summary update' })).toContainText(
+      '0 newly queued, 1 already requested, 0 not queued',
+    );
     await client.goto(`/summaries/${summary.id}`);
     await expect(
       client.getByRole('heading', { name: 'Client decisions and replies' }),
@@ -228,3 +245,150 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await adminContext.close();
   }
 });
+
+test('captured workflow emails retain the record and section through sign-in without granting access', async ({
+  browser,
+}) => {
+  const baseURL = process.env.VERIFY_URL ?? 'https://localhost:8443';
+  const staffContext = await browser.newContext({ baseURL, ignoreHTTPSErrors: true });
+  const clientContext = await browser.newContext({ baseURL, ignoreHTTPSErrors: true });
+  const staff = await staffContext.newPage(),
+    client = await clientContext.newPage();
+  try {
+    await login(staff, 'Developer');
+    await login(client, 'Client');
+    const person = (await (await client.request.get('/api/auth/me')).json()).data;
+    await mutation(
+      client,
+      '/api/auth/notification-preferences',
+      { workflowNotifications: true },
+      'PATCH',
+    );
+    const projects = (await (await client.request.get('/api/projects')).json()).data as {
+      id: string;
+    }[];
+    const releases = (await (await staff.request.get('/api/releases')).json()).data as {
+      id: string;
+      projectId: string;
+    }[];
+    const project = projects.find((item) =>
+      releases.some((release) => release.projectId === item.id),
+    );
+    expect(project).toBeTruthy();
+    if (!project)
+      throw new Error('The disposable fixture must have a client project with a release.');
+    const release = releases.find((item) => item.projectId === project.id)!;
+    const ticket = await mutation(client, '/api/tickets', {
+      projectId: project.id,
+      title: 'Client shipment reference review',
+      description: 'Find archived shipments using the original customer reference.',
+      category: 'FEATURE_REQUEST',
+    });
+    const notice = async (recordId: string, anchor = '', summary = false) =>
+      capturedNotice(
+        staff,
+        person.email,
+        summary
+          ? 'ClientOps: a progress update is available'
+          : 'ClientOps: your review is requested',
+        recordId,
+        anchor,
+      );
+    const followSignedOut = async (href: string, anchor = '') => {
+      await clientContext.clearCookies();
+      const target = new URL(href);
+      target.searchParams.set('from', 'email');
+      await client.goto(target.href);
+      await expect(client).toHaveURL(/\/login\?next=/);
+      await client.getByRole('button', { name: 'Continue as Client', exact: true }).click();
+      await expect(client).toHaveURL(target.href);
+      if (anchor)
+        await expect.poll(() => client.evaluate(() => document.activeElement?.id)).toBe(anchor);
+    };
+    const proposal = await mutation(staff, `/api/tickets/${ticket.id}/scope`, {
+      expectedRevision: 0,
+      approverId: person.id,
+      scope: 'Search archived shipment references.',
+      exclusions: 'No historical imports.',
+      estimate: 'Two days, estimate only.',
+      deliveryImplications: 'Review the result in the next release.',
+    });
+    const scopeUrl = await notice(ticket.id, 'scope');
+    await followSignedOut(scopeUrl, 'scope');
+    await client.getByRole('button', { name: 'Record scope decision', exact: true }).click();
+    await expect(client.getByText('Revision 1: Approved', { exact: true })).toBeVisible();
+    await client.reload();
+    await expect(client.getByText('Revision 1: Approved', { exact: true })).toBeVisible();
+    const delivery = await mutation(staff, `/api/tickets/${ticket.id}/delivery`, {
+      expectedRevision: 0,
+      reviewerId: person.id,
+      outcome: 'Archived shipment references return the correct record.',
+    });
+    const outcomeUrl = await notice(ticket.id, 'delivery');
+    await followSignedOut(outcomeUrl, 'delivery');
+    await client.getByRole('button', { name: 'Agree outcome', exact: true }).click();
+    await expect(client.getByText('Outcome agreed', { exact: true })).toBeVisible();
+    await mutation(
+      staff,
+      `/api/tickets/${ticket.id}/delivery/${delivery.revisions[0].id}/request-acceptance`,
+      { releaseId: release.id, deliveryNotes: 'Search now includes archived shipment references.' },
+    );
+    const acceptanceUrl = await notice(ticket.id, 'delivery');
+    // Revocation leaves the prior browser session unusable; the next email still returns here.
+    await mutation(client, '/api/auth/logout', {});
+    await client.goto(acceptanceUrl);
+    await expect(client).toHaveURL(/\/login\?next=/);
+    await client.getByRole('button', { name: 'Continue as Client', exact: true }).click();
+    await expect(client).toHaveURL(acceptanceUrl);
+    await client.getByRole('button', { name: 'Accept delivery', exact: true }).click();
+    await client.reload();
+    await expect(client.getByText('Accepted by client', { exact: true })).toBeVisible();
+    const summary = await mutation(staff, '/api/summaries', {
+      clientId: person.clientId,
+      weekStart: new Date().toISOString().slice(0, 10),
+    });
+    await mutation(staff, `/api/summaries/${summary.id}/publish`, { recipientIds: [person.id] });
+    await followSignedOut(await notice(summary.id, '', true));
+    await expect(client.locator('main h1')).toContainText('progress update');
+    await accessible(client);
+    // The destination is navigation, never a capability or identity switch.
+    await staff.goto(scopeUrl);
+    await expect(
+      staff.getByRole('button', { name: 'Record scope decision', exact: true }),
+    ).toHaveCount(0);
+    expect((await staff.request.get('/api/auth/me')).ok()).toBe(true);
+    await client.getByRole('button', { name: 'Logout', exact: true }).click();
+    await expect(client).toHaveURL(`${baseURL}/login`);
+    await client.goto(scopeUrl);
+    await client.getByLabel('Email', { exact: true }).fill('bluewave@example.com');
+    await client.getByLabel('Password', { exact: true }).fill('password123');
+    await client.getByRole('button', { name: 'Sign in', exact: true }).click();
+    await expect(client).toHaveURL(scopeUrl);
+    await expect(client.locator('main').getByRole('alert')).toContainText('Ticket was not found');
+    expect(
+      await mutationStatus(client, `/api/tickets/${ticket.id}/scope/${proposal[0].id}/decision`, {
+        decision: 'APPROVED',
+        feedback: '',
+      }),
+    ).toBe(404);
+    await client.goto('/tickets/00000000-0000-4000-8000-000000000000#delivery');
+    await expect(client.locator('main').getByRole('alert')).toContainText('Ticket was not found');
+    for (const destination of [
+      '//outside.example',
+      'https://outside.example',
+      '/login?next=/login',
+      '/tickets/%ZZ',
+    ]) {
+      await client.goto(`/login?next=${encodeURIComponent(destination)}`);
+      await expect(client).toHaveURL(`${baseURL}/dashboard`);
+    }
+  } finally {
+    await staffContext.close();
+    await clientContext.close();
+  }
+});
+
+async function mutationStatus(page: Page, path: string, data: unknown) {
+  const csrf = (await (await page.request.get('/api/auth/csrf')).json()).data.csrfToken;
+  return (await page.request.post(path, { data, headers: { 'X-CSRF-Token': csrf } })).status();
+}

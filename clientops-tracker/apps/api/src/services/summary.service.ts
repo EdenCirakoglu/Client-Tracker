@@ -376,7 +376,7 @@ export async function publishSummary(
   recipientIds: string[] = [],
 ) {
   requireInternal(user);
-  await db.transaction(async (tx) => {
+  const notifications = await db.transaction(async (tx) => {
     await requireCurrentWorkflowActor(tx, user);
     const [summary] = await tx
       .select()
@@ -406,15 +406,16 @@ export async function publishSummary(
       throw new ApiError(
         400,
         'INVALID_RECIPIENTS',
-        'Refresh and choose active contacts who receive workflow emails from this organisation.',
+        'No notices queued; publication unchanged. Refresh and choose active contacts who receive workflow emails from this organisation.',
       );
     if (!summary.publishedAt)
       await tx
         .update(progressSummaries)
         .set({ publishedAt: new Date(), publishedBy: user.name })
         .where(eq(progressSummaries.id, id));
-    for (const recipient of recipients)
-      await enqueueWorkflowMail(tx, {
+    const outcomes: { recipientId: string; outcome: 'QUEUED' | 'ALREADY_REQUESTED' }[] = [];
+    for (const recipient of recipients) {
+      const outcome = await enqueueWorkflowMail(tx, {
         kind: 'WORKFLOW',
         event: 'SUMMARY_PUBLISHED',
         recipientId: recipient.id,
@@ -423,6 +424,14 @@ export async function publishSummary(
         ticketId: null,
         expectedState: 'PUBLISHED',
       });
+      outcomes.push({ recipientId: recipient.id, outcome });
+    }
+    return {
+      queued: outcomes.filter((item) => item.outcome === 'QUEUED').length,
+      alreadyRequested: outcomes.filter((item) => item.outcome === 'ALREADY_REQUESTED').length,
+      notQueued: 0,
+      recipients: outcomes,
+    };
   });
-  return getSummary(user, id);
+  return { ...(await getSummary(user, id)), notifications };
 }

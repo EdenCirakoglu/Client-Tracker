@@ -12,6 +12,16 @@
   maximum 50; omit or pass an empty list for portal-only publication. Invalid,
   moved, disabled or opted-out selected contacts reject the entire operation.
   Publication and deduplicated notices commit in the same transaction.
+  Success returns the summary plus `notifications`: `queued`, `alreadyRequested`,
+  `notQueued` (zero for an accepted all-or-nothing request), and per-recipient
+  `QUEUED`/`ALREADY_REQUESTED` outcomes. Counts represent distinct selected contacts,
+  not the submitted array length. Already-requested jobs include previously
+  accepted, failed and suppressed jobs; publication does not implicitly retry them.
+  A mixed eligible/ineligible selection returns `400 INVALID_RECIPIENTS`, with no
+  partial enqueue and no publication change. Existing jobs are left untouched.
+  Queue creation is not SMTP acceptance; `DELIVERED` in administrator status means
+  **accepted by the mail server**, not inbox receipt. `FAILED` and `EXPIRED` identify
+  exhausted or suppressed/expired work with a safe reason.
 - Existing scope/delivery requests and decisions enqueue role-appropriate generic
   portal notices. This does not alter decision authority or ticket status.
 - `GET /api/users/deliveries` remains ADMIN-only. Workflow rows include safe event,

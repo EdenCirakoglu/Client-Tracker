@@ -23,10 +23,12 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
     setError('');
     setMessage('');
     try {
-      onPublished(await api.publishSummary(summary.id, selected));
+      const result = await api.publishSummary(summary.id, selected);
+      onPublished(result);
+      const { queued, alreadyRequested, notQueued } = result.notifications;
       setMessage(
         selected.length
-          ? 'Published to the portal. Email notices queued for the selected contacts; delivery is not yet confirmed.'
+          ? `Published to the portal. Email notices: ${queued} newly queued, ${alreadyRequested} already requested, ${notQueued} not queued. Queuing does not confirm mail-server acceptance or inbox delivery.`
           : 'Published to the client portal. No email was requested.',
       );
       setSelected([]);
@@ -109,7 +111,7 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
       </Button>
       <p className="text-xs text-muted">
         The published record is a fixed snapshot. Prepare a new summary to correct it. Each selected
-        contact is notified once per summary; mail retries can produce duplicates.
+        contact has at most one delivery request per summary; mail retries can produce duplicates.
       </p>
       {error ? (
         <p role="alert" className="text-sm text-red-700">
