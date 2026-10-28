@@ -406,7 +406,7 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
   await page.waitForLoadState('networkidle');
   await context.clearCookies();
   await page.reload();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login\?next=%2Fdashboard$/);
   expect(await page.evaluate(() => localStorage.getItem('clientops_token'))).toBeNull();
   await login(page, 'Client');
   const secondTab = await context.newPage();

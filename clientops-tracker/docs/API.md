@@ -1,5 +1,12 @@
 # API Reference
 
+`GET /api/dashboard/delivery?view=mine` returns only current pending scope,
+outcome and acceptance decisions assigned to the authenticated CLIENT in their
+current organisation. Internal users get an empty personal decision view. Counts
+cover the full matching scope, independent of pagination (`limit` 1-50). The
+organisation-wide view remains `followup`; `mine` does not change who may decide.
+Both retain the documented stable ordering and current membership checks.
+
 ## Workflow Notification Additions
 
 - `GET /api/dashboard/onboarding`: ADMIN-only real-record setup checklist.

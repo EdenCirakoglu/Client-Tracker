@@ -72,12 +72,15 @@ try {
     await expect(page.getByText('Loading tickets...', { exact: true })).toHaveCount(0);
     await screenshot(page, `${role.toLowerCase()}-mobile-dashboard`, false);
     if (!before) {
-      const action = page
-        .getByRole('region', { name: 'Needs attention' })
-        .locator('li')
-        .first()
-        .locator('a')
-        .last();
+      const decisions = page.getByRole('region', {
+        name: role === 'Client' ? 'My decisions' : 'Delivery follow-up',
+        exact: true,
+      });
+      await expect(decisions.getByText('Loading delivery plan...', { exact: true })).toHaveCount(0);
+      const workingArea = (await decisions.locator('li').count())
+        ? decisions
+        : page.getByRole('region', { name: 'Needs attention' });
+      const action = workingArea.locator('li').first().locator('a').last();
       await expect(action).toBeInViewport();
       expect(await page.getByText('0d since opened', { exact: true }).count()).toBe(0);
     }

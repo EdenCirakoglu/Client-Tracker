@@ -41,6 +41,7 @@ async function capturedNotice(
   subject: string,
   recordId: string,
   anchor = '',
+  seen = new Set<string>(),
 ) {
   const mailbox = process.env.WORKFLOW_MAIL_URL ?? 'http://localhost:8025';
   if (!['localhost', '127.0.0.1'].includes(new URL(mailbox).hostname))
@@ -52,6 +53,7 @@ async function capturedNotice(
         const inbox = await (await page.request.get(`${mailbox}/api/v1/messages`)).json();
         for (const item of inbox.messages.slice(0, 50)) {
           if (
+            seen.has(item.ID) ||
             item.Subject !== subject ||
             !item.To.some((to: { Address: string }) => to.Address === recipient)
           )
@@ -66,6 +68,7 @@ async function capturedNotice(
             expect(message.Text).not.toContain('#token=');
             expect(message.Text).not.toContain('Archived dispatch lookup');
             destination = link;
+            seen.add(item.ID);
             return true;
           }
         }
@@ -101,10 +104,8 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     admin = await adminContext.newPage();
   try {
     await login(admin, 'Admin');
-    await expect(
-      admin.getByRole('heading', { name: 'Get your first client started' }),
-    ).toBeVisible();
-    const checklist = admin.getByRole('region', { name: 'Get your first client started' });
+    await expect(admin.getByRole('heading', { name: 'Installation setup' })).toBeVisible();
+    const checklist = admin.getByRole('region', { name: 'Installation setup' });
     if ((await checklist.locator('details').getAttribute('open')) === null)
       await checklist.getByText('Setup checklist', { exact: true }).click();
     await expect(
@@ -113,9 +114,7 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await accessible(admin);
     await capture(admin, 'admin-onboarding');
     await login(client, 'Client');
-    await expect(
-      client.getByRole('heading', { name: 'Get your first client started' }),
-    ).toHaveCount(0);
+    await expect(client.getByRole('heading', { name: 'Installation setup' })).toHaveCount(0);
     const contact = (await (await client.request.get('/api/auth/me')).json()).data;
     await mutation(
       client,
@@ -125,9 +124,7 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     );
     await capture(client, 'client-dashboard');
     await login(staff, 'Developer');
-    await expect(staff.getByRole('heading', { name: 'Get your first client started' })).toHaveCount(
-      0,
-    );
+    await expect(staff.getByRole('heading', { name: 'Installation setup' })).toHaveCount(0);
     await capture(staff, 'developer-dashboard');
     const projects = (await (await client.request.get('/api/projects')).json()).data;
     const ticket = await mutation(client, '/api/tickets', {
@@ -284,6 +281,7 @@ test('captured workflow emails retain the record and section through sign-in wit
       description: 'Find archived shipments using the original customer reference.',
       category: 'FEATURE_REQUEST',
     });
+    const seenNotices = new Set<string>();
     const notice = async (recordId: string, anchor = '', summary = false) =>
       capturedNotice(
         staff,
@@ -293,6 +291,7 @@ test('captured workflow emails retain the record and section through sign-in wit
           : 'ClientOps: your review is requested',
         recordId,
         anchor,
+        seenNotices,
       );
     const followSignedOut = async (href: string, anchor = '') => {
       await clientContext.clearCookies();

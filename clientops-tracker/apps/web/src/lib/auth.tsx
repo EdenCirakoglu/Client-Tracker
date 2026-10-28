@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('clientops:session-expired', expired);
     const channel = new BroadcastChannel('clientops-session');
-    channel.onmessage = () => endSession();
+    channel.onmessage = () => endSession(false);
     return () => {
       window.removeEventListener('clientops:session-expired', expired);
       channel.close();

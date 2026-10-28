@@ -1,14 +1,6 @@
 'use client';
 import Link from 'next/link';
-import {
-  Clock3,
-  Flame,
-  ListChecks,
-  Plus,
-  RefreshCw,
-  TimerReset,
-  TriangleAlert,
-} from 'lucide-react';
+import { Clock3, Plus, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 import { ProtectedPage } from '../../components/app-shell';
 import { PageHeader } from '../../components/page-header';
@@ -18,6 +10,7 @@ import { ErrorState, LoadingState } from '../../components/ui/states';
 import { NeedsAttention } from '../../components/dashboard/needs-attention';
 import { DeliveryFollowUp } from '../../components/dashboard/delivery-follow-up';
 import { OnboardingChecklist } from '../../components/dashboard/onboarding-checklist';
+import { MetricCards } from '../../components/dashboard/metric-cards';
 import { RecentActivity, RecentReleases } from '../../components/dashboard/recent-activity';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -33,10 +26,10 @@ export default function DashboardPage() {
   return (
     <ProtectedPage>
       <PageHeader
-        title="Dashboard"
+        title={client ? 'Your delivery journal' : 'Delivery overview'}
         description={
           client
-            ? 'Your support requests and latest delivery updates.'
+            ? 'Review what was requested, agreed and delivered.'
             : developer
               ? 'Your work queue, with the wider team in view.'
               : 'Keep support moving. Review unassigned requests and critical issues.'
@@ -82,53 +75,10 @@ export default function DashboardPage() {
               </time>
             </span>
           </div>
-          <div className="mb-5 grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
-            {[
-              {
-                label: client ? 'Active requests' : 'Unresolved',
-                value: data.unresolvedTickets,
-                query: 'status=UNRESOLVED',
-                Icon: ListChecks,
-              },
-              {
-                label: 'Critical unresolved',
-                value: data.criticalTickets,
-                query: 'status=UNRESOLVED&priority=CRITICAL',
-                Icon: Flame,
-              },
-              {
-                label: client ? 'Your reply needed' : 'Waiting for client',
-                value: data.ticketsWaitingForClient,
-                query: 'status=WAITING_FOR_CLIENT',
-                Icon: TriangleAlert,
-              },
-              {
-                label: 'Resolved this month',
-                value: data.resolvedTicketsThisMonth,
-                query: `resolvedMonth=${data.resolvedMonth}`,
-                Icon: TimerReset,
-              },
-            ].map(({ label, value, query, Icon }) => (
-              <Link
-                key={label}
-                href={`/tickets?${query}`}
-                aria-label={`${label}: ${value}`}
-                className="rounded-lg border border-border bg-panel p-3 hover:border-brand-600 sm:p-4 lg:p-5"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-xs text-muted sm:text-sm">{label}</span>
-                  <Icon className="hidden h-4 w-4 shrink-0 text-muted sm:block" />
-                </div>
-                <span className="mt-1 block text-2xl font-semibold tabular-nums sm:mt-3 sm:text-3xl">
-                  {value}
-                </span>
-              </Link>
-            ))}
-          </div>
           <div className="grid gap-8 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
             <div className="min-w-0 space-y-8">
+              <DeliveryFollowUp refresh={refresh} personal={client} />
               {user ? <NeedsAttention role={user.role} refresh={refresh} /> : null}
-              <DeliveryFollowUp refresh={refresh} />
               <div className="grid gap-6 md:grid-cols-2">
                 <Distribution
                   title="Tickets by status"
@@ -148,6 +98,7 @@ export default function DashboardPage() {
             </div>
             <aside className="min-w-0 space-y-8" aria-label="Supporting information">
               {user?.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
+              <MetricCards metrics={data} client={client} />
               {!client && data.developerWorkload ? (
                 <section>
                   <h2 className="text-lg font-semibold">Developer workload</h2>

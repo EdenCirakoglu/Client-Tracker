@@ -13,7 +13,7 @@ export function OnboardingChecklist({ refresh }: OnboardingChecklistProps) {
   return (
     <section aria-labelledby="onboarding-heading" className="mb-6 border-b border-border pb-5">
       <h2 id="onboarding-heading" className="text-lg font-semibold">
-        Get your first client started
+        Installation setup
       </h2>
       {state.loading ? (
         <LoadingState label="Checking setup..." />
@@ -26,6 +26,9 @@ export function OnboardingChecklist({ refresh }: OnboardingChecklistProps) {
           </p>
           <details className="mt-3" open={state.data.completed < state.data.steps.length}>
             <summary className="cursor-pointer text-sm font-medium">Setup checklist</summary>
+            <p className="mt-3 text-xs leading-5 text-muted">
+              These steps count records across all clients, not one client's completed onboarding.
+            </p>
             <ol className="mt-3 grid gap-x-6 sm:grid-cols-2">
               {state.data.steps.map((step) => (
                 <li key={step.key}>

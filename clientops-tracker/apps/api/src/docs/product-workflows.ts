@@ -72,6 +72,7 @@ export const productWorkflowPaths = {
             type: 'string',
             enum: [
               'followup',
+              'mine',
               'overdue',
               'upcoming',
               'agreement',
