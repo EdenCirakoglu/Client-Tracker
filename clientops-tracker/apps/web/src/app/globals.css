@@ -3,12 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --surface: 246 248 249;
+  --surface: 247 247 245;
   --panel: 255 255 255;
-  --subtle: 237 241 242;
-  --ink: 28 40 43;
-  --muted: 83 101 107;
-  --border: 216 225 227;
+  --subtle: 239 241 238;
+  --ink: 27 36 33;
+  --muted: 79 96 89;
+  --border: 215 223 217;
+  --journal-gap: 1.5rem;
+  --journal-radius: 8px;
+  --journal-title: 1.125rem;
+  --journal-focus: var(--accent);
   --action: 23 91 83;
   --accent: 23 91 83;
   --accent-bg: 232 245 242;
@@ -27,9 +31,9 @@
   --info-border: 178 201 236;
 }
 [data-theme='dark'] {
-  --surface: 19 24 26;
-  --panel: 27 34 37;
-  --subtle: 35 44 47;
+  --surface: 20 25 23;
+  --panel: 28 35 32;
+  --subtle: 36 44 40;
   --ink: 232 239 239;
   --muted: 168 185 190;
   --border: 66 80 85;
@@ -89,7 +93,7 @@ table {
 }
 
 :focus-visible {
-  outline: 2px solid rgb(var(--accent));
+  outline: 2px solid rgb(var(--journal-focus));
   outline-offset: 3px;
 }
 
@@ -106,6 +110,30 @@ svg {
 }
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+.journal-decision {
+  padding: var(--journal-gap);
+  border: 1px solid rgb(var(--border));
+  border-top: 3px solid rgb(var(--accent));
+  border-radius: var(--journal-radius);
+  background: rgb(var(--panel));
+}
+.journal-decision h2 {
+  font-size: var(--journal-title);
+}
+.journal-comparison {
+  border-top: 1px solid rgb(var(--border));
+  margin-top: var(--journal-gap);
+  padding-top: var(--journal-gap);
+}
+.journal-comparison :is(del, ins) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+@media (max-width: 639px) {
+  .journal-decision {
+    padding: 1rem;
+  }
 }
 .status-badge {
   color: rgb(var(--tone));

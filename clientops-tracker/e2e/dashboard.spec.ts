@@ -64,6 +64,24 @@ test('role queues, metric destinations and URL filters agree with authorised rec
       await expect(page.getByRole('heading', { name: 'Public updates' })).toBeVisible();
       const feed = (await (await page.request.get('/api/dashboard/activity')).json()).data;
       expect(JSON.stringify(feed)).not.toMatch(/INTERNAL_COMMENT|TRIAGE|Bluewave/);
+      const decisions = (
+        await (await page.request.get('/api/dashboard/delivery?view=mine&limit=4')).json()
+      ).data;
+      const personal = page.getByRole('region', { name: 'My decisions', exact: true });
+      await expect(
+        personal.getByText(`${decisions.total} awaiting your review`, { exact: true }),
+      ).toBeVisible();
+      expect(decisions.items.every((item: { yourDecision: boolean }) => item.yourDecision)).toBe(
+        true,
+      );
+      await personal.getByRole('link', { name: 'View all decisions', exact: true }).click();
+      await expect(page).toHaveURL(/\/delivery\?view=mine$/);
+      await expect(
+        page.getByRole('heading', { name: `My decisions (${decisions.total})`, exact: true }),
+      ).toBeVisible();
+      await page.reload();
+      await expect(page.getByLabel('Show', { exact: true })).toHaveValue('mine');
+      await page.goto('/dashboard');
     }
     await accessible(page);
     await capture(page, `${role.toLowerCase()}-dashboard`);

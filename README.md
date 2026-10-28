@@ -15,6 +15,10 @@ Connect requests to agreed outcomes, named delivery owners, target dates, releas
 delivery and explicit client acceptance. Scope approvals refer to a specific revision;
 staff preview progress summaries before publishing them to the client portal.
 
+The current draft adds a decision-first delivery journal and preserves notification
+destinations through sign-in. See the [revision-specific review and matched captures](clientops-tracker/docs/DELIVERY_JOURNAL.md).
+This is reviewable work, not a published customer release.
+
 ## Open Source and Paid Services
 
 The code remains [MIT-licensed](LICENSE): commercial use, modification and redistribution are permitted with the required notices. You do not need to buy a service to use or self-host the public code.

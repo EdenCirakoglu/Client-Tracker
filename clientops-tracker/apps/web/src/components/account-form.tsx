@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { KeyRound, Mail } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
-import { useAuth } from '../lib/auth';
 import { Button } from './ui/button';
 import { FieldLabel, Input } from './ui/input';
 import { ThemePicker } from './ui/preferences';
@@ -12,9 +11,9 @@ import { PasswordInput } from './ui/password-input';
 
 interface AccountFormProps {
   mode: 'forgot' | 'invitation' | 'reset' | 'change';
+  onPasswordChanged?: () => void;
 }
-export function AccountForm({ mode }: AccountFormProps) {
-  const { refreshUser } = useAuth();
+export function AccountForm({ mode, onPasswordChanged }: AccountFormProps) {
   const token = useRef('');
   const [ready, setReady] = useState(false);
   const [email, setEmail] = useState('');
@@ -96,6 +95,7 @@ export function AccountForm({ mode }: AccountFormProps) {
             ? await api.changePassword(current, password)
             : await api.setPassword(token.current, password, mode === 'invitation');
       setMessage(result.message);
+      if (mode === 'change') onPasswordChanged?.();
       setPassword('');
       setConfirmation('');
       setCurrent('');
@@ -128,15 +128,10 @@ export function AccountForm({ mode }: AccountFormProps) {
               folder. Still need help? Contact your workspace administrator.
             </p>
           ) : null}
-          <Link
-            href="/login"
-            onClick={() => {
-              if (mode === 'change') void refreshUser();
-            }}
-            className="inline-block font-medium text-brand-700 underline"
-          >
+          {/* Start a new document after credential changes; cached auth state is no longer valid. */}
+          <a href="/login" className="inline-block font-medium text-brand-700 underline">
             Sign in
-          </Link>
+          </a>
         </div>
       ) : (
         <form className="mt-6 space-y-4" onSubmit={(event) => void submit(event)}>

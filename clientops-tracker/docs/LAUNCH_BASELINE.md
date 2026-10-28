@@ -6,8 +6,13 @@ PR #19 is merged at `70246650a1ef80096fe74b08213d62d19323e787`; PR #20 is now a
 draft against main, not against the former maintenance branch. Its verified
 `d9099b6febd6ac5f682649ae4d109909d9215d30` results remain tied to that revision.
 See [proposed tooling decisions](DEPENDENCY_REMEDIATION.md#follow-up-review-decisions):
-none has owner acceptance yet. Fresh candidate CI and CodeQL are required; no
-merge or subsequent image publication is claimed here.
+none has owner acceptance yet. The retargeted follow-up head
+`27c7dbb35a7fa855a87ad7ae05ef5034a663c4ec` passed
+[fresh full CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39624281623)
+and [fresh CodeQL analysis](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39623982321).
+Its separate parser commit returns sanitized 400/413 responses. Analysis success
+does not dismiss existing alerts. No #20 merge or subsequent image publication
+is claimed. [Buyer-facing work](LAUNCH_PRODUCT.md) is on a separate dependent branch.
 
 ## Current Milestone 1B
 
@@ -22,14 +27,16 @@ database regression records that compatibility correction.
 Residual tooling risk and the two open CodeQL classifications require owner
 review. They are not dismissed or described as fixed.
 
-This follow-up is based on unmerged PR #19's tested head
+Historically, the original remediation was based on then-unmerged PR #19's tested head
 `7693de8131d9ea11dcff30dbd695219c64a4170d`.
 [Its CI passed](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/39603815386);
 that evidence remains historical and is not evidence for the remediation head.
 The new PR handoff identifies its own exact tested SHA, checks and artifacts.
 PRs #14/#18 stay open until a replacement is actually merged. No merge is authorized
-for milestone 1B. Next implementation increment: administrator onboarding and
-permission-rechecked workflow notifications, after dependency review.
+for milestone 1B. The originally scoped next increment, administrator onboarding
+and permission-rechecked workflow notifications, is now implemented in dependent
+[draft PR #22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22). Its own
+[verification record](LAUNCH_PRODUCT.md) is separate from maintenance evidence.
 
 ## Historical Milestone 1A Record
 

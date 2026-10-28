@@ -9,6 +9,7 @@ import { Button } from '../ui/button';
 import { Card, CardHeader } from '../ui/card';
 import { FieldLabel, Input, Select, Textarea } from '../ui/input';
 import { ErrorState, LoadingState } from '../ui/states';
+import { RevisionComparison } from './revision-comparison';
 
 interface ScopeChangeProps {
   ticketId: string;
@@ -102,6 +103,35 @@ export function ScopeChange({ ticketId, category }: ScopeChangeProps) {
             ) : (
               <p className="text-sm text-muted">No additional scope proposed.</p>
             )}
+            {current && proposals[1] ? (
+              <RevisionComparison
+                previousRevision={proposals[1].revision}
+                currentRevision={current.revision}
+                fields={[
+                  { label: 'Scope', previous: proposals[1].scope, proposed: current.scope },
+                  {
+                    label: 'Exclusions',
+                    previous: proposals[1].exclusions,
+                    proposed: current.exclusions,
+                  },
+                  {
+                    label: 'Estimate',
+                    previous: proposals[1].estimate,
+                    proposed: current.estimate,
+                  },
+                  {
+                    label: 'Delivery implications',
+                    previous: proposals[1].deliveryImplications,
+                    proposed: current.deliveryImplications,
+                  },
+                  {
+                    label: 'External reference',
+                    previous: proposals[1].externalReference,
+                    proposed: current.externalReference,
+                  },
+                ]}
+              />
+            ) : null}
             {internal && category === 'FEATURE_REQUEST' && !editing ? (
               <Button
                 variant="secondary"
