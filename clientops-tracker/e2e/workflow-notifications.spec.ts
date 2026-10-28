@@ -295,6 +295,8 @@ test('captured workflow emails retain the record and section through sign-in wit
       );
     const followSignedOut = async (href: string, anchor = '') => {
       await clientContext.clearCookies();
+      // A received email opens a document; a hash-only navigation would retain live React state.
+      await client.goto('about:blank');
       const target = new URL(href);
       target.searchParams.set('from', 'email');
       await client.goto(target.href);
