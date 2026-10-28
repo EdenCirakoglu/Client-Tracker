@@ -1,6 +1,15 @@
 # First-Customer Launch Baseline
 
-## Maintenance Follow-up
+## Current Release Preparation (October 28)
+
+Main is `38b6ef17f2a2399c5d444da153081167e2b9feae`; PR #19 is merged.
+PR #20 is refreshed separately from the verified product work in PR #22.
+See [current dependency results](DEPENDENCY_REMEDIATION.md#current-release-review-2026-10-28)
+and [controlled release plan](RELEASE_MERGE_PLAN.md). Two esbuild development-tool
+decisions remain unapproved; no merge, publication or public launch is claimed.
+The October 21 statements and results below describe their original revisions.
+
+## Historical Maintenance Follow-up
 
 PR #19 is merged at `70246650a1ef80096fe74b08213d62d19323e787`; PR #20 is now a
 draft against main, not against the former maintenance branch. Its verified
