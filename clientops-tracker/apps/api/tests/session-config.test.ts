@@ -35,6 +35,17 @@ describe('Production session configuration', () => {
     expect(env.APP_ORIGIN).toBe('https://portal.example');
     expect(env.DEMO_MODE).toBe(false);
   });
+  it('defaults transformed boolean settings to false and preserves explicit true', async () => {
+    vi.stubEnv('DEMO_MODE', undefined);
+    vi.stubEnv('SMTP_SECURE', undefined);
+    let config = await import('../src/config/env');
+    expect(config.env.DEMO_MODE).toBe(false);
+    expect(config.env.SMTP_SECURE).toBe(false);
+    vi.resetModules();
+    vi.stubEnv('SMTP_SECURE', 'true');
+    config = await import('../src/config/env');
+    expect(config.env.SMTP_SECURE).toBe(true);
+  });
   it('rejects missing mail keys and capture mode in a production deployment', async () => {
     vi.stubEnv('MAIL_ENCRYPTION_KEY', undefined);
     await expect(import('../src/config/env')).rejects.toThrow('MAIL_ENCRYPTION_KEY');
