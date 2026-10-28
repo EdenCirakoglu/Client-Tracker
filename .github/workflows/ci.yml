@@ -101,6 +101,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Packaged API executables and migration safety
+        run: node scripts/check-packaged-api.mjs
+
       - name: Validate Docker Compose
         run: docker compose -f docker-compose.yml config
 
