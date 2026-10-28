@@ -150,11 +150,17 @@ if (!before) {
       evidence.screens.push(name);
     };
     const summaries = (await (await page.request.get(`${origin}/api/summaries`)).json()).data.items;
+    const tickets = (
+      await (
+        await page.request.get(`${origin}/api/tickets/queue?category=FEATURE_REQUEST&limit=1`)
+      ).json()
+    ).data.items;
     for (const route of [
       '/dashboard',
       '/delivery',
       '/summaries',
       '/tickets',
+      ...(tickets.length ? [`/tickets/${tickets[0].id}#scope`] : []),
       '/users',
       ...(summaries.length ? [`/summaries/${summaries[0].id}`] : []),
       '/account',
@@ -176,7 +182,7 @@ if (!before) {
           page.getByRole('heading', { name: 'Client decisions and replies' }),
         ).toBeVisible();
       await nativeCapture(
-        `native-200-${route.startsWith('/summaries/') ? 'summary-detail' : route.slice(1)}`,
+        `native-200-${route.startsWith('/summaries/') ? 'summary-detail' : route.startsWith('/tickets/') ? 'ticket-review' : route.slice(1)}`,
       );
     }
     await page.getByLabel('Current password', { exact: true }).focus();

@@ -1,5 +1,6 @@
 /* global document, scrollTo */
 import { chromium, request, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
@@ -102,6 +103,15 @@ else {
 }
 const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL ?? 'chrome' });
 const captures = [];
+async function accessible(page) {
+  expect(
+    (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
+      .violations,
+  ).toEqual([]);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= globalThis.innerWidth),
+  ).toBe(true);
+}
 try {
   for (const role of ['Admin', 'Developer', 'Client']) {
     const context = await browser.newContext({
@@ -144,6 +154,7 @@ try {
         await page.evaluate(() => document.fonts.ready);
         await page.evaluate(() => scrollTo(0, 0));
         const file = `${role.toLowerCase()}-${screen}-${width}-light.png`;
+        if (stage === 'after') await accessible(page);
         await page.screenshot({
           path: resolve(directory, file),
           fullPage: true,
@@ -155,6 +166,7 @@ try {
           await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
           await page.keyboard.press('Escape');
           await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+          await accessible(page);
           const darkFile = file.replace('-light.png', '-dark.png');
           await page.screenshot({
             path: resolve(directory, darkFile),
