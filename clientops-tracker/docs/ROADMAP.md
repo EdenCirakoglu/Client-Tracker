@@ -2,6 +2,34 @@
 
 ## Current First-Customer Launch Checklist
 
+Updated 2026-11-06. This table is the single current launch checklist. All 15 PRs
+remain open/unmerged; no auto-merge or queue is authorized. Integration order is
+a recommendation for separate decisions: #20, then #31, then #22. Source CI,
+scanner execution, scanner policy, published-image verification, real services
+and customer acceptance are distinct. Historical results below retain their SHAs.
+
+| Task                               | Status and completion evidence                                                                                                                                                                                                      | Next action                                                                                                                                                                                                               | Owner                                   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Integrated source release          | Main `38b6ef1`; #20 `4a37eb3` and #31 `c1e1efc` previously passed CI/policy; #22 `f2be503` passed CI/analysis but **failed CodeQL policy**. [CSRF review](CSRF_REVIEW.md) corrects the earlier shorthand and adds focused evidence. | Review final preparation heads/checks in PR handoff. Owner/security decision on CSRF classification; expired November 4 Kit disposition is not approved. New minimatch tooling finding remains visible.                   | Maintainer + Eden Cirakoglu             |
+| Each future approved merge         | Not performed in this run; automatic image publication follows successful main push CI                                                                                                                                              | Require exact resulting main SHA CI, both API/web publishing jobs and pulled digest-pinned image runtime verification **without rebuilding** after each of #20, #31 and #22. Then retarget/revalidate the next candidate. | Release maintainer                      |
+| Historical reliability discrepancy | Invitation/restart failure at `5068312` remains unexplained; improved safe status/phase diagnostics retained. [Review](CSRF_REVIEW.md#historical-invitation-failure).                                                               | Repeat strict outage/restart checks on final head; do not infer cause from later passes or alter deadlines.                                                                                                               | Maintainer                              |
+| Focused buyer journey              | Existing decisions/revisions/notifications retained. [Three same-record concepts and selected concept 3](CLIENT_JOURNEY_BRIEF.md); client-specific onboarding/project overview specified, not shipped.                              | Implement bounded selected direction after integration; reuse existing workflow data and permissions. Printable receipt next; reminders/attachments only on pilot evidence.                                               | Product maintainer + owner              |
+| Human accessibility                | Historical axe/keyboard/native 200% passes are not human AT acceptance. [Manual contract](CLIENT_JOURNEY_BRIEF.md#visual-and-interaction-contract).                                                                                 | Record actual screen-reader walkthrough, versions, speech/issues and fixes. No human result recorded yet.                                                                                                                 | Named accessibility reviewer, to assign |
+| Real staging services              | **Not accepted**. [Operator runbook](OPERATOR_CONTROLS.md) and [installation guide](INSTALLATION_GUIDE.md) describe fixtures versus real requirements.                                                                              | Supply the private inputs listed below; approve staging; demonstrate TLS/renewal, real SMTP receipt, off-host restore, alert receipt, stopped-host/heartbeat detection and recovery owner/RTO/RPO.                        | Customer operator + owner               |
+| Defined installation offer         | [Services](SERVICES.md) and [pricing/handover worksheet](FIRST_CUSTOMER_PILOT.md) prepared, not approved or purchasable. MIT unchanged.                                                                                             | Approve scope, price, support hours/terms/capacity; genuine booking/checkout URLs and test-mode journey, then separate activation approval.                                                                               | Eden Cirakoglu                          |
+| One paid agency pilot              | Not recruited or completed; [three-owner interview guide, five-minute demo and proposed 4/5 unaided task](FIRST_CUSTOMER_PILOT.md) ready for review.                                                                                | Approve contacts, obtain consent, run study/install, record actual effort, blockers, payment and accepted handover. No invented feedback.                                                                                 | Owner + named pilot agency              |
+
+The current dependency decision is recorded on maintenance PR #20 in
+`docs/RELEASE_INTEGRATION.md`; its November 20 proposal is **not** an extension or
+acceptance of the expired November 4 deadline. No broad tooling upgrade is added
+here. Before customer installation, resolve or explicitly review every remaining
+finding; production npm audit alone does not cover OS packages, CodeQL or logic.
+
+## Historical October 28 Checklist
+
+The following text preserves the prior review, including statuses since corrected
+above. It is not a second active checklist or current risk acceptance.
+
 Updated 2026-10-28. This is the single current launch checklist. The initial offer
 is assisted installation for one agency, not shared multi-agency SaaS. Public MIT
 code remains available without buying a service. Status means only the evidence
