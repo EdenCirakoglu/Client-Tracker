@@ -75,6 +75,23 @@ pnpm test
 The final PR handoff records the actual tested revision, CI and policy-check
 conclusions. A successful test run alone is not disposition approval.
 
+### Independent Head Verification
+
+The newer maintenance base conflicts with this product branch in validation
+tests, dependency/roadmap evidence and local fixture naming. GitHub therefore
+withholds normal `pull_request` CI. The existing CI job now also accepts a manual
+`workflow_dispatch`, checking out `github.sha` and retaining every assertion,
+audit, privacy, browser and operational step. This verifies the product head,
+**not integration with maintenance**. It does not run privileged PR-target code.
+Permissions remain contents-read; Docker publication still requires successful
+main **push** CI and does not follow this branch dispatch. Reconciliation and
+fresh PR CI remain required after separately approved #20 and #31 merges.
+
+```sh
+gh workflow run ci.yml --repo EdenCirakoglu/Client-Tracker --ref feature/agency-onboarding-notifications
+gh run list --repo EdenCirakoglu/Client-Tracker --workflow ci.yml --branch feature/agency-onboarding-notifications
+```
+
 ## Proposed Disposition, Pending Owner Review
 
 Evidence supports **false positive due to unmodeled middleware**, with no bypass
