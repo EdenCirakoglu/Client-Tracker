@@ -1,6 +1,15 @@
 # Dependency Remediation: Milestone 1B
 
-## Current Release Review: 2026-10-28
+## Current Integration Review: 2026-11-06
+
+The November 4 owner-decision deadline passed without acceptance. See
+[release integration decisions](RELEASE_INTEGRATION.md) for the new bounded,
+unapproved Kit proposal, registry evidence, new minimatch tooling advisory and
+individual PR dispositions. The October results below remain historical.
+Production audit is still clean, but neither full audit nor all product CodeQL
+policy checks are clean. No alert or audit result is suppressed.
+
+## Historical Release Review: 2026-10-28
 
 PR #20 is being refreshed against main
 `38b6ef17f2a2399c5d444da153081167e2b9feae`. Its October 21 results below remain
