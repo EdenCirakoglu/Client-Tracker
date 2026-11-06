@@ -1,5 +1,15 @@
 # Roadmap
 
+Integration update, 2026-11-06: [current release decisions](RELEASE_INTEGRATION.md)
+supersede the October status statements below. All 15 PRs remain open; #20 is
+next for review, not approved merge. Kit acceptance is overdue/unapproved and a
+new minimatch tooling advisory is visible. #22's analysis jobs succeeded but its
+CodeQL policy check failed on existing high CSRF alert #1. For **each** future
+approved merge (#20, then reconciled #31, then #22), require resulting-main CI,
+both image publications, and digest-pinned API/web runtime verification without
+rebuilding. Real staging, human accessibility, approved installation terms and
+one paid agency pilot remain separate owner/operator acceptance gates.
+
 ## Current First-Customer Launch Checklist
 
 Updated 2026-10-28. This is the single current launch checklist. The initial offer
