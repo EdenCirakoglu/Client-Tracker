@@ -1,31 +1,31 @@
 # Roadmap
 
-Integration update, 2026-11-06: [current release decisions](RELEASE_INTEGRATION.md)
-supersede the October status statements below. All 15 PRs remain open; #20 is
-next for review, not approved merge. Kit acceptance is overdue/unapproved and a
-new minimatch tooling advisory is visible. #22's analysis jobs succeeded but its
-CodeQL policy check failed on existing high CSRF alert #1. For **each** future
-approved merge (#20, then reconciled #31, then #22), require resulting-main CI,
-both image publications, and digest-pinned API/web runtime verification without
-rebuilding. Real staging, human accessibility, approved installation terms and
-one paid agency pilot remain separate owner/operator acceptance gates.
+Integration update, 2026-11-06: the owner merged #20 as `e114a0e` and
+[main CI, both publications and digest-pinned runtime verification passed](RELEASE_E114A0E.md).
+#31 now targets main and is the next separate tooling review; #22 remains
+unmerged with its recorded CodeQL policy finding. Kit acceptance is overdue and
+unapproved; the minimatch tooling finding also remains. For **each** future
+approved merge (#31, then reconciled #22), require resulting-main CI, both image
+publications and digest-pinned runtime verification without rebuilding. Real
+staging, human accessibility, approved terms and one paid agency pilot remain
+separate owner/operator acceptance gates.
 
 ## Current First-Customer Launch Checklist
 
-Updated 2026-10-28. This is the single current launch checklist. The initial offer
+Updated 2026-11-06. This is the single current launch checklist. The initial offer
 is assisted installation for one agency, not shared multi-agency SaaS. Public MIT
 code remains available without buying a service. Status means only the evidence
 listed: source CI, published-image runtime, real-service acceptance and customer
 acceptance are separate gates.
 
-| Task                               | Status                                                                                                               | Tested revision / evidence                                                                                                                             | Next action                                                                                                                                                                            | Owner                           |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| 1. Establish and maintain baseline | PR #19 merged; PR #20 security refresh under review                                                                  | [Current release preparation and exact-head evidence](RELEASE_MERGE_PLAN.md), [dependency inventory](DEPENDENCY_REMEDIATION.md)                        | Require fresh CI and both CodeQL analyses; resolve or explicitly review two unaccepted esbuild findings. No merge yet.                                                                 | Maintainer + repository owner   |
-| 2. Buyer-facing workflow           | Onboarding, notifications and delivery journal implemented in unmerged PR #22                                        | [Verified 2834eff handoff](https://github.com/EdenCirakoglu/Client-Tracker/pull/22#issuecomment-6469426601): 190 API, 28 helpers, 14 browser scenarios | Preserve product history; after separately approved #20 merge retarget #22 to main, reconcile duplicated security changes and rerun CI/CodeQL. Human screen-reader acceptance pending. | Maintainer + reviewer           |
-| 3. Release candidate               | Historical CI/publication verified; current pair has registry metadata but no new published-image runtime acceptance | [Release evidence](RELEASE_READINESS.md), [installation guide](INSTALLATION_GUIDE.md)                                                                  | Full product CI, approved merge, digest-pinned image verification, populated upgrade/restore and versioned handoff                                                                     | Maintainer + repository owner   |
-| 4. Real staging                    | Not accepted; fixture tests are not external-service evidence                                                        | [Operator controls](OPERATOR_CONTROLS.md), [deployment guide](DEPLOYMENT.md)                                                                           | Supply operator inputs below privately; approve separated staging and perform actual acceptance                                                                                        | Operator                        |
-| 5. Purchasable installation offer  | Service information only; no configured booking or checkout                                                          | [Services](SERVICES.md), [commercial options](MONETISATION.md)                                                                                         | Agree scope, effort/cost worksheet, price, terms and capacity; configure genuine destinations and test-mode purchase before approval to activate                                       | Repository owner                |
-| 6. Controlled agency pilot         | Not started; no customer evidence                                                                                    | [Installation acceptance](INSTALLATION_GUIDE.md)                                                                                                       | Prepare interview/demo/feedback pack, then obtain permission to contact one agency; record usability, support effort and willingness to pay                                            | Repository owner + pilot agency |
+| Task                               | Status                                                                       | Tested revision / evidence                                                                                    | Next action                                                                                                                                      | Owner                           |
+| ---------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| 1. Establish and maintain baseline | #19/#20 merged; #31 refreshed against verified main                          | [Published e114a0e evidence](RELEASE_E114A0E.md), [tsup 9 audit/review](TSUP9_REVIEW.md)                      | Review actual-head CI and CodeQL policy; owner decisions on Kit and minimatch remain unapproved                                                  | Maintainer + repository owner   |
+| 2. Buyer-facing workflow           | Onboarding, notifications and delivery journal remain in unmerged #22        | [Historical product handoff](https://github.com/EdenCirakoglu/Client-Tracker/pull/22#issuecomment-6690629304) | After separate #31 decision, reconcile product against approved main and rerun CI/CodeQL; retain migration 0007 worker constraints               | Maintainer + reviewer           |
+| 3. Release candidate               | Published maintenance images locally verified; product release still pending | [Exact-main CI/publication/digest checks](RELEASE_E114A0E.md)                                                 | Repeat CI, both publications and pulled-image verification after every future approved main merge                                                | Maintainer + repository owner   |
+| 4. Real staging                    | Not accepted; fixture tests are not external-service evidence                | [Operator controls](OPERATOR_CONTROLS.md), [deployment guide](DEPLOYMENT.md)                                  | Supply operator inputs below privately; approve separated staging and perform actual acceptance                                                  | Operator                        |
+| 5. Purchasable installation offer  | Service information only; no configured booking or checkout                  | [Services](SERVICES.md), [commercial options](MONETISATION.md)                                                | Agree scope, effort/cost worksheet, price, terms and capacity; configure genuine destinations and test-mode purchase before approval to activate | Repository owner                |
+| 6. Controlled agency pilot         | Not started; no customer evidence                                            | [Installation acceptance](INSTALLATION_GUIDE.md)                                                              | Prepare interview/demo/feedback pack, then obtain permission to contact one agency; record usability, support effort and willingness to pay      | Repository owner + pilot agency |
 
 ### Operator Inputs (One Outstanding List)
 
