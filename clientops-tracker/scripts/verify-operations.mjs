@@ -138,6 +138,7 @@ try {
     ).status(),
     200,
   );
+  phase = 'newly invited member login';
   assert.equal(
     (
       await mutation(member, '/api/auth/login', { email, password: 'Local-delivery-passphrase-42' })
@@ -210,10 +211,21 @@ try {
   console.log(
     'Database outage/recovery, real SMTP outage/retry, restart, concurrent workers and stale-link checks passed.',
   );
-} catch {
+} catch (error) {
   console.error(
     `Outage/retry acceptance failed at ${phase}. Request headers and private configuration are intentionally omitted.`,
   );
+  if (
+    error?.code === 'ERR_ASSERTION' &&
+    typeof error.actual === 'number' &&
+    typeof error.expected === 'number'
+  ) {
+    console.error(`Numeric assertion: received ${error.actual}, expected ${error.expected}.`);
+  }
+  if (/^Fixture CSRF request failed with HTTP \d{3}\.$/.test(error?.message ?? ''))
+    console.error(error.message);
+  if (['Error', 'TimeoutError', 'AssertionError'].includes(error?.name))
+    console.error(`Failure type: ${error.name}.`);
   process.exitCode = 1;
 } finally {
   if (paused) compose(['unpause', 'postgres']);

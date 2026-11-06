@@ -6,7 +6,7 @@ export const openApiDocument = {
     title: 'ClientOps Tracker API',
     version: '0.5.0',
     description:
-      'Cookie-session REST API. First GET /api/auth/csrf, retain cookies, then send X-CSRF-Token on every POST/PATCH including login. Login rotates the session and returns a fresh CSRF token. Swagger obtains this token automatically. Bearer JWTs are no longer accepted. Recovery links arrive by email; no public registration. ADMIN controls invitations and account membership.',
+      'Cookie-session REST API. First GET /api/auth/csrf, retain cookies, then send X-CSRF-Token on every POST/PATCH including login. Login rotates the session and returns a fresh CSRF token. Swagger obtains this token automatically. Bearer JWTs are no longer accepted. Recovery links arrive by email; no public registration. ADMIN controls invitations and account membership. JSON bodies are limited to 1 MiB. Invalid JSON returns 400 INVALID_JSON; oversized JSON returns 413 PAYLOAD_TOO_LARGE. Both use a sanitized error envelope without submitted content.',
   },
   servers: [
     {

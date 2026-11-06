@@ -59,6 +59,27 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     return;
   }
 
+  if (error instanceof Error) {
+    const parser = error as Error & { type?: unknown; status?: unknown; statusCode?: unknown };
+    if (
+      error instanceof SyntaxError &&
+      parser.type === 'entity.parse.failed' &&
+      parser.status === 400 &&
+      parser.statusCode === 400
+    ) {
+      res.status(400).json({
+        error: { code: 'INVALID_JSON', message: 'Request body must contain valid JSON.' },
+      });
+      return;
+    }
+    if (parser.type === 'entity.too.large' && parser.status === 413 && parser.statusCode === 413) {
+      res.status(413).json({
+        error: { code: 'PAYLOAD_TOO_LARGE', message: 'Request body exceeds the allowed size.' },
+      });
+      return;
+    }
+  }
+
   if (isDatabaseUniqueViolation(error)) {
     res.status(409).json({
       error: {
@@ -81,6 +102,9 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   });
 };
 
-function isDatabaseUniqueViolation(error: unknown) {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505';
+function isDatabaseUniqueViolation(error: unknown, depth = 0): boolean {
+  if (!error || typeof error !== 'object' || depth > 4) return false;
+  // Drizzle wraps the PostgreSQL error; never expose its query or parameters.
+  const value = error as { code?: string; cause?: unknown };
+  return value.code === '23505' || isDatabaseUniqueViolation(value.cause, depth + 1);
 }
