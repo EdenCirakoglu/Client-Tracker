@@ -1,5 +1,32 @@
 # tsup 9 Compatibility Review
 
+## Current Main-Based Candidate: 2026-11-06
+
+The owner merged PR #20 as `e114a0e64c9736b84db2fdb2d9ed330c650eb136`.
+Its exact-main CI, both automatic publishing jobs and isolated digest-pinned
+runtime checks passed; see [release evidence](RELEASE_E114A0E.md). Only then was
+PR #31 retargeted to `main` and that history merged into this review branch.
+Reconciliation was clean; no application, historical migration or dependency
+resolution changed. The tsup range remains `^9.0.0`; frozen install passed.
+
+Fresh production audit: exit 0, zero known production npm findings. Full audit:
+exit 1, **two moderate findings remain**, neither accepted nor suppressed:
+
+| Advisory                                                                 | Exact affected chain                                                                                                   | Required next action                                                                                                   |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99) | API > drizzle-kit 0.31.11 > @esbuild-kit/esm-loader 2.6.5 > @esbuild-kit/core-utils 3.3.2 > esbuild 0.18.20            | Maintainer: supported loader replacement; owner: explicit overdue decision, no acceptance inferred from a source merge |
+| [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) | Root > typescript-eslint 8.61.0 > typescript-estree 8.61.0 > minimatch 10.2.5, through seven parser/utils/plugin paths | Maintainer: supported parent update to minimatch >=11.0.1; owner review before customer installation                   |
+
+This candidate removes **GHSA-g7r4-m6w7-qqqr** from tsup and bundle-require by
+selecting esbuild 0.28.2 (patched >=0.28.1). Production audit does not cover
+development tools, OS packages, application logic, CodeQL or deployment settings.
+Retain restrictions/proposed decisions in [RELEASE_INTEGRATION.md](RELEASE_INTEGRATION.md).
+Fresh CI and CodeQL analysis **and policy** results for the final pushed head
+are linked in the PR handoff, not substituted by historical October success.
+This PR stays open/unmerged, with no auto-merge and no public deployment.
+
+## Historical Stacked Review: 2026-10-28
+
 PR #31 is prepared separately from PR #20 and PR #22. The existing Dependabot
 commit is retained, with the refreshed maintenance baseline merged into its
 review branch. Its intended review base is PR #20, then main after an approved

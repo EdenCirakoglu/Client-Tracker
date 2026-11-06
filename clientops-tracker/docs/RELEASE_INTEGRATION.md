@@ -1,5 +1,19 @@
 # Release Integration Decisions: 6 November 2026
 
+## Post-Merge Update
+
+The owner has now merged #20 as `e114a0e64c9736b84db2fdb2d9ed330c650eb136`.
+[Exact-main CI, both publications and digest-pinned runtime verification](RELEASE_E114A0E.md)
+passed. #31 now targets main with that history reconciled; its current dependency
+results and review boundary are in [TSUP9_REVIEW.md](TSUP9_REVIEW.md). No other PR
+was merged/closed and no risk was accepted in this run. For every future approved
+merge, require new main CI, both publications and digest-only runtime verification.
+
+The pre-merge snapshot below is historical, including its PR heads and statuses.
+Its unapproved tooling decisions and restrictions still require explicit review.
+
+## Historical Pre-Merge Snapshot
+
 Preparation only. All 15 PRs remain open and unmerged. No auto-merge, merge queue,
 closure, alert dismissal, real-recipient email, checkout or deployment is authorized.
 Main remains `38b6ef17f2a2399c5d444da153081167e2b9feae`.

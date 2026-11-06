@@ -1,6 +1,15 @@
 # Release Readiness Evidence
 
-## Current Launch Baseline
+## Current Published Maintenance Baseline
+
+Main `e114a0e64c9736b84db2fdb2d9ed330c650eb136` (PR #20) passed exact-main CI,
+both automatic publishing jobs and isolated digest-pinned runtime verification
+on 6 November 2026. See [release evidence](RELEASE_E114A0E.md) for immutable
+digests, run/artifact links, migration/login/ticket/outage/recreation checks and
+the host TLS-inspection limitation. This is not customer deployment. PR #31 is
+the next separate tooling candidate; PR #22 remains unmerged.
+
+## Historical Launch Baseline: 2026-10-21
 
 As rechecked on 2026-10-21, main is `bc7eeaf131a606da39470ef9aec406a661eb7b08`.
 PR #16 and PR #17 are merged. Main [CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/37227250895)
