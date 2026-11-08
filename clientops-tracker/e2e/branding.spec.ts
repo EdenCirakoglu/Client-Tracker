@@ -59,6 +59,8 @@ test('fictional walkthrough is signed-out, API-free and keeps simulation separat
   page,
 }) => {
   const apiRequests: string[] = [];
+  const scriptErrors: string[] = [];
+  page.on('pageerror', (error) => scriptErrors.push(error.message));
   page.on('request', (request) => {
     if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url());
   });
@@ -86,6 +88,7 @@ test('fictional walkthrough is signed-out, API-free and keeps simulation separat
   await expect(page.getByLabel('Appearance')).toHaveValue('system');
   await expect(page.locator('#acceptance')).toHaveText('Awaiting confirmation');
   expect(apiRequests).toEqual([]);
+  expect(scriptErrors).toEqual([]);
   await expect(page.getByRole('link', { name: 'Self-host with Docker' })).toHaveAttribute(
     'href',
     'https://github.com/EdenCirakoglu/Client-Tracker/blob/main/clientops-tracker/docs/DEPLOYMENT.md',

@@ -289,13 +289,15 @@ export function AppShell({ children }: AppShellProps) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Link
-              href="/dashboard"
-              aria-label="ClientOps Tracker home"
-              className="shrink-0 lg:hidden"
-            >
-              <BrandMark size={32} />
-            </Link>
+            {!sidebarOpen ? (
+              <Link
+                href="/dashboard"
+                aria-label="ClientOps Tracker home"
+                className="shrink-0 lg:hidden"
+              >
+                <BrandMark size={32} />
+              </Link>
+            ) : null}
             <div className="min-w-0">
               <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm font-medium">
                 {nestedTicket ? (
