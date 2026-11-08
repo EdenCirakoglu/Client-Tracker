@@ -6,6 +6,8 @@ import {
   getSummary,
   listSummaries,
   publishSummary,
+  publishSummaryBody,
+  summaryRecipients,
   summaryBody,
   summaryListQuery,
 } from '../services/summary.service';
@@ -37,8 +39,19 @@ summariesRouter.get(
 summariesRouter.post(
   '/:id/publish',
   authorizeRoles('ADMIN', 'DEVELOPER'),
-  validateRequest({ params: idParamsSchema }),
+  validateRequest({ params: idParamsSchema, body: publishSummaryBody }),
   asyncHandler(async (req, res) => {
-    sendSuccess(res, await publishSummary(requireUser(req), String(req.params.id)));
+    sendSuccess(
+      res,
+      await publishSummary(requireUser(req), String(req.params.id), req.body.recipientIds),
+    );
   }),
+);
+summariesRouter.get(
+  '/:id/recipients',
+  authorizeRoles('ADMIN', 'DEVELOPER'),
+  validateRequest({ params: idParamsSchema }),
+  asyncHandler(async (req, res) =>
+    sendSuccess(res, await summaryRecipients(requireUser(req), String(req.params.id))),
+  ),
 );

@@ -292,6 +292,16 @@ describe('Delivery planning and factual follow-up', () => {
       role: 'CLIENT',
     });
     const contact = await loginSession(app, 'planning-contact@example.com');
+    const personal = (await plan('mine', client, 'limit=1').expect(200)).body.data;
+    expect(personal.total).toBeGreaterThan(0);
+    expect(personal.items).toHaveLength(1);
+    expect(personal.items.every((item: { yourDecision: boolean }) => item.yourDecision)).toBe(true);
+    const allPersonal = (await plan('mine', client).expect(200)).body.data;
+    expect(allPersonal.items).toHaveLength(personal.total);
+    expect(allPersonal.counts.mine).toBe(personal.total);
+    expect((await plan('mine', contact).expect(200)).body.data.total).toBe(0);
+    expect((await plan('mine', developer).expect(200)).body.data.total).toBe(0);
+    await plan('mine', other, `projectId=${projectId}`).expect(404);
     const designated = (await plan().expect(200)).body.data.items;
     expect(designated[0].yourDecision).toBe(true);
     const colleague = (await plan('followup', contact).expect(200)).body.data.items;

@@ -11,6 +11,7 @@ import {
   scopeProposals,
   ticketEvents,
   tickets,
+  users,
   type SummaryItem,
   type SummarySection,
 } from '../db/schema';
@@ -18,6 +19,36 @@ import type { AuthenticatedUser } from '../types/auth';
 import { ApiError } from '../utils/http';
 import { requireInternal, requireCurrentWorkflowActor } from './workflow-access';
 import { deliveryDateBounds } from './delivery-plan.service';
+import { enqueueWorkflowMail } from './mail-payload';
+
+export const publishSummaryBody = z
+  .object({ recipientIds: z.array(z.string().uuid()).max(50).default([]) })
+  .strict();
+
+export async function summaryRecipients(user: AuthenticatedUser, id: string) {
+  requireInternal(user);
+  return db.transaction(async (tx) => {
+    await requireCurrentWorkflowActor(tx, user);
+    const [summary] = await tx.select().from(progressSummaries).where(eq(progressSummaries.id, id));
+    if (!summary) throw new ApiError(404, 'SUMMARY_NOT_FOUND', 'Summary was not found.');
+    return tx
+      .select({
+        id: users.id,
+        name: users.name,
+        workflowNotifications: users.workflowNotifications,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.clientId, summary.clientId),
+          eq(users.role, 'CLIENT'),
+          eq(users.accountStatus, 'ACTIVE'),
+        ),
+      )
+      .orderBy(users.name, users.id)
+      .limit(100);
+  });
+}
 
 const linkedNote = z
   .object({ ticketId: z.string().uuid(), note: z.string().trim().min(10).max(2000) })
@@ -339,9 +370,13 @@ export async function getSummary(user: AuthenticatedUser, id: string) {
   if (!summary) throw new ApiError(404, 'SUMMARY_NOT_FOUND', 'Summary was not found.');
   return summary;
 }
-export async function publishSummary(user: AuthenticatedUser, id: string) {
+export async function publishSummary(
+  user: AuthenticatedUser,
+  id: string,
+  recipientIds: string[] = [],
+) {
   requireInternal(user);
-  await db.transaction(async (tx) => {
+  const notifications = await db.transaction(async (tx) => {
     await requireCurrentWorkflowActor(tx, user);
     const [summary] = await tx
       .select()
@@ -349,11 +384,54 @@ export async function publishSummary(user: AuthenticatedUser, id: string) {
       .where(eq(progressSummaries.id, id))
       .for('update');
     if (!summary) throw new ApiError(404, 'SUMMARY_NOT_FOUND', 'Summary was not found.');
+    const selected = [...new Set(recipientIds)];
+    if (selected.length > 50)
+      throw new ApiError(400, 'INVALID_RECIPIENTS', 'Choose up to 50 contacts.');
+    const recipients = selected.length
+      ? await tx
+          .select({ id: users.id })
+          .from(users)
+          .where(
+            and(
+              inArray(users.id, selected),
+              eq(users.clientId, summary.clientId),
+              eq(users.role, 'CLIENT'),
+              eq(users.accountStatus, 'ACTIVE'),
+              eq(users.workflowNotifications, true),
+            ),
+          )
+          .for('share')
+      : [];
+    if (recipients.length !== selected.length)
+      throw new ApiError(
+        400,
+        'INVALID_RECIPIENTS',
+        'No notices queued; publication unchanged. Refresh and choose active contacts who receive workflow emails from this organisation.',
+      );
     if (!summary.publishedAt)
       await tx
         .update(progressSummaries)
         .set({ publishedAt: new Date(), publishedBy: user.name })
         .where(eq(progressSummaries.id, id));
+    const outcomes: { recipientId: string; outcome: 'QUEUED' | 'ALREADY_REQUESTED' }[] = [];
+    for (const recipient of recipients) {
+      const outcome = await enqueueWorkflowMail(tx, {
+        kind: 'WORKFLOW',
+        event: 'SUMMARY_PUBLISHED',
+        recipientId: recipient.id,
+        clientId: summary.clientId,
+        recordId: id,
+        ticketId: null,
+        expectedState: 'PUBLISHED',
+      });
+      outcomes.push({ recipientId: recipient.id, outcome });
+    }
+    return {
+      queued: outcomes.filter((item) => item.outcome === 'QUEUED').length,
+      alreadyRequested: outcomes.filter((item) => item.outcome === 'ALREADY_REQUESTED').length,
+      notQueued: 0,
+      recipients: outcomes,
+    };
   });
-  return getSummary(user, id);
+  return { ...(await getSummary(user, id)), notifications };
 }

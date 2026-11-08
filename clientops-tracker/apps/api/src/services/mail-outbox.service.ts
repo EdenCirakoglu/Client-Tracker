@@ -6,6 +6,7 @@ import { env } from '../config/env';
 import { preparePasswordReset } from './account.service';
 import { decryptMail, encryptMail, type MailPayload } from './mail-payload';
 import { sendAccountMail } from './mail.service';
+import { deliverWorkflowMail, type WorkflowSender } from './workflow-mail.service';
 
 type Delivery = typeof mailOutbox.$inferSelect;
 type SendMail = typeof sendAccountMail;
@@ -17,7 +18,11 @@ const owned = (job: Delivery) =>
     sql`${mailOutbox.leaseUntil} > clock_timestamp()`,
   );
 
-async function finish(job: Delivery, status: 'DELIVERED' | 'EXPIRED') {
+async function finish(
+  job: Delivery,
+  status: 'DELIVERED' | 'EXPIRED',
+  reason: string | null = null,
+) {
   await db
     .update(mailOutbox)
     .set({
@@ -26,7 +31,7 @@ async function finish(job: Delivery, status: 'DELIVERED' | 'EXPIRED') {
       completedAt: new Date(),
       leaseId: null,
       leaseUntil: null,
-      lastError: null,
+      lastError: reason,
     })
     .where(owned(job));
 }
@@ -75,9 +80,21 @@ export async function claimMail(): Promise<Delivery | null> {
   });
 }
 
-export async function deliverMail(job: Delivery, send: SendMail = sendAccountMail): Promise<void> {
+export async function deliverMail(
+  job: Delivery,
+  send: SendMail = sendAccountMail,
+  workflowSend?: WorkflowSender,
+): Promise<void> {
   try {
     let payload: MailPayload = decryptMail(job.id, job.payload!);
+    if (payload.kind === 'WORKFLOW') {
+      const result = await deliverWorkflowMail(job, payload, workflowSend);
+      return finish(
+        job,
+        result === 'DELIVERED' ? 'DELIVERED' : 'EXPIRED',
+        result === 'DELIVERED' ? null : result,
+      );
+    }
     if (payload.kind === 'RECOVERY_REQUEST') {
       const email = payload.email;
       const prepared = await db.transaction(async (tx) => {
@@ -143,11 +160,15 @@ export async function deliverMail(job: Delivery, send: SendMail = sendAccountMai
   }
 }
 
-export async function drainMail(limit = 5, send: SendMail = sendAccountMail) {
+export async function drainMail(
+  limit = 5,
+  send: SendMail = sendAccountMail,
+  workflowSend?: WorkflowSender,
+) {
   for (let index = 0; index < limit; index++) {
     const job = await claimMail();
     if (!job) break;
-    await deliverMail(job, send);
+    await deliverMail(job, send, workflowSend);
   }
 }
 
@@ -183,6 +204,8 @@ export async function mailDeliveryStatus() {
     .select({
       id: mailOutbox.id,
       kind: mailOutbox.kind,
+      notificationEvent: mailOutbox.notificationEvent,
+      recipientName: users.name,
       status: mailOutbox.status,
       attempts: mailOutbox.attempts,
       createdAt: mailOutbox.createdAt,
@@ -191,6 +214,7 @@ export async function mailDeliveryStatus() {
       lastError: mailOutbox.lastError,
     })
     .from(mailOutbox)
+    .leftJoin(users, eq(users.id, mailOutbox.recipientId))
     .orderBy(sql`${mailOutbox.createdAt} DESC`, mailOutbox.id)
     .limit(30);
   return { summary, recent };

@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { Card, CardHeader } from '../ui/card';
 import { FieldLabel, Input, Select, Textarea } from '../ui/input';
 import { ErrorState, LoadingState } from '../ui/states';
+import { RevisionComparison } from './revision-comparison';
 
 interface DeliveryRecordProps {
   ticketId: string;
@@ -179,6 +180,34 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
                   <span className="text-xs text-muted">Revision {current.revision}</span>
                 </div>
                 <RevisionDetails revision={current} />
+                {record?.revisions[1] ? (
+                  <RevisionComparison
+                    previousRevision={record.revisions[1].revision}
+                    currentRevision={current.revision}
+                    fields={[
+                      {
+                        label: 'Acceptance criteria',
+                        previous: record.revisions[1].outcome,
+                        proposed: current.outcome,
+                      },
+                      {
+                        label: 'Target date (UTC)',
+                        previous: record.revisions[1].targetDate,
+                        proposed: current.targetDate,
+                      },
+                      {
+                        label: 'Client reviewer',
+                        previous: record.revisions[1].reviewerName,
+                        proposed: current.reviewerName,
+                      },
+                      {
+                        label: 'Delivery owner',
+                        previous: record.revisions[1].ownerName,
+                        proposed: current.ownerName,
+                      },
+                    ]}
+                  />
+                ) : null}
                 {current.state === 'ACCEPTED' ? (
                   <p className="text-sm text-muted">
                     Acceptance is recorded separately from ticket resolution.
@@ -431,17 +460,33 @@ function RevisionDetails({ revision }: { revision: DeliveryRevision }) {
   return (
     <div className="space-y-3 text-sm">
       <p className="whitespace-pre-wrap">{revision.outcome}</p>
-      <p className="text-muted">Client reviewer: {revision.reviewerName}</p>
-      <p className="text-muted">Delivery owner: {revision.ownerName ?? 'Not recorded'}</p>
-      <p className="text-muted">
-        {revision.state === 'PROPOSED' ? 'Proposed target' : 'Revision target'} (UTC):{' '}
-        {revision.targetDate ?? 'No target date'}
-      </p>
+      <div className="grid gap-3 border-y border-border py-3 sm:grid-cols-3">
+        <p>
+          <span className="block text-xs text-muted">Client reviewer</span>
+          {revision.reviewerName}
+        </p>
+        <p>
+          <span className="block text-xs text-muted">Delivery owner</span>
+          {revision.ownerName ?? 'Not recorded'}
+        </p>
+        <p>
+          <span className="block text-xs text-muted">
+            {revision.state === 'PROPOSED' ? 'Proposed target' : 'Revision target'} (UTC):{' '}
+          </span>
+          {revision.targetDate ?? 'No target date'}
+        </p>
+      </div>
       {revision.releaseVersion ? (
-        <p className="font-medium">Release {revision.releaseVersion}</p>
-      ) : null}
-      {revision.deliveryNotes ? (
-        <p className="whitespace-pre-wrap">{revision.deliveryNotes}</p>
+        <div className="border-l-2 border-brand-600 pl-4">
+          <h3 className="text-base font-semibold">Delivery evidence</h3>
+          <p className="mt-2 font-medium">Release {revision.releaseVersion}</p>
+          {revision.deliveryNotes ? (
+            <p className="mt-2 whitespace-pre-wrap">{revision.deliveryNotes}</p>
+          ) : null}
+          <p className="mt-2 text-xs text-muted">
+            Release delivery and client acceptance are recorded separately from ticket resolution.
+          </p>
+        </div>
       ) : null}
       <ol className="space-y-2 border-l-2 border-border pl-4">
         {revision.events.map((event) => (

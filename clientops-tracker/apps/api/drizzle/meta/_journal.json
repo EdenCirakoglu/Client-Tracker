@@ -50,6 +50,13 @@
       "when": 1790177934703,
       "tag": "0006_hesitant_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792596384956,
+      "tag": "0007_workflow_notifications",
+      "breakpoints": true
     }
   ]
 }

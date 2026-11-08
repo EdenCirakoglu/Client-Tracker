@@ -16,7 +16,7 @@ function operation(
     tags: ['Product workflows'],
     security: [{ cookieAuth: [] }],
     description:
-      'Cookie session required. Mutations require X-CSRF-Token. Client data is scoped by the server to the current organisation. No internal comments or triage are included. Summary publishing shares a reviewed snapshot in the portal, not by email.',
+      'Cookie session required. Mutations require X-CSRF-Token. Client data is scoped by the server to the current organisation. No internal comments or triage are included. Review requests and decisions enqueue generic portal-link notices; active membership, preferences and latest revision/state are rechecked before sending. Summary email requires explicit recipientIds. Queue acceptance is not inbox receipt.',
     parameters: parameters.map((name) => ({ name, in: 'path', required: true, schema: uuid })),
     ...(properties
       ? {
@@ -50,6 +50,15 @@ function operation(
   };
 }
 export const productWorkflowPaths = {
+  '/api/dashboard/onboarding': {
+    get: operation('ADMIN only: checklist derived from existing installation records', []),
+  },
+  '/api/auth/notification-preferences': {
+    get: operation('Read own workflow email preference (account mail is unaffected)', []),
+    patch: operation('Change own workflow email preference', [], {
+      workflowNotifications: { type: 'boolean' },
+    }),
+  },
   '/api/dashboard/delivery': {
     get: {
       ...operation('Permission-scoped delivery plan and full-scope counts', []),
@@ -63,6 +72,7 @@ export const productWorkflowPaths = {
             type: 'string',
             enum: [
               'followup',
+              'mine',
               'overdue',
               'upcoming',
               'agreement',
@@ -155,8 +165,25 @@ export const productWorkflowPaths = {
   '/api/summaries/{id}': { get: operation('Read a permitted summary snapshot', ['id']) },
   '/api/summaries/{id}/publish': {
     post: operation(
-      'Publish reviewed draft to client portal (ADMIN/DEVELOPER); idempotent, no email',
+      'Publish reviewed snapshot and optionally enqueue selected contact notices (ADMIN/DEVELOPER)',
       ['id'],
+      {
+        recipientIds: {
+          type: 'array',
+          maxItems: 50,
+          uniqueItems: true,
+          items: uuid,
+          default: [],
+          description:
+            'Explicit active CLIENT contacts in this organisation with workflow emails enabled. Omitted/empty means portal publication only. Any ineligible contact rejects the entire operation (400), without publication change or partial enqueue. Success returns the summary plus notifications {queued, alreadyRequested, notQueued:0, recipients:[{recipientId,outcome:QUEUED|ALREADY_REQUESTED}]}. Counts are actual inserts/deduplication outcomes, not delivery confirmations. Existing jobs, including accepted/failed/suppressed jobs, are not requeued.',
+        },
+      },
+      ['recipientIds'],
     ),
+  },
+  '/api/summaries/{id}/recipients': {
+    get: operation('Internal-only active client contacts and workflow preferences; at most 100', [
+      'id',
+    ]),
   },
 };

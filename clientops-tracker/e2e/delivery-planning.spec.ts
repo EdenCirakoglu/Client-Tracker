@@ -35,12 +35,14 @@ async function accessible(page: Page) {
 }
 async function settledDashboard(page: Page) {
   await expect(
-    page.getByRole('heading', { name: 'Delivery follow-up', exact: true }),
+    page.getByRole('heading', { name: /^(Delivery follow-up|My decisions)$/ }),
   ).toBeVisible();
   await expect(page.getByText(/Loading (delivery|releases|activity|queue|overview)/)).toHaveCount(
     0,
   );
-  await expect(page.getByRole('link', { name: /^Past agreed target/ })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: /^(View delivery plan|View all decisions)$/ }),
+  ).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /Loading/ })).toHaveCount(0);
 }
 

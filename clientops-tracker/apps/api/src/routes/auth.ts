@@ -15,6 +15,7 @@ import {
   requestPasswordReset,
 } from '../services/account.service';
 import { z } from 'zod';
+import { notificationPreferences } from '../services/notification-preferences.service';
 
 export const authRouter = Router();
 
@@ -36,6 +37,24 @@ authRouter.post(
   loginController,
 );
 authRouter.get('/me', authenticate, meController);
+authRouter.get(
+  '/notification-preferences',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    sendSuccess(res, await notificationPreferences(requireUser(req)));
+  }),
+);
+authRouter.patch(
+  '/notification-preferences',
+  authenticate,
+  validateRequest({ body: z.object({ workflowNotifications: z.boolean() }).strict() }),
+  asyncHandler(async (req, res) =>
+    sendSuccess(
+      res,
+      await notificationPreferences(requireUser(req), req.body.workflowNotifications),
+    ),
+  ),
+);
 authRouter.post(
   '/logout',
   asyncHandler(async (req, res) => {

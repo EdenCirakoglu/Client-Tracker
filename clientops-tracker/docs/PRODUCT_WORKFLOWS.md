@@ -47,7 +47,7 @@ The deterministic template includes:
 
 Staff review a private draft, check its suitability for the client, then explicitly **Publish to client portal**. Clients cannot retrieve unpublished drafts, generate summaries or publish them. Publication is idempotent. The snapshot cannot be edited in place; prepare a correction as a new summary. Record links still enforce current access permissions.
 
-**Delivery channel:** portal publication only. No summary email, scheduled weekly send, delivery notification or email receipt is claimed. Account invitation/recovery email is unchanged. Clients open Progress summaries after sign-in, or staff share the authenticated portal URL through their existing communication channel.
+**Delivery channel:** portal publication, with optional notices to explicitly selected active client contacts. Notices contain a generic subject and authenticated portal link, never the summary contents, internal notes or credentials. Publication without selected contacts sends no email. Scheduled weekly sends and reminders are not implemented. Account invitation/recovery messages remain independent of workflow preferences. A queued notice or SMTP acceptance is not proof of inbox receipt.
 
 Each automatically generated section is bounded at 100 records and explicitly indicates truncation. Summary lists are paginated at 20 records. Staff can search up to 50 ticket matches at a time when linking commitments and blockers. Full authorised scope, rather than the current ticket-list page, supplies each summary query.
 
@@ -95,4 +95,57 @@ Manual checks:
 
 Validate with agencies using real tasks: time spent answering delivery questions, frequency of scope disputes, clarity of approval ownership and whether summaries replace existing manual updates. Do not add subscriptions, billing, seat pricing or a separate tenancy model before demand is established.
 
-Later work, subject to feedback: summary email through a generalised durable outbox; reminders; explicit project-level approver delegation; longer-history pagination; reviewed GitHub links; knowledge capture; and SLA/retainer tracking only after accurate lifecycle and usage data exist. Optional AI requires evaluation, permission-aware retrieval and explicit data/provider controls. The current first-resolution timestamp remains unsuitable for stronger SLA claims.
+Later work, subject to feedback: reminders; explicit project-level approver delegation; longer-history pagination; reviewed GitHub links; knowledge capture; and SLA/retainer tracking only after accurate lifecycle and usage data exist. Optional AI requires evaluation, permission-aware retrieval and explicit data/provider controls. The current first-resolution timestamp remains unsuitable for stronger SLA claims.
+
+## Onboarding and Workflow Notices
+
+The administrator dashboard derives five setup steps from real installation records:
+client organisation/contact details, a project, an invited or active named client
+contact, a request, and a client-accepted delivery. These are installation-wide
+presence checks, not proof that every client is fully onboarded. Ticket resolution
+does not complete the acceptance step. Developers and clients cannot retrieve this
+administrator checklist.
+
+Scope proposals notify the designated client approver; outcome and acceptance
+requests notify the designated client reviewer. A recorded scope decision notifies
+its proposer; a delivery decision notifies its recorded internal owner. Historical
+scope proposals without an owner ID remain valid records but cannot generate an
+owner-addressed notice. Summary contacts are selected explicitly on publication;
+no contacts are preselected. Selection is limited to 50 per operation and the
+contact picker returns at most 100 active contacts.
+
+Every user can turn workflow mail off in **My account**. The default is enabled.
+This never disables invitations or recovery mail. Administrators see safe delivery
+metadata in **Accounts -> Email delivery**, including suppressed, failed and
+mail-server-accepted outcomes. Failed workflow notices require staff follow-up;
+there is no unbounded automatic retry or misleading "delivered to inbox" state.
+
+Migration `0007_workflow_notifications.sql` adds preferences, scope proposer IDs
+and outbox metadata/unique event keys. No existing records are reseeded. Decisions
+and encrypted notices commit together. The existing worker uses leased claims and
+bounded retries (eight attempts, exponential backoff capped at one hour); workflow
+notices expire after seven days. Before dispatch it rechecks active account,
+current role/organisation, preference, designated recipient, project ownership,
+latest revision and expected state. It holds those rows stable during a bounded
+SMTP attempt, with a transaction-local 40-second idle limit and 30-second mail
+deadline. Unavailable/stale/opted-out notices become payload-free `EXPIRED`
+receipts with a safe reason, not unexpected retries.
+
+Workflow payloads use the existing authenticated encryption, contain references
+rather than business text, and are erased on terminal delivery. Payload-free
+workflow receipts are retained for event deduplication; the account-mail
+30-day cleanup remains unchanged. A crash after SMTP accepts a message but before
+the delivery transaction is recorded can cause duplicate mail. Exactly-once SMTP
+delivery is not promised. Restores clear outbox/session/token state before startup:
+they must not replay mail from a backup.
+
+Use the existing migration and backup roles: the runtime can write the existing
+outbox and updated business tables but cannot perform DDL. Backups include new
+columns automatically. **Do not roll an active notification queue back to an older
+worker that cannot decode WORKFLOW payloads.** Stop API/workers, take a verified
+backup, and use a reviewed compatible image or repair-forward plan. This additive
+migration alone does not make an arbitrary older binary a safe rollback.
+
+Only isolated Mailpit delivery is authorized for this increment. Production SMTP,
+real recipients, merge/publication and public deployment remain separate approval
+and acceptance gates. See [launch product evidence](LAUNCH_PRODUCT.md).

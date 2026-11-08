@@ -122,4 +122,23 @@ describe('Request parsing dependency regressions', () => {
       });
     }
   });
+
+  it('handles a compressed frame with trailing garbage without an unhandled stream error', async () => {
+    const isolated = express();
+    isolated.use(express.json({ limit: '1mb' }));
+    isolated.post('/', (_req, res) => res.sendStatus(204));
+    isolated.use(errorHandler);
+    const body = Buffer.concat([gzipSync('{"fixture":true}'), Buffer.from('invalid-trailer')]);
+    const response = await request(isolated)
+      .post('/')
+      .set('Content-Type', 'application/json')
+      .set('Content-Encoding', 'gzip')
+      .send(body);
+    // Decoder errors stay generic; the process must remain available after rejection.
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+      error: { code: 'INTERNAL_SERVER_ERROR', message: 'Unexpected server error.' },
+    });
+    await request(isolated).post('/').send({ fixture: true }).expect(204);
+  });
 });

@@ -195,6 +195,24 @@ export default function TicketDetailPage() {
         Back to tickets
       </Link>
       <PageHeader title={ticket?.title ?? 'Ticket detail'} />
+      {ticket ? (
+        <nav
+          aria-label="Delivery journal"
+          className="mb-5 flex flex-wrap gap-x-6 border-y border-border py-1 text-sm font-semibold text-brand-700"
+        >
+          <a href="#request" className="inline-flex min-h-11 items-center">
+            Request
+          </a>
+          {ticket.category === 'FEATURE_REQUEST' ? (
+            <a href="#scope" className="inline-flex min-h-11 items-center">
+              Scope
+            </a>
+          ) : null}
+          <a href="#delivery" className="inline-flex min-h-11 items-center">
+            Outcome and delivery
+          </a>
+        </nav>
+      ) : null}
 
       {loading ? <LoadingState /> : null}
       {error ? <ErrorState message={error} onRetry={loadTicket} /> : null}
@@ -209,12 +227,25 @@ export default function TicketDetailPage() {
           className={`grid items-start gap-6 ${internalUser ? 'xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}
         >
           <div className="space-y-6">
-            <Card>
-              <CardHeader title="Ticket information" />
+            <Card id="request">
+              <CardHeader title={ticket.originalDescription ? 'Original request' : 'Request'} />
               <div className="space-y-5 p-5">
                 <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                  {ticket.description}
+                  {ticket.originalDescription ?? ticket.description}
                 </p>
+                {!ticket.originalDescription ? (
+                  <p className="text-xs text-muted">
+                    Original request was not captured for this historical record.
+                  </p>
+                ) : null}
+                {ticket.originalDescription && ticket.description !== ticket.originalDescription ? (
+                  <details>
+                    <summary className="cursor-pointer text-sm font-semibold">
+                      Current request description
+                    </summary>
+                    <p className="mt-3 whitespace-pre-wrap text-sm">{ticket.description}</p>
+                  </details>
+                ) : null}
                 <div className="grid gap-4 md:grid-cols-3">
                   <Info label="Project" value={ticket.project?.name ?? 'Not available'} />
                   <Info
@@ -227,9 +258,10 @@ export default function TicketDetailPage() {
                   />
                   <Info label="Assignee" value={ticket.assignee?.name ?? 'Unassigned'} />
                   <Info label="Created" value={formatDate(ticket.createdAt)} />
-                  <Info label="Resolved" value={formatDate(ticket.resolvedAt)} />
+                  <Info label="Ticket resolved" value={formatDate(ticket.resolvedAt)} />
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <span className="self-center text-xs text-muted">Ticket status</span>
                   <Badge value={ticket.status} />
                   <Badge value={ticket.priority} />
                   <Badge value={ticket.category} />

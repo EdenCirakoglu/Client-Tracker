@@ -5,6 +5,7 @@ import { deliveryEvents, deliveryRevisions, releases, tickets, users } from '../
 import type { AuthenticatedUser } from '../types/auth';
 import { accessibleTicket, requireInternal as internal } from './workflow-access';
 import { ApiError } from '../utils/http';
+import { enqueueWorkflowMail } from './mail-payload';
 import type {
   deliveryDecisionBody,
   proposeOutcomeBody,
@@ -180,6 +181,15 @@ export async function proposeOutcome(
       })
       .returning();
     await recordEvent(tx, user, record!.id, 'PROPOSED');
+    await enqueueWorkflowMail(tx, {
+      kind: 'WORKFLOW',
+      event: 'OUTCOME_REVIEW',
+      recipientId: reviewer.id,
+      clientId: project.clientId,
+      recordId: record!.id,
+      ticketId,
+      expectedState: 'PROPOSED',
+    });
   });
   return getDeliveryRecord(user, ticketId);
 }
@@ -192,7 +202,7 @@ export async function requestAcceptance(
 ) {
   internal(user);
   await db.transaction(async (tx) => {
-    const { ticket } = await accessibleTicket(tx, user, ticketId);
+    const { ticket, project } = await accessibleTicket(tx, user, ticketId);
     const record = await latest(tx, ticketId);
     if (!record || record.id !== revisionId)
       throw new ApiError(409, 'STALE_REVISION', 'Only the latest outcome can be delivered.');
@@ -224,6 +234,15 @@ export async function requestAcceptance(
       })
       .where(eq(deliveryRevisions.id, record.id));
     await recordEvent(tx, user, record.id, 'ACCEPTANCE_REQUESTED');
+    await enqueueWorkflowMail(tx, {
+      kind: 'WORKFLOW',
+      event: 'DELIVERY_REVIEW',
+      recipientId: record.reviewerId,
+      clientId: project.clientId,
+      recordId: record.id,
+      ticketId,
+      expectedState: 'AWAITING_ACCEPTANCE',
+    });
   });
   return getDeliveryRecord(user, ticketId);
 }
@@ -241,7 +260,7 @@ export async function decideDelivery(
       'Only the designated client reviewer can record a decision.',
     );
   await db.transaction(async (tx) => {
-    await accessibleTicket(tx, user, ticketId);
+    const { project } = await accessibleTicket(tx, user, ticketId);
     const record = await latest(tx, ticketId);
     if (!record || record.id !== revisionId)
       throw new ApiError(
@@ -277,6 +296,16 @@ export async function decideDelivery(
       .set({ state: data.decision })
       .where(eq(deliveryRevisions.id, revisionId));
     await recordEvent(tx, user, revisionId, data.decision, data.feedback);
+    if (record.ownerId)
+      await enqueueWorkflowMail(tx, {
+        kind: 'WORKFLOW',
+        event: 'DELIVERY_DECISION',
+        recipientId: record.ownerId,
+        clientId: project.clientId,
+        recordId: record.id,
+        ticketId,
+        expectedState: data.decision,
+      });
   });
   return getDeliveryRecord(user, ticketId);
 }

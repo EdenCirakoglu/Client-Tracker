@@ -5,6 +5,7 @@ import { scopeProposals, users } from '../db/schema';
 import type { AuthenticatedUser } from '../types/auth';
 import { ApiError } from '../utils/http';
 import { accessibleTicket, requireInternal, type WorkflowTransaction } from './workflow-access';
+import { enqueueWorkflowMail } from './mail-payload';
 
 export const scopeProposalBody = z
   .object({
@@ -82,17 +83,30 @@ export async function proposeScope(
         'INVALID_APPROVER',
         'Choose an active client approver from this organisation.',
       );
-    await tx.insert(scopeProposals).values({
+    const [proposal] = await tx
+      .insert(scopeProposals)
+      .values({
+        ticketId,
+        revision: data.expectedRevision + 1,
+        scope: data.scope,
+        exclusions: data.exclusions,
+        estimate: data.estimate,
+        deliveryImplications: data.deliveryImplications,
+        externalReference: data.externalReference || null,
+        approverId: approver.id,
+        approverName: approver.name,
+        proposedBy: user.name,
+        proposedById: user.id,
+      })
+      .returning();
+    await enqueueWorkflowMail(tx, {
+      kind: 'WORKFLOW',
+      event: 'SCOPE_REVIEW',
+      recipientId: approver.id,
+      clientId: project.clientId,
+      recordId: proposal!.id,
       ticketId,
-      revision: data.expectedRevision + 1,
-      scope: data.scope,
-      exclusions: data.exclusions,
-      estimate: data.estimate,
-      deliveryImplications: data.deliveryImplications,
-      externalReference: data.externalReference || null,
-      approverId: approver.id,
-      approverName: approver.name,
-      proposedBy: user.name,
+      expectedState: 'PROPOSED',
     });
   });
   return getScopeProposals(user, ticketId);
@@ -106,7 +120,7 @@ export async function decideScope(
   if (user.role !== 'CLIENT')
     throw new ApiError(403, 'FORBIDDEN', 'Only the designated client approver can decide.');
   await db.transaction(async (tx) => {
-    await accessibleTicket(tx, user, ticketId);
+    const { project } = await accessibleTicket(tx, user, ticketId);
     const current = await latest(tx, ticketId);
     if (!current || current.id !== proposalId)
       throw new ApiError(409, 'STALE_REVISION', 'Review the latest scope revision.');
@@ -128,6 +142,16 @@ export async function decideScope(
         decidedAt: new Date(),
       })
       .where(eq(scopeProposals.id, proposalId));
+    if (current.proposedById)
+      await enqueueWorkflowMail(tx, {
+        kind: 'WORKFLOW',
+        event: 'SCOPE_DECISION',
+        recipientId: current.proposedById,
+        clientId: project.clientId,
+        recordId: current.id,
+        ticketId,
+        expectedState: data.decision,
+      });
   });
   return getScopeProposals(user, ticketId);
 }

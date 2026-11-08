@@ -8,6 +8,7 @@ import { organisationScope } from './queue.service';
 
 export const deliveryViews = [
   'followup',
+  'mine',
   'overdue',
   'upcoming',
   'agreement',
@@ -88,6 +89,7 @@ export async function getDeliveryPlan(
     )`;
       const predicates: Record<(typeof deliveryViews)[number], SQL> = {
         all: sql`true`,
+        mine: sql`${user.role === 'CLIENT'} and "reviewerId" = ${user.id} and (source = 'scope' or state in ('PROPOSED', 'AWAITING_ACCEPTANCE'))`,
         followup: sql`state <> 'ACCEPTED'`,
         overdue: sql`source = 'delivery' and state = 'AGREED' and "targetDate" < ${today}`,
         upcoming: sql`source = 'delivery' and state = 'AGREED' and "targetDate" >= ${today} and "targetDate" < ${through}`,

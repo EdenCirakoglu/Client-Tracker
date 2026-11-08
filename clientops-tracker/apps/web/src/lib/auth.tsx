@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 
 import { api, clearCsrf } from './api';
 import type { User } from './types';
+import { loginDestination } from './return-destination';
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous';
 
@@ -22,6 +23,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   sessionEnded: boolean;
+  preserveDestination: boolean;
   refreshUser: () => Promise<void>;
 };
 
@@ -32,19 +34,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [sessionEnded, setSessionEnded] = useState(false);
+  const [preserveDestination, setPreserveDestination] = useState(true);
   const generation = useRef(0);
 
-  const endSession = useCallback(() => {
-    generation.current += 1;
-    clearCsrf();
-    setUser(null);
-    setStatus('anonymous');
-    setSessionEnded(true);
-    router.replace('/login');
-  }, [router]);
+  const endSession = useCallback(
+    (preserve = true) => {
+      generation.current += 1;
+      clearCsrf();
+      setUser(null);
+      setStatus('anonymous');
+      setSessionEnded(true);
+      setPreserveDestination(preserve);
+      router.replace(
+        preserve
+          ? loginDestination(
+              window.location.pathname + window.location.search + window.location.hash,
+            )
+          : '/login',
+      );
+    },
+    [router],
+  );
   const logout = useCallback(async () => {
     await api.logout();
-    endSession();
+    endSession(false);
     setSessionEnded(false);
     const channel = new BroadcastChannel('clientops-session');
     channel.postMessage('logout');
@@ -77,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener('clientops:session-expired', expired);
     const channel = new BroadcastChannel('clientops-session');
-    channel.onmessage = () => endSession();
+    channel.onmessage = () => endSession(false);
     return () => {
       window.removeEventListener('clientops:session-expired', expired);
       channel.close();
@@ -90,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
     setStatus('authenticated');
     setSessionEnded(false);
+    setPreserveDestination(true);
   }, []);
 
   const value = useMemo(
@@ -100,8 +114,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       refreshUser,
       sessionEnded,
+      preserveDestination,
     }),
-    [user, status, login, logout, refreshUser, sessionEnded],
+    [user, status, login, logout, refreshUser, sessionEnded, preserveDestination],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
