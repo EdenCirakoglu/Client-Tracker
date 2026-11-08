@@ -18,6 +18,10 @@ the relevant public visitor-path acceptance.
 - Exactly three gallery PNGs and their manifest are generated from a clean
   branded checkout by `node scripts/capture-product-hunt.mjs`.
   Captures are real fictional portal records, not Decision Journal concept art.
+  [Approved scope](gallery/01-approved-scope.png),
+  [awaiting confirmation](gallery/02-awaiting-confirmation.png),
+  [changes requested](gallery/03-changes-requested.png),
+  [revision/role/viewport/caption/alt/hash manifest](gallery/manifest.json).
 - [60-90 second recording script](RECORDING.md).
 - [No-login walkthrough](../../apps/web/public/walkthrough/index.html):
   static local files, no application/API/database access, explicit simulation.
@@ -28,6 +32,21 @@ available in the checkout. The owner supplied the 240px path again; that exact
 file is authoritative. The old `logo-source.svg` is **not** its vector source.
 No comparison against unavailable gallery panels or larger master is claimed.
 New captures are the review candidates, not a reconstruction of missing panels.
+
+Gallery application source: `bfbf50eb28ee506392e12a45f0b23043c124418a`;
+capture harness: `b99a2f15cfa75eba516f0c20f8c4a925990d46fb`.
+Both API/web source trees were checked equal between these checkpoints.
+The 72px preview caption sits outside the unaltered runtime viewport; the small
+Resolved badge in panels 2/3 is a separate real crop from the same ticket.
+The header logo is rendered by the application, never painted into old screenshots.
+Earlier capture attempts were rejected for clipping/header overlap and retained
+only in ignored local evidence. Historical application captures are unchanged.
+
+Form copy counts: name 17/40, tagline 50/60, description 296/500 and maker
+comment 907/5,000 (newlines normalised to spaces). Measured local cached
+private-stack rebuild/start: 91.5 seconds; this does not replace the
+15-21-hour unmeasured full-service planning range. The completed local worksheet
+is private and excluded from the public pack.
 
 ## Preview and Reproduce
 

@@ -9,6 +9,14 @@ The [review handoff](PR22_INTEGRATION.md) separates normal PR CI from the unreso
 CodeQL policy gate.
 Historical results below keep their original revisions.
 
+Branding follow-up: draft [PR #34](https://github.com/EdenCirakoglu/Client-Tracker/pull/34)
+is based on verified #22 head `9e25bc27d73ae1756c8fc185223704417de8642b`.
+The [v3 identity, fictional walkthrough and Product Hunt draft pack](product-hunt/README.md)
+are review-only 0.2.0 preview materials. Owner review, #22 security disposition,
+human accessibility and real visitor-path acceptance are outstanding. Retarget
+#34 only after #22 is independently cleared and merged; do not merge the stack
+into the product branch. No contact, checkout or public launch is activated.
+
 | Task                           | Status / evidence                                                                                                                                                                               | Next action                                                                                                                        | Owner                          |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | Published maintenance release  | [Exact cfec6e71 evidence](RELEASE_CFEC6E71.md): pulled images, migrations, login, ticket/comments, two-organisation denial, DB outage/recovery, recreation persistence and logout replay passed | Preserve evidence; do not attribute it to the product candidate                                                                    | Maintainer                     |

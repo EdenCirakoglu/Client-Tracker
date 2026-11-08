@@ -34,6 +34,16 @@ test('journal identity survives themes, collapse and mobile navigation without d
   await page.getByRole('button', { name: 'Light theme', exact: true }).click();
   await page.getByRole('button', { name: 'Continue as Client', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+  await page.getByLabel('Account menu').click();
+  await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
+  await page.getByLabel('Account menu').click();
+  await page.screenshot({ path: 'test-results/branding/shell-dark.png' });
+  expect(
+    (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations,
+  ).toEqual([]);
+  await page.getByLabel('Account menu').click();
+  await page.getByRole('button', { name: 'Light theme', exact: true }).click();
+  await page.getByLabel('Account menu').click();
   await page.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
   const home = page.getByRole('link', { name: 'ClientOps Tracker home', exact: true });
   await expect(home).toHaveCount(1);
@@ -47,6 +57,9 @@ test('journal identity survives themes, collapse and mobile navigation without d
   await page.screenshot({ path: 'test-results/branding/mobile-header.png' });
   await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Navigation' })).toBeVisible();
+  await expect
+    .poll(async () => (await page.getByRole('dialog', { name: 'Navigation' }).boundingBox())?.x)
+    .toBe(0);
   await expect(page.getByRole('link', { name: 'ClientOps Tracker home', exact: true })).toHaveCount(
     1,
   );
