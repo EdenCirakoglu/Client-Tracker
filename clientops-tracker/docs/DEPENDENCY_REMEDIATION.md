@@ -1,6 +1,27 @@
 # Dependency Remediation: Milestone 1B
 
-## Current Integration Review: 2026-11-06
+## Current Recheck: 2026-11-08
+
+PR #22 is reconciled with main `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
+Its lockfile is unchanged from that main revision. A fresh frozen installation
+passed. `pnpm audit --prod` returned zero known vulnerabilities; the full audit
+returned exit 1 with **two moderate advisories**, not a clean result:
+
+- `GHSA-67mh-4wv8-2f99`: API dev dependency `drizzle-kit@0.31.11` ->
+  `@esbuild-kit/esm-loader@2.6.5` -> `@esbuild-kit/core-utils@3.3.2` ->
+  `esbuild@0.18.20`; patched esbuild >=0.25.0. Kit's legacy path remains.
+- `GHSA-g3hv-75wg-m249`: root `typescript-eslint@8.61.0` -> parser/plugin/type-utils
+  -> `@typescript-eslint/typescript-estree@8.61.0` -> `minimatch@10.2.5` (seven
+  dependency paths, one advisory); patched >=11.0.1.
+
+The main tsup 9/esbuild 0.28.2 fix is retained. No override, broad dependency
+upgrade, suppression or risk acceptance was added. The Kit November 4 decision
+deadline remains expired; proposed restrictions/deadlines in earlier documents
+are not approval. Repository owner/security reviewer must resolve or explicitly
+decide remaining tooling exposure before customer installation. Production npm
+audit does not cover container OS packages, CodeQL, application logic or deployment.
+
+## Historical Integration Review: 2026-11-06
 
 The November 4 owner-decision deadline passed without acceptance. See
 [release integration decisions](RELEASE_INTEGRATION.md) for the new bounded,

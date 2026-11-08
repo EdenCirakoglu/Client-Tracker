@@ -18,6 +18,7 @@ test('shipment demo retains revision 2, release and resolution when the client r
   await expect(page.getByRole('button', { name: 'Accept delivery', exact: true })).toBeVisible();
   await expect(page.getByText('1.5.0-demo', { exact: false }).first()).toBeVisible();
   await expect(page.getByText('Resolved', { exact: true }).first()).toBeVisible();
+  await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({
     path: resolve(directory, 'shipment-demo-awaiting-client.png'),
     fullPage: true,
@@ -42,6 +43,7 @@ test('shipment demo retains revision 2, release and resolution when the client r
   await expect(page.getByText('Resolved', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('1.5.0-demo', { exact: false }).first()).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({
     path: resolve(directory, 'shipment-demo-changes-requested-mobile.png'),
     fullPage: true,
