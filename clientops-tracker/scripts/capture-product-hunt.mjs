@@ -58,6 +58,16 @@ try {
     hash(brand),
     'Running app must serve the selected v3.',
   );
+  await page.evaluate(
+    () =>
+      new Promise((done) =>
+        globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(done)),
+      ),
+  );
+  await page.evaluate(() => globalThis.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect.poll(() => page.evaluate(() => globalThis.scrollY)).toBe(0);
+  const badgeBounds = await page.getByText('Resolved', { exact: true }).first().boundingBox();
+  assert.ok(badgeBounds && badgeBounds.y > 80 && badgeBounds.y + badgeBounds.height < 688);
   const resolvedBadge = await page.getByText('Resolved', { exact: true }).first().screenshot();
   const framePage = await browser.newPage({ viewport: { width: 1270, height: 760 } });
   async function capture(name, title, caption, alt, selector, includeStatus = false) {
@@ -114,7 +124,7 @@ try {
     'The agreement includes active and archived shipments',
     'Revision 2 is approved. The comparison preserves what changed from revision 1.',
     'Client scope revision 2 approved, with active and archived shipment search and the previous scope comparison.',
-    '#scope > .space-y-4',
+    '#scope .journal-comparison',
   );
   await capture(
     '02-awaiting-confirmation.png',
@@ -174,7 +184,8 @@ try {
   console.log(
     JSON.stringify(
       {
-        sourceRevision: revision,
+        sourceRevision: runtime.revision,
+        captureHarnessRevision: revision,
         ticketId: record.ticketId,
         frames: frames.map((f) => ({ filename: f.filename, sha256: f.sha256 })),
       },
