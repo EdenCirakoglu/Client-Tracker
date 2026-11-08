@@ -100,4 +100,48 @@ describe('Global CSRF boundary behind cookie sessions (CodeQL alert 1)', () => {
       .expect(403);
     expect(forbidden.body.error.code).toBe('FORBIDDEN');
   });
+
+  it('guards real preference and publication writes, then permits matching session proof', async () => {
+    const clients = await request(app).get('/api/clients').set(authHeader(admin)).expect(200);
+    const summary = await request(app)
+      .post('/api/summaries')
+      .set(authHeader(admin))
+      .send({ clientId: clients.body.data[0].id, weekStart: '2026-01-01' })
+      .expect(201);
+    const publishPath = `/api/summaries/${summary.body.data.id}/publish`;
+    const preferencePath = '/api/auth/notification-preferences';
+    for (const [method, path, body] of [
+      ['post', publishPath, { recipientIds: [] }],
+      ['patch', preferencePath, { workflowNotifications: false }],
+    ] as const) {
+      const denied = await request(app)
+        [method](path)
+        .set('Cookie', admin.cookie)
+        .send(body)
+        .expect(403);
+      expect(denied.body.error.code).toBe('CSRF_INVALID');
+    }
+    const unchanged = await request(app).get(preferencePath).set(authHeader(admin)).expect(200);
+    expect(unchanged.body.data.workflowNotifications).toBe(true);
+    const draft = await request(app)
+      .get(`/api/summaries/${summary.body.data.id}`)
+      .set(authHeader(admin))
+      .expect(200);
+    expect(draft.body.data.publishedAt).toBeNull();
+    await request(app)
+      .patch(preferencePath)
+      .set(authHeader(admin))
+      .set('Origin', env.APP_ORIGIN)
+      .send({ workflowNotifications: false })
+      .expect(200);
+    const saved = await request(app).get(preferencePath).set(authHeader(admin)).expect(200);
+    expect(saved.body.data.workflowNotifications).toBe(false);
+    const published = await request(app)
+      .post(publishPath)
+      .set(authHeader(admin))
+      .set('Origin', env.APP_ORIGIN)
+      .send({ recipientIds: [] })
+      .expect(200);
+    expect(published.body.data.publishedAt).toBeTruthy();
+  });
 });

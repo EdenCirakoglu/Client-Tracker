@@ -9,34 +9,39 @@ const uiFixture = process.argv.includes('--ui');
 const opsFixture = process.argv.includes('--ops');
 const followup = process.argv.includes('--followup');
 const feature = process.argv.includes('--feature');
+const privateDemo = process.argv.includes('--private-demo');
 const launch = process.argv.includes('--launch');
 const review = process.argv.includes('--review');
-const demoProject = launch
-  ? 'clientops-launch-demo'
-  : review
-    ? 'clientops-review-demo'
-    : feature
-      ? 'clientops-feature-release'
-      : followup
-        ? 'clientops-followup'
-        : opsFixture
-          ? 'clientops-ops'
-          : uiFixture
-            ? 'clientops-ui'
-            : 'clientops-hardening';
-const accountsProject = launch
-  ? 'clientops-launch-accounts'
-  : review
-    ? 'clientops-review-accounts'
-    : feature
-      ? 'clientops-feature-release-accounts'
-      : followup
-        ? 'clientops-followup-accounts'
-        : opsFixture
-          ? 'clientops-ops-accounts'
-          : uiFixture
-            ? 'clientops-ui-accounts'
-            : 'clientops-accounts';
+const demoProject = privateDemo
+  ? 'clientops-private-demo'
+  : launch
+    ? 'clientops-launch-demo'
+    : review
+      ? 'clientops-review-demo'
+      : feature
+        ? 'clientops-feature-release'
+        : followup
+          ? 'clientops-followup'
+          : opsFixture
+            ? 'clientops-ops'
+            : uiFixture
+              ? 'clientops-ui'
+              : 'clientops-hardening';
+const accountsProject = privateDemo
+  ? 'clientops-private-accounts'
+  : launch
+    ? 'clientops-launch-accounts'
+    : review
+      ? 'clientops-review-accounts'
+      : feature
+        ? 'clientops-feature-release-accounts'
+        : followup
+          ? 'clientops-followup-accounts'
+          : opsFixture
+            ? 'clientops-ops-accounts'
+            : uiFixture
+              ? 'clientops-ui-accounts'
+              : 'clientops-accounts';
 const legacy =
   'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83';
 mkdirSync('test-results/tls', { recursive: true });
@@ -62,45 +67,51 @@ if (!keys.backup) {
 }
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: launch
-    ? 'clientops_launch_demo'
-    : review
-      ? 'clientops_review_demo'
-      : feature
-        ? 'clientops_feature_release_demo'
-        : followup
-          ? 'clientops_followup_demo'
-          : opsFixture
-            ? 'clientops_ops_demo'
-            : uiFixture
-              ? 'clientops_ui_demo'
-              : 'clientops_hardening_demo',
-  HTTPS_PORT: launch
-    ? '8460'
-    : review
-      ? '8462'
-      : feature
-        ? '8458'
-        : followup
-          ? '8456'
-          : opsFixture
-            ? '8452'
-            : uiFixture
-              ? '8445'
-              : '8443',
-  MAIL_PORT: launch
-    ? '8040'
-    : review
-      ? '8042'
-      : feature
-        ? '8038'
-        : followup
-          ? '8036'
-          : opsFixture
-            ? '8032'
-            : uiFixture
-              ? '8027'
-              : '8025',
+  HARDENING_DATABASE: privateDemo
+    ? 'clientops_private_demo'
+    : launch
+      ? 'clientops_launch_demo'
+      : review
+        ? 'clientops_review_demo'
+        : feature
+          ? 'clientops_feature_release_demo'
+          : followup
+            ? 'clientops_followup_demo'
+            : opsFixture
+              ? 'clientops_ops_demo'
+              : uiFixture
+                ? 'clientops_ui_demo'
+                : 'clientops_hardening_demo',
+  HTTPS_PORT: privateDemo
+    ? '8470'
+    : launch
+      ? '8460'
+      : review
+        ? '8462'
+        : feature
+          ? '8458'
+          : followup
+            ? '8456'
+            : opsFixture
+              ? '8452'
+              : uiFixture
+                ? '8445'
+                : '8443',
+  MAIL_PORT: privateDemo
+    ? '8050'
+    : launch
+      ? '8040'
+      : review
+        ? '8042'
+        : feature
+          ? '8038'
+          : followup
+            ? '8036'
+            : opsFixture
+              ? '8032'
+              : uiFixture
+                ? '8027'
+                : '8025',
   HARDENING_API_IMAGE: `${demoProject}-api:local`,
   HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
@@ -109,45 +120,51 @@ const baseEnv = {
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: launch
-    ? 'clientops_launch_accounts_demo'
-    : review
-      ? 'clientops_review_accounts_demo'
-      : feature
-        ? 'clientops_feature_release_accounts_demo'
-        : followup
-          ? 'clientops_followup_accounts_demo'
-          : opsFixture
-            ? 'clientops_ops_accounts_demo'
-            : uiFixture
-              ? 'clientops_ui_accounts_demo'
-              : 'clientops_accounts_demo',
-  HTTPS_PORT: launch
-    ? '8461'
-    : review
-      ? '8463'
-      : feature
-        ? '8459'
-        : followup
-          ? '8457'
-          : opsFixture
-            ? '8453'
-            : uiFixture
-              ? '8446'
-              : '8444',
-  MAIL_PORT: launch
-    ? '8041'
-    : review
-      ? '8043'
-      : feature
-        ? '8039'
-        : followup
-          ? '8037'
-          : opsFixture
-            ? '8033'
-            : uiFixture
-              ? '8028'
-              : '8026',
+  HARDENING_DATABASE: privateDemo
+    ? 'clientops_private_accounts_demo'
+    : launch
+      ? 'clientops_launch_accounts_demo'
+      : review
+        ? 'clientops_review_accounts_demo'
+        : feature
+          ? 'clientops_feature_release_accounts_demo'
+          : followup
+            ? 'clientops_followup_accounts_demo'
+            : opsFixture
+              ? 'clientops_ops_accounts_demo'
+              : uiFixture
+                ? 'clientops_ui_accounts_demo'
+                : 'clientops_accounts_demo',
+  HTTPS_PORT: privateDemo
+    ? '8471'
+    : launch
+      ? '8461'
+      : review
+        ? '8463'
+        : feature
+          ? '8459'
+          : followup
+            ? '8457'
+            : opsFixture
+              ? '8453'
+              : uiFixture
+                ? '8446'
+                : '8444',
+  MAIL_PORT: privateDemo
+    ? '8051'
+    : launch
+      ? '8041'
+      : review
+        ? '8043'
+        : feature
+          ? '8039'
+          : followup
+            ? '8037'
+            : opsFixture
+              ? '8033'
+              : uiFixture
+                ? '8028'
+                : '8026',
   DEMO_MODE: 'false',
 };
 for (const env of [baseEnv, accountsEnv]) {
@@ -409,7 +426,7 @@ const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  `test-results/${launch ? 'launch' : review ? 'review' : feature ? 'feature' : followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
+  `test-results/${privateDemo ? 'private-demo' : launch ? 'launch' : review ? 'review' : feature ? 'feature' : followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),

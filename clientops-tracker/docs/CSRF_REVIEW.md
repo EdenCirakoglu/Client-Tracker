@@ -1,5 +1,53 @@
 # CSRF Review: 6 November 2026
 
+## Reconciled Review: November 8
+
+Main is now `cfec6e71a51975e224a2cee9ddda2238183b8b31`; PR #22 targets
+main rather than the old maintenance branch. Both alerts #1 and #3 remain open
+on that exact main revision. No middleware bypass was reproduced, no alert was
+dismissed, and no query, production guard, permissions or timeout was weakened.
+The final-head handoff distinguishes normal PR CI, analysis execution and the
+code-scanning policy conclusion. Historical dispatch results below are not the
+fresh integration result.
+
+The CSRF suite now has **seven** tests: the existing 26-path rejection matrices,
+unsafe-method/body/query rejection and authorised-write control, plus a real
+publication/preferences control. The latter uses valid records and verifies
+missing proof yields `403 CSRF_INVALID` **without** publishing the draft or
+changing preferences; matching session proof then persists both actions.
+Thus a forbidden response from record validation is not mistaken for CSRF protection.
+
+Reproduction uses a new disposable database cluster and Mailpit:
+
+```powershell
+$env:TEST_PG_PORT='15440'
+$env:TEST_SMTP_PORT='11032'
+$env:TEST_MAIL_PORT='18032'
+docker compose -p clientops-product-main-tests-20261108 -f docker-compose.hardening-test.yml up -d --wait
+$env:TEST_DATABASE_URL='postgresql://clientops_test:disposable_test_password@localhost:15440/clientops_hardening_test'
+$env:DISPOSABLE_DATABASE_NAME='clientops_hardening_test'
+$env:SMTP_MODE='capture'
+$env:SMTP_HOST='localhost'
+$env:SMTP_PORT='11032'
+$env:MAILPIT_URL='http://localhost:18032'
+pnpm --filter @clientops/api exec vitest run tests/csrf-boundaries.test.ts tests/security.test.ts tests/validation-compatibility.test.ts
+```
+
+On this host the default subnet pool was exhausted; an ignored Compose override
+assigned the new test cluster `10.240.65.0/24`. No prior network/database was removed.
+The focused run passed 29 tests. Exact final-revision full/hosted results belong
+to the handoff, not this intermediate run.
+
+**Independent decision required:** a security reviewer must inspect the listed
+request flow and all unsafe route registrations, reproduce negative and positive
+controls, compare the installed library with CodeQL's recognizers, then explicitly
+approve or reject the proposed false-positive classification for alert #1.
+If rejected, identify an actual unguarded request or missing control for a focused
+fix. Scanner success or test success alone is not approval. Alert #3 requires its
+own production-cookie assessment. No disposition is made on the owner's behalf.
+
+## Historical Assessment
+
 ## Actual Finding, Not Scanner Success
 
 At `f2be50394906d355e51a81cf4cc186bf467c4185`, PR #22's
