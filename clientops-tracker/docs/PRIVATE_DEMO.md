@@ -30,6 +30,15 @@ disable antivirus or global TLS checking to demonstrate the application. Only
 proceed after verifying this is the local disposable fixture. Automated browser
 tests allow the local fixture certificate explicitly.
 
+For a separate temporary browser context, with a certificate exception confined
+to this local demo (never browse real services in that context):
+
+```powershell
+pnpm exec playwright open --channel chrome --ignore-https-errors https://localhost:8470
+```
+
+Close that browser when finished. It does not use your personal Chrome profile.
+
 The stack builds this branch locally, applies additive migrations with separate
 migration/runtime roles, and seeds only a newly empty named disposable database.
 Repeated startup preserves existing business records. It never resets the
