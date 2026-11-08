@@ -10,6 +10,23 @@ const origin = process.env.VERIFY_URL ?? 'https://localhost:8470';
 assert.equal(process.env.E2E_ALLOW_DISPOSABLE_DEMO, 'true');
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(origin).hostname));
 const revision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+const runtime = JSON.parse(await readFile('test-results/private-demo-upgrade.json', 'utf8'));
+assert.equal(
+  runtime.workingTreeDirty,
+  false,
+  'Runtime must have been built from a clean checkpoint.',
+);
+for (const app of ['api', 'web']) {
+  const tree = (ref) =>
+    execFileSync('git', ['rev-parse', `${ref}:clientops-tracker/apps/${app}`], {
+      encoding: 'utf8',
+    }).trim();
+  assert.equal(
+    tree(revision),
+    tree(runtime.revision),
+    'Runtime application source differs from capture checkout.',
+  );
+}
 const dirty = execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim();
 assert.equal(dirty, '', 'Capture from a committed clean checkout; never mislabel working changes.');
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -81,7 +98,7 @@ try {
       height: 760,
       caption,
       alt,
-      sourceRevision: revision,
+      sourceRevision: runtime.revision,
       role: 'CLIENT',
       theme: 'light',
       viewport: { width: 1270, height: 688 },
@@ -97,7 +114,7 @@ try {
     'The agreement includes active and archived shipments',
     'Revision 2 is approved. The comparison preserves what changed from revision 1.',
     'Client scope revision 2 approved, with active and archived shipment search and the previous scope comparison.',
-    '#scope .space-y-4',
+    '#scope > .space-y-4',
   );
   await capture(
     '02-awaiting-confirmation.png',
@@ -140,7 +157,8 @@ try {
     resolve(output, 'manifest.json'),
     JSON.stringify(
       {
-        sourceRevision: revision,
+        sourceRevision: runtime.revision,
+        captureHarnessRevision: revision,
         workingTreeDirtyAtStart: false,
         capturedAt: new Date().toISOString(),
         previewVersion: '0.2.0 preview (unreleased)',
