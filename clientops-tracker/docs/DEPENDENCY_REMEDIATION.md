@@ -1,6 +1,44 @@
 # Dependency Remediation: Milestone 1B
 
-## Current Recheck: 2026-10-28
+## Current Integration Review: 2026-11-06
+
+The November 4 owner-decision deadline passed without acceptance. See
+[release integration decisions](RELEASE_INTEGRATION.md) for the new bounded,
+unapproved Kit proposal, registry evidence, new minimatch tooling advisory and
+individual PR dispositions. The October results below remain historical.
+Production audit is still clean, but neither full audit nor all product CodeQL
+policy checks are clean. No alert or audit result is suppressed.
+
+## Historical Release Review: 2026-10-28
+
+PR #20 is being refreshed against main
+`38b6ef17f2a2399c5d444da153081167e2b9feae`. Its October 21 results below remain
+historical, not current audit evidence. The product-only changes in PR #22 are
+not included. The security adaptation from `0f567fd4cf8b71dbd2e64d1c00b180884281dbcc`
+tests the existing summary collections instead of importing notification schemas.
+No migration, request limit, cookie policy, permission or audit gate changed.
+
+| Finding                                                                                                                                                   | Previous maintenance lock                                                       | Refreshed maintenance lock / resolution                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [Zod GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)                                                                              | API > zod 3.25.76                                                               | 4.6.7, supported patch >=4.6.6; scoped Zod 4 migration, transformed boolean defaults and bounded collection regressions |
+| [body-parser GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)                                                                      | API > express 4.22.3 > body-parser 1.20.8                                       | 1.20.9 within the parent range; compressed malformed input regression, sanitized parser responses retained              |
+| [ip-address GHSA-rxp7-6hxx-x8q5](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5)                                                                       | API > express-rate-limit 8.7.0 > ip-address 10.7.2                              | express-rate-limit 8.7.1 > ip-address 10.7.5; original ^8.7.0 range retained, rate-limit/proxy tests retained           |
+| [Vitest GHSA-qxg6-89mg-rqv8](https://github.com/advisories/GHSA-qxg6-89mg-rqv8), [GHSA-xp26-3454-mjgp](https://github.com/advisories/GHSA-xp26-3454-mjgp) | API development > vitest 4.1.11                                                 | 4.1.12 and matching internals, no Vite/Vitest major upgrade                                                             |
+| [Selector parser GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf)                                                                  | web > tailwindcss 3.4.19 / postcss-nested 6.2.0 > postcss-selector-parser 6.1.4 | Supported 6.1.5 backport, no parser 7 override                                                                          |
+| [Braces GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)                                                                           | Historical tooling finding                                                      | Publisher withdrew the advisory; not a package fix, owner acceptance or local suppression                               |
+| esbuild (two advisories, three paths)                                                                                                                     | See exact paths below                                                           | Still present and unaccepted; full audit exits 1                                                                        |
+
+Fresh `pnpm audit --prod` reports zero known production npm advisories. Full
+`pnpm audit` reports one moderate and one low advisory. This does not establish
+container OS, application logic, CodeQL or deployment security. The earlier
+four-finding table below is preserved as the October 21 decision record; only its
+two esbuild entries remain current. Both retain owner **proposed**, not approved,
+dispositions and the **November 4 or first-installation** deadline.
+
+The [controlled release plan](RELEASE_MERGE_PLAN.md) records PR disposition,
+CodeQL coverage, merge boundaries and the revision-specific evidence handoff.
+
+## Historical Recheck: 2026-10-28
 
 The product candidate at `81012cb42a54a2bff8863cb5b11f07c893e8ee55` acquired
 new advisory matches after its recorded checks. Those earlier checks remain

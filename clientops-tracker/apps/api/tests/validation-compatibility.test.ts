@@ -14,6 +14,12 @@ describe('Zod 4 request contract compatibility', () => {
 
   it('retains omitted defaults, coercion, trimming and strict object validation', () => {
     expect(publishSummaryBody.parse({})).toEqual({ recipientIds: [] });
+    expect(summaryBody.parse({ clientId: id, weekStart: '2026-01-01' })).toEqual({
+      clientId: id,
+      weekStart: '2026-01-01',
+      upcoming: [],
+      blocked: [],
+    });
     expect(summaryListQuery.parse({ page: '2' })).toEqual({ page: 2 });
     expect(summaryListQuery.parse({})).toEqual({ page: 1 });
     expect(deliveryDecisionBody.parse({ decision: 'AGREED' })).toEqual({
@@ -43,13 +49,18 @@ describe('Zod 4 request contract compatibility', () => {
       expect(recipients.error.issues).toHaveLength(1);
       expect(recipients.error.issues[0]?.code).toBe('too_big');
     }
-    const summary = summaryBody.safeParse({
-      clientId: id,
-      weekStart: '2026-01-01',
-      upcoming: Array(21).fill({}),
-    });
-    expect(summary.success).toBe(false);
-    if (!summary.success) expect(summary.error.issues).toHaveLength(1);
+    for (const field of ['upcoming', 'blocked']) {
+      const summary = summaryBody.safeParse({
+        clientId: id,
+        weekStart: '2026-01-01',
+        [field]: Array(21).fill({}),
+      });
+      expect(summary.success).toBe(false);
+      if (!summary.success) {
+        expect(summary.error.issues).toHaveLength(1);
+        expect(summary.error.issues[0]?.code).toBe('too_big');
+      }
+    }
   });
 
   it('keeps field-associated validation errors without returning submitted values', async () => {
@@ -61,11 +72,7 @@ describe('Zod 4 request contract compatibility', () => {
     isolated.use(errorHandler);
     const response = await request(isolated)
       .post('/')
-      .send({
-        expectedRevision: 0,
-        reviewerId: 'private-not-a-uuid',
-        outcome: 'short',
-      })
+      .send({ expectedRevision: 0, reviewerId: 'private-not-a-uuid', outcome: 'short' })
       .expect(400);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
     expect(response.body.error.details.fieldErrors).toHaveProperty('reviewerId');
