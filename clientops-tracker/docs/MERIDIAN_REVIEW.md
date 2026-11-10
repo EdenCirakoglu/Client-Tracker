@@ -16,6 +16,22 @@ lighter-charcoal correction. [Draft PR #37](https://github.com/EdenCirakoglu/Cli
 - No API routes, database schema, migrations, authentication, authorization,
   worker configuration, public walkthrough or logo assets changed.
 
+The initial combined hosted run at the implementation checkpoint failed: three
+old checks selected every header rather than the application header, an outcome
+label became more specific, and a repeated decision label needed an explicit
+heading target. The ticket context now follows the existing non-banner PageHeader
+convention; delivery state is a real heading and the affected assertions still
+check the same records and persisted decisions.
+
+Later cases in that run received the existing auth-ingress response, "Too many
+attempts. Please wait before trying again." The enlarged automation exceeded the
+300-request/15-minute ingress budget from one IP. CI now runs the 18 existing
+business/account scenarios and the 14 logo/Meridian scenarios in separate jobs,
+each with a fresh isolated stack. All 32 cases remain included. No auth limit,
+CSRF guard, timeout, assertion or retry policy was relaxed; no limiter is cleared
+inside a journey. Both job results are required for a successful workflow.
+The failed checkpoint remains historical evidence, not a passed combined run.
+
 After separately approved parent merges, retarget this PR to actual main, inspect
 the incremental diff and rerun CI. No merge, image publication, public deployment,
 real email, payment activation or risk acceptance is included.
