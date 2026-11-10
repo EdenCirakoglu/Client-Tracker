@@ -258,10 +258,10 @@ test('captured workflow emails retain the record and section through sign-in wit
     const target = new URL(baseURL);
     if (
       !['localhost', '127.0.0.1'].includes(target.hostname) ||
-      !['8443', '8460'].includes(target.port)
+      !['8443', '8460', '8480'].includes(target.port)
     )
       throw new Error(
-        'Email navigation requires the named hardening or launch disposable fixture.',
+        'Email navigation requires the named hardening, launch or customer disposable fixture.',
       );
     // This independent scenario must not inherit the prior suite's in-memory IP budget.
     // Restart only the fixture API, retaining sessions, records and database-backed limits.
@@ -270,7 +270,7 @@ test('captured workflow emails retain the record and section through sign-in wit
       [
         'scripts/hardening-stack.mjs',
         'restart-demo-api',
-        ...(target.port === '8460' ? ['--launch'] : []),
+        ...(target.port === '8480' ? ['--customer'] : target.port === '8460' ? ['--launch'] : []),
       ],
       { stdio: 'inherit' },
     );

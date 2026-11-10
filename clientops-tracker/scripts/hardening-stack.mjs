@@ -265,7 +265,8 @@ function migrate(accounts, command = 'migrate', extras = []) {
     },
   );
 }
-function snapshot() {
+function snapshot(accounts = false) {
+  const database = (accounts ? accountsEnv : baseEnv).HARDENING_DATABASE;
   return Object.fromEntries(
     [
       'clients',
@@ -291,7 +292,7 @@ function snapshot() {
               ? "to_jsonb(t) - 'proposed_by_id'"
               : 'to_jsonb(t)';
       const exists = compose(
-        false,
+        accounts,
         [
           'exec',
           '-T',
@@ -300,7 +301,7 @@ function snapshot() {
           '-U',
           'hardening',
           '-d',
-          baseEnv.HARDENING_DATABASE,
+          database,
           '-Atc',
           `SELECT to_regclass('public.${table}') IS NOT NULL`,
         ],
@@ -308,7 +309,7 @@ function snapshot() {
       ).trim();
       if (exists === 'f') return [table, '0:d41d8cd98f00b204e9800998ecf8427e'];
       const result = compose(
-        false,
+        accounts,
         [
           'exec',
           '-T',
@@ -317,7 +318,7 @@ function snapshot() {
           '-U',
           'hardening',
           '-d',
-          baseEnv.HARDENING_DATABASE,
+          database,
           '-Atc',
           `SELECT count(*) || ':' || md5(coalesce(string_agg((${row})::text, '' ORDER BY id), '')) FROM ${table} t`,
         ],
@@ -337,25 +338,28 @@ if (action === 'snapshot') {
   console.log(JSON.stringify(snapshot(), null, 2));
   process.exit(0);
 }
-if (action === 'restart-demo-api') {
-  compose(false, [
+if (action === 'restart-demo-api' || action === 'restart-accounts-api') {
+  const accounts = action === 'restart-accounts-api';
+  compose(accounts, [
     'exec',
     '-T',
     'api',
     'node',
     '-e',
-    "if (process.env.DEMO_MODE !== 'true' || process.env.DISPOSABLE_DATABASE_NAME !== new URL(process.env.DATABASE_URL).pathname.slice(1)) process.exit(1)",
+    "if (process.env.DEPLOYMENT_MODE !== 'disposable' || process.env.DISPOSABLE_DATABASE_NAME !== new URL(process.env.DATABASE_URL).pathname.slice(1) || new URL(process.env.APP_ORIGIN).hostname !== 'localhost') process.exit(1)",
   ]);
-  const before = snapshot();
-  compose(false, ['restart', 'api']);
-  compose(false, ['up', '-d', '--no-build', '--no-deps', '--no-recreate', '--wait', 'api']);
-  if (JSON.stringify(before) !== JSON.stringify(snapshot()))
+  const before = snapshot(accounts);
+  compose(accounts, ['restart', 'api']);
+  compose(accounts, ['up', '-d', '--no-build', '--no-deps', '--no-recreate', '--wait', 'api']);
+  if (JSON.stringify(before) !== JSON.stringify(snapshot(accounts)))
     throw new Error('API restart changed existing business records.');
   console.log('Disposable API restarted; business records and persistent rate limits retained.');
   process.exit(0);
 }
 if (action !== 'start')
-  throw new Error('Use start, stop, snapshot or restart-demo-api. No reset command is provided.');
+  throw new Error(
+    'Use start, stop, snapshot, restart-demo-api or restart-accounts-api. No reset command is provided.',
+  );
 const openssl =
   process.env.OPENSSL_PATH ??
   (process.platform === 'win32' ? 'C:\\Program Files\\Git\\usr\\bin\\openssl.exe' : 'openssl');

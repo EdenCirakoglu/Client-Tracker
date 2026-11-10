@@ -1,5 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -73,6 +74,19 @@ async function capture(page: Page, name: string) {
 test('selected-client setup and fresh role accounts complete separate acceptance and changes journeys', async ({
   browser,
 }) => {
+  const port = new URL(origin).port;
+  if (!['8444', '8461', '8481'].includes(port))
+    throw new Error('Use the named hardening, launch or customer accounts fixture.');
+  // Do not inherit other scenarios' in-memory IP budget. Persistent limits and data remain.
+  execFileSync(
+    process.execPath,
+    [
+      'scripts/hardening-stack.mjs',
+      'restart-accounts-api',
+      ...(port === '8481' ? ['--customer'] : port === '8461' ? ['--launch'] : []),
+    ],
+    { stdio: 'inherit' },
+  );
   const contexts = await Promise.all(
     Array.from({ length: 5 }, () =>
       browser.newContext({
