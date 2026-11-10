@@ -174,11 +174,11 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
             {current ? (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="meridian-heading text-3xl text-ink">
+                  <h3 className="meridian-heading text-3xl text-ink">
                     {current.state === 'AWAITING_ACCEPTANCE' && internal
                       ? 'Delivered - awaiting client confirmation'
                       : stateLabels[current.state]}
-                  </p>
+                  </h3>
                   <span className="meridian-meta text-muted">
                     Outcome revision {current.revision}
                   </span>

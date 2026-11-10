@@ -303,12 +303,12 @@ test('selected-client setup and fresh role accounts complete separate acceptance
         await reviewer!.getByRole('button', { name: 'Send feedback', exact: true }).click();
       } else await reviewer!.getByRole('button', { name: 'Accept delivery', exact: true }).click();
       const outcome = decision === 'accept' ? 'Accepted by client' : 'Changes requested';
-      await expect(reviewer!.getByText(outcome, { exact: true })).toBeVisible();
+      await expect(reviewer!.getByRole('heading', { name: outcome, exact: true })).toBeVisible();
       await reviewer!.getByRole('button', { name: 'Logout', exact: true }).click();
       await expect(reviewer!).toHaveURL(/\/login$/);
       await reviewer!.goto(`${ticketPath}#delivery`);
       await signIn(reviewer!, people[0]!.email);
-      await expect(reviewer!.getByText(outcome, { exact: true })).toBeVisible();
+      await expect(reviewer!.getByRole('heading', { name: outcome, exact: true })).toBeVisible();
       const exported = (
         await (await reviewer!.request.get(`/api${ticketPath}/delivery/export`)).json()
       ).data.content;

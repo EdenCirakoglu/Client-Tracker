@@ -139,9 +139,9 @@ try {
     .getByLabel('What remains unresolved?')
     .fill('Archived NS-0921 works, but active NS-1042 still returns no result.');
   await page.getByRole('button', { name: 'Send feedback', exact: true }).click();
-  await expect(page.getByText('Changes requested', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Changes requested', exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Changes requested', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Changes requested', exact: true })).toBeVisible();
   await expect(page.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
   await expect(page.getByText('Resolved', { exact: true }).first()).toBeVisible();
   await capture(

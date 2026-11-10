@@ -193,7 +193,7 @@ test('dated delivery agreement, factual dashboard, project links and mobile deci
       'Outcome sent',
     );
     await customer.reload();
-    await expect(customer.getByText('Revision 2', { exact: true })).toBeVisible();
+    await expect(customer.getByText('Outcome revision 2', { exact: true })).toBeVisible();
     await expect(
       customer.getByText(`Proposed target (UTC): ${yesterday}`, { exact: true }),
     ).toBeVisible();

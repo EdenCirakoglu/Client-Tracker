@@ -189,7 +189,7 @@ export default function TicketDetailPage() {
 
   return (
     <ProtectedPage>
-      <header className="mb-5">
+      <div className="mb-5">
         {ticket ? (
           <p className="meridian-meta mb-3 text-brand-700">
             {ticketReference(ticket.id)} / {titleCase(ticket.category)}
@@ -206,7 +206,7 @@ export default function TicketDetailPage() {
             </span>
           </div>
         ) : null}
-      </header>
+      </div>
       {ticket ? (
         <nav
           aria-label="Delivery journal"

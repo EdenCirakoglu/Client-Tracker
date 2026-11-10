@@ -132,7 +132,9 @@ test('client request, versioned scope, delivery acceptance and reviewed progress
       .getByLabel('What remains unresolved?')
       .fill('The archived label is missing for last year orders.');
     await customer.getByRole('button', { name: 'Send feedback', exact: true }).click();
-    await expect(customer.getByText('Changes requested', { exact: true })).toBeVisible();
+    await expect(
+      customer.getByRole('heading', { name: 'Changes requested', exact: true }),
+    ).toBeVisible();
     await staff.reload();
     await staff.getByRole('button', { name: 'Propose revised outcome', exact: true }).click();
     await staff
