@@ -157,6 +157,7 @@ if (!before) {
     ).data.items;
     for (const route of [
       '/dashboard',
+      '/guide',
       '/delivery',
       '/summaries',
       '/tickets',

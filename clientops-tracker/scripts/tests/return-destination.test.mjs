@@ -11,6 +11,7 @@ test('preserves internal query parameters and record anchors through login', () 
     '/tickets/123?from=delivery#scope',
     '/tickets/123#delivery',
     '/summaries/123',
+    '/guide?clientId=123#client-setup-title',
     '/tickets?status=OPEN&search=one%20two',
   ]) {
     assert.equal(safeReturnDestination(path), path);

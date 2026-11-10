@@ -108,7 +108,7 @@ test('selected-client setup and fresh role accounts complete separate acceptance
     await expect(admin!.getByLabel('Client', { exact: true })).toHaveValue(clientId);
     await admin!.getByLabel('Name', { exact: true }).fill('Harbor Shipment Portal');
     await admin!.getByRole('button', { name: 'Create project', exact: true }).click();
-    await expect(admin!.getByRole('status')).toContainText('Project created.');
+    await expect(admin!.getByRole('status').filter({ hasText: 'Project created.' })).toBeVisible();
     await admin!.getByRole('link', { name: "Back to this client's setup" }).click();
     await expect(
       admin!.getByText(`2 of 6 steps recorded for ${agency}.`, { exact: true }),
@@ -258,6 +258,7 @@ test('selected-client setup and fresh role accounts complete separate acceptance
       ).toHaveCount(0);
       expect((await outsider!.request.get(`/api${ticketPath}`)).status()).toBe(404);
       await reviewer!.getByRole('button', { name: 'Logout', exact: true }).click();
+      await expect(reviewer!).toHaveURL(/\/login$/);
       const notice = await mailLink(admin!, people[0]!.email, `${ticketPath}#delivery`);
       await reviewer!.goto(notice);
       await expect(reviewer!).toHaveURL(/\/login\?next=/);
@@ -288,6 +289,7 @@ test('selected-client setup and fresh role accounts complete separate acceptance
       const outcome = decision === 'accept' ? 'Accepted by client' : 'Changes requested';
       await expect(reviewer!.getByText(outcome, { exact: true })).toBeVisible();
       await reviewer!.getByRole('button', { name: 'Logout', exact: true }).click();
+      await expect(reviewer!).toHaveURL(/\/login$/);
       await reviewer!.goto(`${ticketPath}#delivery`);
       await signIn(reviewer!, people[0]!.email);
       await expect(reviewer!.getByText(outcome, { exact: true })).toBeVisible();
