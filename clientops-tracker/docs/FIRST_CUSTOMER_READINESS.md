@@ -13,6 +13,32 @@
   changes. The final PR handoff pins the tested head/checks/artifact and file inventory.
   Historical results in parent reports retain their original revisions.
 
+Review increment: draft [PR #35](https://github.com/EdenCirakoglu/Client-Tracker/pull/35),
+[incremental Files changed](https://github.com/EdenCirakoglu/Client-Tracker/pull/35/files),
+base `feature/journal-brand-product-hunt` (#34). Integration is #22 -> #34 -> #35,
+with separate approval, retargeting and fresh checks after each parent lands.
+
+## Verification Ledger
+
+| Revision / surface                                                                                                                           | Actual result                                                              | Scope                                                                                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `012fd5910814fa9aedfce8e671d28a577b3ce876` hosted [CI 42859148417](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42859148417) | Passed                                                                     | Frozen install, audits gate, lint/types/format, 205 API tests, 30 helper tests, builds, 18 browser scenarios, native zoom, restricted roles, outages, encrypted backup, restore, rollback and deployment failure recovery          |
+| Local implementation through 012fd591                                                                                                        | Passed                                                                     | Frozen install, lint/types, 205 API tests (two full runs), 30 helpers, builds, format, migration generation with no delta, 10 packaged entries and secret scan                                                                     |
+| Local combined browser at 012fd591                                                                                                           | 16 passed, 2 failed                                                        | Named fixture guard did not allow the new port; prior account scenarios consumed the shared in-memory auth IP budget (observed 429). Neither was hidden or called a product success.                                               |
+| `baf963d` fixture correction                                                                                                                 | 18 passed, 0 skipped/unexpected/flaky                                      | Guarded fixture API restart before the independent account scenario retains business records and persistent limits; customer fixture added to the email-return guard. No production rate limit, assertion or timeout was weakened. |
+| `8d805122ad11eea7f217bd77d9d0958e25b1d610` capture correction                                                                                | Native zoom / axe / keyboard passed; focused recapture recorded separately | Screenshot defaults no longer overwrite history; anchored full-page captures start at scroll top. API/web code is unchanged from 012fd591.                                                                                         |
+| Candidate decision persistence                                                                                                               | Passed                                                                     | [Populated accepted and changes-requested records](evidence/customer-persistence.json) survive API restart, sessions and client-safe exports remain valid. This is not evidence for the older published image.                     |
+| Published cfec6e71                                                                                                                           | Passed without application rebuild                                         | [New immutable-image report](evidence/customer-registry-cfec6e71.json), distinct from candidate results                                                                                                                            |
+
+Final-head hosted evidence, complete commit-pinned file inventory and artifact checksum
+are recorded in the PR review handoff, not attributed retrospectively to this ledger.
+The final hosted run must pass before source verification is called complete.
+CodeQL analysis is absent for the stacked #35 base at this checkpoint, not a policy
+pass. GitHub also reported an independently configured **Workers Builds: client-tracker**
+failure with no diagnostic detail exposed in its check output. No Cloudflare settings
+were changed; the separately hosted fictional walkthrough remains unchanged. The owner
+must review that connected build configuration separately from GitHub Actions Validate.
+
 No merge, alert disposition, checkout activation, public deployment, real email or
 customer contact is authorized/performed. The existing public fictional walkthrough
 was fetched read-only (HTTP 200); HTML SHA-256
@@ -119,6 +145,9 @@ $env:WORKFLOW_MAIL_URL='http://localhost:8060'
 $env:BROWSER_CHANNEL='chrome'
 pnpm test:e2e
 node scripts/verify-ui-acceptance.mjs
+# Restart only this disposable account fixture; compare all business tables before/after.
+node scripts/hardening-stack.mjs restart-accounts-api --customer
+# Re-login as the named reviewer and reopen both recorded decision cases.
 ```
 
 Preview: `https://localhost:8480` with labelled disposable role buttons. Fresh-account
@@ -156,6 +185,10 @@ pnpm audit --prod
 pnpm audit
 ```
 
+Focused CSRF/scoping command with the same test environment:
+`pnpm --filter @clientops/api exec vitest run tests/csrf.test.ts tests/client-onboarding.test.ts`.
+The invalid/missing/cross-session token matrix and valid-token controls remain enabled.
+
 On this machine a private network override added 10.240.73.0/24 to that test Compose
 command. Test data is disposable/tmpfs; test configuration never falls back to demo.
 Reports: `test-results/browser-results.json`, `playwright-report/index.html`,
@@ -163,6 +196,8 @@ Reports: `test-results/browser-results.json`, `playwright-report/index.html`,
 Final checked revision/check URLs are recorded in the PR handoff; earlier intermediate
 runs are not silently attributed to the final commit. Local Windows logs stay local;
 public browser artifacts come from the privacy-gated Linux CI checkout.
+Selected inspected screenshots, capture conditions and SHA-256 values are in
+[the screenshot manifest](assets/screenshots/first-customer/README.md).
 
 ## Security and Acceptance Decisions
 

@@ -21,6 +21,13 @@ local fixtures, hosted checks and outstanding acceptance. Do not merge this stac
 into a parent feature branch; after each separately approved parent merge, retarget
 and revalidate the next PR against actual main.
 
+Draft [PR #35](https://github.com/EdenCirakoglu/Client-Tracker/pull/35) is the review
+surface. Hosted checkpoint `012fd5910814fa9aedfce8e671d28a577b3ce876` passed
+[CI 42859148417](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42859148417).
+Local fixture corrections then passed all 18 combined browser scenarios; the PR
+handoff records the final head and fresh CI. No missing CodeQL analysis or independent
+Cloudflare check is represented as a successful security/release gate.
+
 Branding follow-up: draft [PR #34](https://github.com/EdenCirakoglu/Client-Tracker/pull/34)
 is based on verified #22 head `9e25bc27d73ae1756c8fc185223704417de8642b`.
 The [v3 identity, fictional walkthrough and Product Hunt draft pack](product-hunt/README.md)
