@@ -78,14 +78,12 @@ it('does not count another client project, active contact, request or decision',
       reviewerName: otherClient.name,
     })
     .returning();
-  await db
-    .insert(deliveryEvents)
-    .values({
-      revisionId: revision!.id,
-      actorId: otherClient.id,
-      actorName: otherClient.name,
-      action: 'AGREED',
-    });
+  await db.insert(deliveryEvents).values({
+    revisionId: revision!.id,
+    actorId: otherClient.id,
+    actorName: otherClient.name,
+    action: 'AGREED',
+  });
   expect(await onboardingForClient(admin, clientId)).toEqual({
     client: { id: clientId, name: 'Harbor Agency (Fictional)' },
     project: null,
@@ -108,15 +106,13 @@ it('distinguishes a queued or accepted invitation from active reviewer access wi
     })
     .returning();
   const id = randomUUID();
-  await db
-    .insert(mailOutbox)
-    .values({
-      id,
-      tokenId: token!.id,
-      kind: 'INVITATION',
-      payload: 'private-encrypted-payload',
-      expiresAt: token!.expiresAt,
-    });
+  await db.insert(mailOutbox).values({
+    id,
+    tokenId: token!.id,
+    kind: 'INVITATION',
+    payload: 'private-encrypted-payload',
+    expiresAt: token!.expiresAt,
+  });
   const pending = await onboardingForClient(admin, clientId);
   expect(pending.invitation).toEqual({ status: 'PENDING', name: person.name });
   expect(pending.reviewer).toBeNull();
@@ -153,14 +149,12 @@ it('links actual client decisions without treating outcome agreement as delivery
       reviewerName: person.name,
     })
     .returning();
-  await db
-    .insert(deliveryEvents)
-    .values({
-      revisionId: revision!.id,
-      actorId: person.id,
-      actorName: person.name,
-      action: 'AGREED',
-    });
+  await db.insert(deliveryEvents).values({
+    revisionId: revision!.id,
+    actorId: person.id,
+    actorName: person.name,
+    action: 'AGREED',
+  });
   const state = await onboardingForClient(admin, clientId);
   expect(state.request).toEqual({ id: record.id, title: record.title });
   expect(state.project?.id).toBe(record.projectId);
@@ -175,22 +169,20 @@ it('links actual client decisions without treating outcome agreement as delivery
 it('links a recorded scope decision even when delivery has not started', async () => {
   const person = await contact('ACTIVE');
   const record = await ticket();
-  await db
-    .insert(scopeProposals)
-    .values({
-      ticketId: record.id,
-      revision: 1,
-      scope: 'Shipment search',
-      exclusions: 'No imports',
-      estimate: 'Two days',
-      deliveryImplications: 'Proposed date only',
-      approverId: person.id,
-      approverName: person.name,
-      proposedBy: admin.name,
-      state: 'CHANGES_REQUESTED',
-      decidedBy: person.name,
-      decidedAt: new Date(),
-    });
+  await db.insert(scopeProposals).values({
+    ticketId: record.id,
+    revision: 1,
+    scope: 'Shipment search',
+    exclusions: 'No imports',
+    estimate: 'Two days',
+    deliveryImplications: 'Proposed date only',
+    approverId: person.id,
+    approverName: person.name,
+    proposedBy: admin.name,
+    state: 'CHANGES_REQUESTED',
+    decidedBy: person.name,
+    decidedAt: new Date(),
+  });
   expect((await onboardingForClient(admin, clientId)).decision).toMatchObject({
     ticketId: record.id,
     action: 'CHANGES_REQUESTED',
