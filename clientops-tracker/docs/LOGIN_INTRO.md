@@ -95,3 +95,15 @@ on `127.0.0.1:8085` and new PostgreSQL fixture only on `127.0.0.1:15460`.
 Private fixture launchers and generated reports are ignored under
 `test-results/logo-preview` and `test-results/logo-intro`. They are not production
 configuration or part of the shipped application.
+
+## Button Removal Follow-Up
+
+The visible skip button was removed at the maintainer's request. Escape,
+reduced-motion handling, automatic dismissal and sign-in focus restoration remain.
+Coverage now asserts that there are no intro buttons and that Enter cannot submit
+the background form. The first local run passed 12 of 13 scenarios; its contrast
+check sampled the title mid-fade (2.13:1). Like the existing visual captures, that
+check now samples the real animation at its settled 900ms frame rather than an
+uncontrolled point during the fade. Contrast rules and production timing remain
+unchanged. Prior button-bearing captures are retained locally under
+`test-results/logo-intro-810c12b`.

@@ -27,6 +27,10 @@ async function holdIntro(page: Page) {
   await page.clock.pauseAt(new Date(now.getTime() + 1000));
   await page.goto('/login');
   await expect(intro(page)).toBeVisible();
+  await settleReveal(page);
+}
+
+async function settleReveal(page: Page) {
   // Capture the actual CSS animation at a reproducible mid-reveal frame.
   await intro(page).evaluate((element) => {
     for (const animation of element.getAnimations({ subtree: true })) {
@@ -51,6 +55,7 @@ test('first arrival reveals the exact logo, traps focus, completes and does not 
   await expect(intro(page)).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(intro(page)).toBeFocused();
+  await settleReveal(page);
   expect(
     (
       await whileClockAdvances(page, () =>
