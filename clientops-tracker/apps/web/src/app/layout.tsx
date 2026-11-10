@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 
 import { AuthProvider } from '../lib/auth';
 import { PreferencesProvider } from '../components/ui/preferences';
+import '@fontsource-variable/geist/wght.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
+import '@fontsource/instrument-serif/latin-400.css';
 import './globals.css';
+import './meridian.css';
 
 export const metadata: Metadata = {
   title: 'ClientOps Tracker',

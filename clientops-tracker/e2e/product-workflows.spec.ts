@@ -1,5 +1,6 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { approveScope } from './helpers/scope-review';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -82,8 +83,7 @@ test('client request, versioned scope, delivery acceptance and reviewed progress
       'Proposal sent for approval.',
     );
     await customer.reload();
-    await customer.getByLabel('Scope decision').selectOption('APPROVED');
-    await customer.getByRole('button', { name: 'Record scope decision', exact: true }).click();
+    await approveScope(customer, 1);
     await expect(customer.getByText('Revision 1: Approved', { exact: true })).toBeVisible();
     await staff.reload();
     await staff.getByRole('button', { name: 'Revise scope proposal', exact: true }).click();
@@ -95,7 +95,7 @@ test('client request, versioned scope, delivery acceptance and reviewed progress
     await staff.getByRole('button', { name: 'Request scope approval', exact: true }).click();
     await expect(staff.getByText('Revision 2: Proposed', { exact: true })).toBeVisible();
     await customer.reload();
-    await customer.getByRole('button', { name: 'Record scope decision', exact: true }).click();
+    await approveScope(customer, 2);
     await expect(customer.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
     await staff.reload();
     await staff.getByRole('button', { name: 'Propose outcome', exact: true }).click();

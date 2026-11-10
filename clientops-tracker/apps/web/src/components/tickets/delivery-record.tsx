@@ -8,6 +8,7 @@ import { useAuth } from '../../lib/auth';
 import type { DeliveryRecord, DeliveryRevision, Release } from '../../lib/types';
 import { formatDate, titleCase } from '../../lib/format';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import { Card, CardHeader } from '../ui/card';
 import { FieldLabel, Input, Select, Textarea } from '../ui/input';
 import { ErrorState, LoadingState } from '../ui/states';
@@ -173,13 +174,39 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
             {current ? (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="font-semibold text-brand-700">
+                  <p className="meridian-heading text-3xl text-ink">
                     {current.state === 'AWAITING_ACCEPTANCE' && internal
                       ? 'Delivered - awaiting client confirmation'
                       : stateLabels[current.state]}
                   </p>
-                  <span className="text-xs text-muted">Revision {current.revision}</span>
+                  <span className="meridian-meta text-muted">
+                    Outcome revision {current.revision}
+                  </span>
                 </div>
+                <dl className="grid gap-4 border-y border-border py-4 text-sm sm:grid-cols-3">
+                  <div>
+                    <dt className="mb-2 text-xs text-muted">Ticket status</dt>
+                    <dd>
+                      <Badge value={record!.ticketStatus} />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="mb-2 text-xs text-muted">Delivered in release</dt>
+                    <dd>{current.releaseVersion ?? 'No delivery recorded'}</dd>
+                  </div>
+                  <div>
+                    <dt className="mb-2 text-xs text-muted">Client acceptance</dt>
+                    <dd>
+                      {current.state === 'ACCEPTED'
+                        ? 'Accepted'
+                        : current.state === 'AWAITING_ACCEPTANCE'
+                          ? 'Awaiting confirmation'
+                          : current.state === 'CHANGES_REQUESTED' && current.releaseVersion
+                            ? 'Changes requested'
+                            : 'Not recorded'}
+                    </dd>
+                  </div>
+                </dl>
                 <RevisionDetails revision={current} />
                 {record?.revisions[1] ? (
                   <RevisionComparison
