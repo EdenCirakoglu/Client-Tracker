@@ -106,7 +106,7 @@ Responsive checks use 390x844, 768x1000, 1280x1000 and 1440x1000, both themes.
 Native Chrome zoom changed CSS width from 1422 to 711 and device pixel ratio from
 1 to 2; this is not CSS zoom or viewport emulation. Clean-checkpoint result:
 `test-results/meridian-zoom/acceptance.json`.
-Playwright output: `playwright-report/`, `test-results/results.json`;
+Playwright output: `playwright-report/`, `test-results/browser-results.json`;
 screenshots: `test-results/meridian-evidence/`.
 
 Implementation-stage failures were investigated, not hidden: selecting the original
@@ -157,7 +157,18 @@ approve the retained preview record before that check; the browser suite creates
 separate fictional records for its mutations. Fresh machines must use the ID
 printed/created by their own fixture. For the full same-origin Compose browser
 suite, set VERIFY_URL to its HTTPS URL, remove VERIFY_API_URL, and use the existing
-account/mail fixture configuration in `.github/workflows/ci.yml`.
+account/mail fixture configuration in `.github/workflows/ci.yml`. CI runs these
+two groups on separate fresh disposable stacks, retaining the real auth budget:
+
+```powershell
+# Business/account group: 18 scenarios.
+node node_modules/@playwright/test/cli.js test --grep-invert 'login-intro.spec.ts|meridian-review.spec.ts'
+# Review group: 14 scenarios, on its own fresh stack as configured in CI.
+pnpm test:e2e e2e/login-intro.spec.ts e2e/meridian-review.spec.ts
+```
+
+Do not run both groups consecutively against an existing installation or clear
+its rate-limit state. Use the two CI jobs for complete isolated verification.
 
 API regression invocation used the explicitly disposable test database:
 
