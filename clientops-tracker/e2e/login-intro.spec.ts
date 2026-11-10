@@ -2,6 +2,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { chromium, expect, test, type Page } from '@playwright/test';
 
+test.use({ reducedMotion: 'no-preference' });
+
 const intro = (page: Page) => page.getByRole('dialog', { name: 'ClientOps Tracker', exact: true });
 
 async function whileClockAdvances<T>(page: Page, action: () => Promise<T>): Promise<T> {
