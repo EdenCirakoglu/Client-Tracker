@@ -165,6 +165,12 @@ test('Meridian revision navigation, semantic diff, keyboard review and persisten
       }
     }
     await client.setViewportSize({ width: 1440, height: 1000 });
+    await staff.goto(record.url);
+    const staffDecision = staff.locator('#scope-decision-panel');
+    await expect(staffDecision.getByText('Revision 2: Proposed', { exact: true })).toBeVisible();
+    await expect(staffDecision.getByText(/Only .+ can record this decision\./)).toBeVisible();
+    await expect(staff.getByRole('button', { name: /Approve revision/ })).toHaveCount(0);
+    await capture(staff, 'developer-review');
     const approve = client.getByRole('button', { name: 'Approve revision 2', exact: true });
     await approve.click();
     let dialog = client.getByRole('dialog', { name: 'Approve revision 2', exact: true });
@@ -204,8 +210,8 @@ test('Meridian revision navigation, semantic diff, keyboard review and persisten
     await expect(client.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
     await capture(client, 'scope-approved');
     await staff.goto(record.url);
+    await expect(staff.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
     await expect(staff.getByRole('button', { name: /Approve revision/ })).toHaveCount(0);
-    await capture(staff, 'developer-review');
   } finally {
     await client.context().close();
     await staff.context().close();
