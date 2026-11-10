@@ -64,6 +64,8 @@ async function capture(page: Page, name: string) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const directory = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'test-results/first-customer');
   await mkdir(directory, { recursive: true });
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect(page.locator('header')).toBeInViewport();
   await page.screenshot({
     path: resolve(directory, `customer-${name}.png`),
     fullPage: true,

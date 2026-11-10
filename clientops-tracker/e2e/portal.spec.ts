@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
-const screenshotDir = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'docs/assets/screenshots');
+const screenshotDir = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'test-results/portal');
 
 async function capture(page: Page, name: string) {
   await mkdir(screenshotDir, { recursive: true });
