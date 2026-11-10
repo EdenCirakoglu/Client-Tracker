@@ -199,6 +199,13 @@ test('Meridian revision navigation, semantic diff, keyboard review and persisten
     await expect(dialog).toHaveCount(0);
     await expect(client.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
     expect(posts).toBe(1);
+    await client.emulateMedia({ reducedMotion: 'no-preference' });
+    for (const theme of ['light', 'dark']) {
+      await client.evaluate((value) => localStorage.setItem('clientops:theme', value), theme);
+      await client.reload();
+      await expect(client.locator('.decision-receipt')).toBeVisible();
+      await accessible(client);
+    }
     await client.reload();
     await expect(client.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
     const ticket = await get<{ status: string }>(client, `/api/tickets/${record.ticket.id}`);

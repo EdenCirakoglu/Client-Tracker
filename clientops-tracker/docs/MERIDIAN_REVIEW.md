@@ -32,6 +32,13 @@ CSRF guard, timeout, assertion or retry policy was relaxed; no limiter is cleare
 inside a journey. Both job results are required for a successful workflow.
 The failed checkpoint remains historical evidence, not a passed combined run.
 
+At `adfa474c9a5f6fe57105983be853fd4bcd2e0652`, all 32 browser scenarios passed,
+but the broader native-zoom check found transient low contrast in the saved
+decision receipt's opacity animation. The receipt now moves three pixels without
+fading text; saved-receipt accessibility is checked in both themes with motion
+enabled. The staff screenshot also now waits for a loaded pending revision and
+checks the designated-reviewer explanation before confirming unavailable controls.
+
 After separately approved parent merges, retarget this PR to actual main, inspect
 the incremental diff and rerun CI. No merge, image publication, public deployment,
 real email, payment activation or risk acceptance is included.
