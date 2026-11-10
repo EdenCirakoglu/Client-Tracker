@@ -10,38 +10,43 @@ const opsFixture = process.argv.includes('--ops');
 const followup = process.argv.includes('--followup');
 const feature = process.argv.includes('--feature');
 const privateDemo = process.argv.includes('--private-demo');
+const customer = process.argv.includes('--customer');
 const launch = process.argv.includes('--launch');
 const review = process.argv.includes('--review');
-const demoProject = privateDemo
-  ? 'clientops-private-demo'
-  : launch
-    ? 'clientops-launch-demo'
-    : review
-      ? 'clientops-review-demo'
-      : feature
-        ? 'clientops-feature-release'
-        : followup
-          ? 'clientops-followup'
-          : opsFixture
-            ? 'clientops-ops'
-            : uiFixture
-              ? 'clientops-ui'
-              : 'clientops-hardening';
-const accountsProject = privateDemo
-  ? 'clientops-private-accounts'
-  : launch
-    ? 'clientops-launch-accounts'
-    : review
-      ? 'clientops-review-accounts'
-      : feature
-        ? 'clientops-feature-release-accounts'
-        : followup
-          ? 'clientops-followup-accounts'
-          : opsFixture
-            ? 'clientops-ops-accounts'
-            : uiFixture
-              ? 'clientops-ui-accounts'
-              : 'clientops-accounts';
+const demoProject = customer
+  ? 'clientops-customer-demo'
+  : privateDemo
+    ? 'clientops-private-demo'
+    : launch
+      ? 'clientops-launch-demo'
+      : review
+        ? 'clientops-review-demo'
+        : feature
+          ? 'clientops-feature-release'
+          : followup
+            ? 'clientops-followup'
+            : opsFixture
+              ? 'clientops-ops'
+              : uiFixture
+                ? 'clientops-ui'
+                : 'clientops-hardening';
+const accountsProject = customer
+  ? 'clientops-customer-accounts'
+  : privateDemo
+    ? 'clientops-private-accounts'
+    : launch
+      ? 'clientops-launch-accounts'
+      : review
+        ? 'clientops-review-accounts'
+        : feature
+          ? 'clientops-feature-release-accounts'
+          : followup
+            ? 'clientops-followup-accounts'
+            : opsFixture
+              ? 'clientops-ops-accounts'
+              : uiFixture
+                ? 'clientops-ui-accounts'
+                : 'clientops-accounts';
 const legacy =
   'ghcr.io/edencirakoglu/client-tracker-api@sha256:c3e3c6e4e0d0166e54c734f29bd9270ba4fdaa8a4649ed052b1539a12da36e83';
 mkdirSync('test-results/tls', { recursive: true });
@@ -67,51 +72,57 @@ if (!keys.backup) {
 }
 const baseEnv = {
   ...process.env,
-  HARDENING_DATABASE: privateDemo
-    ? 'clientops_private_demo'
-    : launch
-      ? 'clientops_launch_demo'
-      : review
-        ? 'clientops_review_demo'
-        : feature
-          ? 'clientops_feature_release_demo'
-          : followup
-            ? 'clientops_followup_demo'
-            : opsFixture
-              ? 'clientops_ops_demo'
-              : uiFixture
-                ? 'clientops_ui_demo'
-                : 'clientops_hardening_demo',
-  HTTPS_PORT: privateDemo
-    ? '8470'
-    : launch
-      ? '8460'
-      : review
-        ? '8462'
-        : feature
-          ? '8458'
-          : followup
-            ? '8456'
-            : opsFixture
-              ? '8452'
-              : uiFixture
-                ? '8445'
-                : '8443',
-  MAIL_PORT: privateDemo
-    ? '8050'
-    : launch
-      ? '8040'
-      : review
-        ? '8042'
-        : feature
-          ? '8038'
-          : followup
-            ? '8036'
-            : opsFixture
-              ? '8032'
-              : uiFixture
-                ? '8027'
-                : '8025',
+  HARDENING_DATABASE: customer
+    ? 'clientops_customer_demo'
+    : privateDemo
+      ? 'clientops_private_demo'
+      : launch
+        ? 'clientops_launch_demo'
+        : review
+          ? 'clientops_review_demo'
+          : feature
+            ? 'clientops_feature_release_demo'
+            : followup
+              ? 'clientops_followup_demo'
+              : opsFixture
+                ? 'clientops_ops_demo'
+                : uiFixture
+                  ? 'clientops_ui_demo'
+                  : 'clientops_hardening_demo',
+  HTTPS_PORT: customer
+    ? '8480'
+    : privateDemo
+      ? '8470'
+      : launch
+        ? '8460'
+        : review
+          ? '8462'
+          : feature
+            ? '8458'
+            : followup
+              ? '8456'
+              : opsFixture
+                ? '8452'
+                : uiFixture
+                  ? '8445'
+                  : '8443',
+  MAIL_PORT: customer
+    ? '8060'
+    : privateDemo
+      ? '8050'
+      : launch
+        ? '8040'
+        : review
+          ? '8042'
+          : feature
+            ? '8038'
+            : followup
+              ? '8036'
+              : opsFixture
+                ? '8032'
+                : uiFixture
+                  ? '8027'
+                  : '8025',
   HARDENING_API_IMAGE: `${demoProject}-api:local`,
   HARDENING_WEB_IMAGE: `${demoProject}-web:local`,
   DEMO_MODE: 'true',
@@ -120,51 +131,57 @@ const baseEnv = {
 };
 const accountsEnv = {
   ...baseEnv,
-  HARDENING_DATABASE: privateDemo
-    ? 'clientops_private_accounts_demo'
-    : launch
-      ? 'clientops_launch_accounts_demo'
-      : review
-        ? 'clientops_review_accounts_demo'
-        : feature
-          ? 'clientops_feature_release_accounts_demo'
-          : followup
-            ? 'clientops_followup_accounts_demo'
-            : opsFixture
-              ? 'clientops_ops_accounts_demo'
-              : uiFixture
-                ? 'clientops_ui_accounts_demo'
-                : 'clientops_accounts_demo',
-  HTTPS_PORT: privateDemo
-    ? '8471'
-    : launch
-      ? '8461'
-      : review
-        ? '8463'
-        : feature
-          ? '8459'
-          : followup
-            ? '8457'
-            : opsFixture
-              ? '8453'
-              : uiFixture
-                ? '8446'
-                : '8444',
-  MAIL_PORT: privateDemo
-    ? '8051'
-    : launch
-      ? '8041'
-      : review
-        ? '8043'
-        : feature
-          ? '8039'
-          : followup
-            ? '8037'
-            : opsFixture
-              ? '8033'
-              : uiFixture
-                ? '8028'
-                : '8026',
+  HARDENING_DATABASE: customer
+    ? 'clientops_customer_accounts_demo'
+    : privateDemo
+      ? 'clientops_private_accounts_demo'
+      : launch
+        ? 'clientops_launch_accounts_demo'
+        : review
+          ? 'clientops_review_accounts_demo'
+          : feature
+            ? 'clientops_feature_release_accounts_demo'
+            : followup
+              ? 'clientops_followup_accounts_demo'
+              : opsFixture
+                ? 'clientops_ops_accounts_demo'
+                : uiFixture
+                  ? 'clientops_ui_accounts_demo'
+                  : 'clientops_accounts_demo',
+  HTTPS_PORT: customer
+    ? '8481'
+    : privateDemo
+      ? '8471'
+      : launch
+        ? '8461'
+        : review
+          ? '8463'
+          : feature
+            ? '8459'
+            : followup
+              ? '8457'
+              : opsFixture
+                ? '8453'
+                : uiFixture
+                  ? '8446'
+                  : '8444',
+  MAIL_PORT: customer
+    ? '8061'
+    : privateDemo
+      ? '8051'
+      : launch
+        ? '8041'
+        : review
+          ? '8043'
+          : feature
+            ? '8039'
+            : followup
+              ? '8037'
+              : opsFixture
+                ? '8033'
+                : uiFixture
+                  ? '8028'
+                  : '8026',
   DEMO_MODE: 'false',
 };
 for (const env of [baseEnv, accountsEnv]) {
@@ -248,7 +265,8 @@ function migrate(accounts, command = 'migrate', extras = []) {
     },
   );
 }
-function snapshot() {
+function snapshot(accounts = false) {
+  const database = (accounts ? accountsEnv : baseEnv).HARDENING_DATABASE;
   return Object.fromEntries(
     [
       'clients',
@@ -274,7 +292,7 @@ function snapshot() {
               ? "to_jsonb(t) - 'proposed_by_id'"
               : 'to_jsonb(t)';
       const exists = compose(
-        false,
+        accounts,
         [
           'exec',
           '-T',
@@ -283,7 +301,7 @@ function snapshot() {
           '-U',
           'hardening',
           '-d',
-          baseEnv.HARDENING_DATABASE,
+          database,
           '-Atc',
           `SELECT to_regclass('public.${table}') IS NOT NULL`,
         ],
@@ -291,7 +309,7 @@ function snapshot() {
       ).trim();
       if (exists === 'f') return [table, '0:d41d8cd98f00b204e9800998ecf8427e'];
       const result = compose(
-        false,
+        accounts,
         [
           'exec',
           '-T',
@@ -300,7 +318,7 @@ function snapshot() {
           '-U',
           'hardening',
           '-d',
-          baseEnv.HARDENING_DATABASE,
+          database,
           '-Atc',
           `SELECT count(*) || ':' || md5(coalesce(string_agg((${row})::text, '' ORDER BY id), '')) FROM ${table} t`,
         ],
@@ -320,25 +338,28 @@ if (action === 'snapshot') {
   console.log(JSON.stringify(snapshot(), null, 2));
   process.exit(0);
 }
-if (action === 'restart-demo-api') {
-  compose(false, [
+if (action === 'restart-demo-api' || action === 'restart-accounts-api') {
+  const accounts = action === 'restart-accounts-api';
+  compose(accounts, [
     'exec',
     '-T',
     'api',
     'node',
     '-e',
-    "if (process.env.DEMO_MODE !== 'true' || process.env.DISPOSABLE_DATABASE_NAME !== new URL(process.env.DATABASE_URL).pathname.slice(1)) process.exit(1)",
+    "if (process.env.DEPLOYMENT_MODE !== 'disposable' || process.env.DISPOSABLE_DATABASE_NAME !== new URL(process.env.DATABASE_URL).pathname.slice(1) || new URL(process.env.APP_ORIGIN).hostname !== 'localhost') process.exit(1)",
   ]);
-  const before = snapshot();
-  compose(false, ['restart', 'api']);
-  compose(false, ['up', '-d', '--no-build', '--no-deps', '--no-recreate', '--wait', 'api']);
-  if (JSON.stringify(before) !== JSON.stringify(snapshot()))
+  const before = snapshot(accounts);
+  compose(accounts, ['restart', 'api']);
+  compose(accounts, ['up', '-d', '--no-build', '--no-deps', '--no-recreate', '--wait', 'api']);
+  if (JSON.stringify(before) !== JSON.stringify(snapshot(accounts)))
     throw new Error('API restart changed existing business records.');
   console.log('Disposable API restarted; business records and persistent rate limits retained.');
   process.exit(0);
 }
 if (action !== 'start')
-  throw new Error('Use start, stop, snapshot or restart-demo-api. No reset command is provided.');
+  throw new Error(
+    'Use start, stop, snapshot, restart-demo-api or restart-accounts-api. No reset command is provided.',
+  );
 const openssl =
   process.env.OPENSSL_PATH ??
   (process.platform === 'win32' ? 'C:\\Program Files\\Git\\usr\\bin\\openssl.exe' : 'openssl');
@@ -426,7 +447,7 @@ const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after))
   throw new Error('Upgrade changed existing business records.');
 writeFileSync(
-  `test-results/${privateDemo ? 'private-demo' : launch ? 'launch' : review ? 'review' : feature ? 'feature' : followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
+  `test-results/${customer ? 'customer' : privateDemo ? 'private-demo' : launch ? 'launch' : review ? 'review' : feature ? 'feature' : followup ? 'followup' : opsFixture ? 'ops' : uiFixture ? 'ui' : 'hardening'}-upgrade.json`,
   JSON.stringify(
     {
       revision: run('git', ['rev-parse', 'HEAD'], baseEnv, true),

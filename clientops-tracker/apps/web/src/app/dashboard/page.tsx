@@ -10,6 +10,7 @@ import { ErrorState, LoadingState } from '../../components/ui/states';
 import { NeedsAttention } from '../../components/dashboard/needs-attention';
 import { DeliveryFollowUp } from '../../components/dashboard/delivery-follow-up';
 import { OnboardingChecklist } from '../../components/dashboard/onboarding-checklist';
+import { StartHere } from '../../components/guidance/start-here';
 import { MetricCards } from '../../components/dashboard/metric-cards';
 import { RecentActivity, RecentReleases } from '../../components/dashboard/recent-activity';
 import { api } from '../../lib/api';
@@ -54,6 +55,7 @@ export default function DashboardPage() {
           </div>
         }
       />
+      <StartHere />
       {loading && !data ? (
         <LoadingState label="Loading overview..." />
       ) : error ? (

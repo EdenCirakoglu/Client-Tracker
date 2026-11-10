@@ -1,5 +1,5 @@
 const protectedRoute =
-  /^\/(?:dashboard|clients|projects|delivery|tickets|releases|summaries|users|account)(?:\/[a-zA-Z0-9-]+)*\/?$/;
+  /^\/(?:dashboard|clients|projects|delivery|tickets|releases|summaries|users|account|guide)(?:\/[a-zA-Z0-9-]+)*\/?$/;
 
 /** Navigation only: destinations never authorize access to a record or decision. */
 export function safeReturnDestination(value: string | null): string | null {
