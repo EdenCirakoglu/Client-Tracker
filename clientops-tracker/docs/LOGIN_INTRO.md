@@ -17,8 +17,10 @@ redistribution restrictions, rather than the repository's MIT terms.
 ## Behaviour
 
 - Plays once per browser tab, including entry through `/` and `/dashboard`.
-- `Skip to sign in` and Escape dismiss immediately. Tab stays on the skip action;
-  dismissal focuses the Sign in heading, then Tab reaches Email.
+- No visible skip button. The brief intro finishes automatically; Escape still
+  dismisses immediately. Tab stays within the intro while it is open. Dismissal
+  focuses the Sign in heading, then Tab reaches Email. Enter cannot submit the
+  background login form.
 - Reduced-motion visitors go straight to sign-in. Enabling reduced motion during
   playback also dismisses it.
 - Record destinations bypass the intro. Validated query parameters and section
@@ -66,11 +68,11 @@ Native zoom measurements: `test-results/logo-intro/native-200.json`.
 Mid-reveal captures use the real CSS animation at 900ms, not edited artwork.
 
 Human screen-reader acceptance remains pending. Check that the intro is announced
-once, Skip is reachable, Escape dismisses it, and the Sign in heading and Email
+once, Escape dismisses it, and the Sign in heading and Email
 field are reachable afterwards. Existing release, dependency and security-policy
 decisions remain separate from this visual check.
 
-## Local Verification
+## Initial Verification (810c12b)
 
 - Frozen install, workspace lint/typecheck, API and web builds, formatting: passed.
   The initial sandboxed API build could not resolve its workspace path; the same

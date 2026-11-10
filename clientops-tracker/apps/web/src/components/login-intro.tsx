@@ -1,11 +1,9 @@
 'use client';
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
 
 import { destinationAfterLogin } from '../lib/return-destination';
 import { BrandMark } from './ui/brand-mark';
-import { Button } from './ui/button';
 import styles from './login-intro.module.css';
 
 interface LoginIntroProps {
@@ -78,7 +76,7 @@ export function LoginIntro({ disabled }: LoginIntroProps) {
   }, [disabled, finish]);
 
   useLayoutEffect(() => {
-    if (active) dialog.current?.querySelector('button')?.focus();
+    if (active) dialog.current?.focus();
   }, [active]);
 
   return (
@@ -90,7 +88,7 @@ export function LoginIntro({ disabled }: LoginIntroProps) {
       onKeyDown={(event) => {
         if (event.key === 'Tab') {
           event.preventDefault();
-          event.currentTarget.querySelector('button')?.focus();
+          event.currentTarget.focus();
         }
       }}
       onCancel={(event) => {
@@ -108,9 +106,6 @@ export function LoginIntro({ disabled }: LoginIntroProps) {
           <p id="intro-name" className={styles.name}>
             ClientOps Tracker
           </p>
-          <Button variant="secondary" className={styles.skip} onClick={finish}>
-            Skip to sign in <ArrowRight aria-hidden="true" className="h-4 w-4" />
-          </Button>
         </div>
       ) : null}
     </dialog>

@@ -45,13 +45,12 @@ test('first arrival reveals the exact logo, traps focus, completes and does not 
   await page.clock.pauseAt(new Date(now.getTime() + 1000));
   await page.goto('/');
   await expect(intro(page)).toBeVisible();
-  const skip = page.getByRole('button', { name: 'Skip to sign in', exact: true });
-  await expect(skip).toBeFocused();
+  await expect(intro(page).getByRole('button')).toHaveCount(0);
+  await expect(intro(page)).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(skip).toBeFocused();
-  await skip.focus();
+  await expect(intro(page)).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(skip).toBeFocused();
+  await expect(intro(page)).toBeFocused();
   expect(
     (
       await whileClockAdvances(page, () =>
@@ -78,17 +77,33 @@ test('first arrival reveals the exact logo, traps focus, completes and does not 
   await expect(page.locator('img[src="/brand/journal-v3.png"]')).toHaveCount(1);
 });
 
-for (const key of ['Enter', 'Escape']) {
-  test(`${key} skips immediately and leaves keyboard focus at sign-in`, async ({ page }) => {
-    await holdIntro(page);
-    await expect(page.getByRole('button', { name: 'Skip to sign in' })).toBeFocused();
-    await page.keyboard.press(key);
-    await expect(intro(page)).not.toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Sign in', exact: true })).toBeFocused();
-    await page.keyboard.press('Tab');
-    await expect(page.getByLabel('Email', { exact: true })).toBeFocused();
+test('Escape dismisses immediately and leaves keyboard focus at sign-in', async ({ page }) => {
+  await holdIntro(page);
+  await expect(intro(page)).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(intro(page)).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByLabel('Email', { exact: true })).toBeFocused();
+});
+
+test('Enter during the button-free intro does not submit the background login form', async ({
+  page,
+}) => {
+  const loginRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/auth/login')
+      loginRequests.push(request.url());
   });
-}
+  await holdIntro(page);
+  await expect(intro(page).getByRole('button')).toHaveCount(0);
+  await page.keyboard.press('Enter');
+  await expect(intro(page)).toBeVisible();
+  expect(loginRequests).toEqual([]);
+  await page.clock.runFor(2300);
+  await expect(intro(page)).not.toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in', exact: true })).toBeFocused();
+});
 
 test('reduced motion goes directly to sign-in, including when changed during the intro', async ({
   page,
@@ -150,7 +165,7 @@ for (const view of [
   { name: 'mobile-dark', width: 390, height: 844, theme: 'dark' },
   { name: 'short-light', width: 768, height: 360, theme: 'light' },
 ]) {
-  test(`glass reveal fits ${view.name} with an accessible skip action`, async ({ page }) => {
+  test(`button-free glass reveal fits ${view.name}`, async ({ page }) => {
     await mkdir('test-results/logo-intro', { recursive: true });
     await page.setViewportSize({ width: view.width, height: view.height });
     await page.addInitScript((theme) => localStorage.setItem('clientops:theme', theme), view.theme);
@@ -158,21 +173,21 @@ for (const view of [
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
-    const button = await page.getByRole('button', { name: 'Skip to sign in' }).boundingBox();
-    expect(button?.height).toBeGreaterThanOrEqual(44);
-    expect(button!.y + button!.height).toBeLessThanOrEqual(view.height);
+    await expect(intro(page).getByRole('button')).toHaveCount(0);
+    await expect(intro(page).locator('img')).toBeInViewport();
+    await expect(intro(page).getByText('ClientOps Tracker', { exact: true })).toBeInViewport();
     await whileClockAdvances(page, async () => {
       expect(
         (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations,
       ).toEqual([]);
       await page.screenshot({ path: `test-results/logo-intro/${view.name}.png` });
     });
-    await page.getByRole('button', { name: 'Skip to sign in' }).click();
+    await page.keyboard.press('Escape');
     await expect(intro(page)).not.toBeVisible();
   });
 }
 
-test('native 200 percent browser zoom keeps the logo and skip control usable', async ({
+test('native 200 percent browser zoom keeps the button-free intro readable', async ({
   baseURL,
 }) => {
   const context = await chromium.launchPersistentContext('', {
@@ -195,8 +210,10 @@ test('native 200 percent browser zoom keeps the logo and skip control usable', a
     const zoom = await page.evaluate(() => ({ dpr: devicePixelRatio, width: innerWidth }));
     expect(zoom.dpr / normal.dpr).toBeCloseTo(2, 1);
     expect(zoom.width / normal.width).toBeCloseTo(0.5, 1);
-    await expect(page.getByRole('button', { name: 'Skip to sign in' })).toBeInViewport();
-    await expect(page.getByRole('button', { name: 'Skip to sign in' })).toBeFocused();
+    await expect(intro(page).getByRole('button')).toHaveCount(0);
+    await expect(intro(page).locator('img')).toBeInViewport();
+    await expect(intro(page).getByText('ClientOps Tracker', { exact: true })).toBeInViewport();
+    await expect(intro(page)).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

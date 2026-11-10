@@ -92,14 +92,6 @@
   animation: name-reveal 600ms 300ms ease-out both;
 }
 
-.skip {
-  min-height: 44px;
-}
-
-.skip:hover {
-  background: rgb(var(--subtle));
-}
-
 @keyframes glass-settle {
   0% {
     opacity: 0;
