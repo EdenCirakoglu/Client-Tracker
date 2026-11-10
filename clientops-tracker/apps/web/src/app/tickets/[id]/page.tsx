@@ -2,13 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { Bot, MessageSquare, RefreshCw, WandSparkles } from 'lucide-react';
 
 import { ProtectedPage } from '../../../components/app-shell';
 import { TicketDeliveryRecord } from '../../../components/tickets/delivery-record';
 import { ScopeChange } from '../../../components/tickets/scope-change';
-import { PageHeader } from '../../../components/page-header';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
 import { Card, CardHeader } from '../../../components/ui/card';
@@ -16,7 +14,7 @@ import { FieldLabel, Select, Textarea } from '../../../components/ui/input';
 import { ErrorState, LoadingState } from '../../../components/ui/states';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
-import { formatDate, titleCase } from '../../../lib/format';
+import { formatDate, titleCase, ticketReference } from '../../../lib/format';
 import { ticketCategories, ticketPriorities, ticketStatuses } from '../../../lib/options';
 import type {
   Client,
@@ -191,16 +189,37 @@ export default function TicketDetailPage() {
 
   return (
     <ProtectedPage>
-      <Link href="/tickets" className="mb-4 inline-block text-sm font-medium text-brand-700">
-        Back to tickets
-      </Link>
-      <PageHeader title={ticket?.title ?? 'Ticket detail'} />
+      <div className="mb-5">
+        {ticket ? (
+          <p className="meridian-meta mb-3 text-brand-700">
+            {ticketReference(ticket.id)} / {titleCase(ticket.category)}
+          </p>
+        ) : null}
+        <h1 className="meridian-heading ticket-heading">{ticket?.title ?? 'Ticket detail'}</h1>
+        {ticket ? (
+          <div className="ticket-context">
+            <span>{ticket.project?.name ?? 'Project unavailable'}</span>
+            <span>Owner: {ticket.assignee?.name ?? 'Unassigned'}</span>
+            <span>Opened {formatDate(ticket.createdAt)}</span>
+            <span className="inline-flex items-center gap-2">
+              Ticket status <Badge value={ticket.status} />
+            </span>
+          </div>
+        ) : null}
+      </div>
       {ticket ? (
         <nav
           aria-label="Delivery journal"
           className="mb-5 flex flex-wrap gap-x-6 border-y border-border py-1 text-sm font-semibold text-brand-700"
         >
-          <a href="#request" className="inline-flex min-h-11 items-center">
+          <a
+            href="#request"
+            onClick={() => {
+              const details = document.getElementById('request');
+              if (details instanceof HTMLDetailsElement) details.open = true;
+            }}
+            className="inline-flex min-h-11 items-center"
+          >
             Request
           </a>
           {ticket.category === 'FEATURE_REQUEST' ? (
@@ -223,12 +242,15 @@ export default function TicketDetailPage() {
       ) : null}
 
       {ticket ? (
-        <div
-          className={`grid items-start gap-6 ${internalUser ? 'xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}
-        >
+        <div className="space-y-6">
           <div className="space-y-6">
-            <Card id="request">
-              <CardHeader title={ticket.originalDescription ? 'Original request' : 'Request'} />
+            <details id="request" className="meridian-details scroll-mt-24">
+              <summary className="font-semibold">
+                {ticket.originalDescription ? 'Original request' : 'Request'}
+                <span className="ml-3 font-normal text-muted">
+                  Read the request and ticket context
+                </span>
+              </summary>
               <div className="space-y-5 p-5">
                 <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
                   {ticket.originalDescription ?? ticket.description}
@@ -267,8 +289,19 @@ export default function TicketDetailPage() {
                   <Badge value={ticket.category} />
                 </div>
               </div>
-            </Card>
+            </details>
 
+            <ScopeChange
+              ticketId={ticket.id}
+              category={ticket.category}
+              originalRequest={ticket.originalDescription}
+              originalDate={ticket.createdAt}
+            />
+            <TicketDeliveryRecord
+              key={ticket.id}
+              ticketId={ticket.id}
+              projectId={ticket.projectId}
+            />
             {internalUser ? (
               <Card>
                 <CardHeader title="Update ticket" />
@@ -343,13 +376,7 @@ export default function TicketDetailPage() {
               </Card>
             ) : null}
 
-            <ScopeChange ticketId={ticket.id} category={ticket.category} />
-            <TicketDeliveryRecord
-              key={ticket.id}
-              ticketId={ticket.id}
-              projectId={ticket.projectId}
-            />
-            <Card>
+            <Card id="comments" className="scroll-mt-24">
               <CardHeader title="Comments" />
               <div className="divide-y divide-border">
                 {comments.length > 0 ? (

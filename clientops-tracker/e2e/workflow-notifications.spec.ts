@@ -1,6 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { approveScope } from './helpers/scope-review';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
@@ -149,8 +150,7 @@ test('administrator checklist, review notices, explicit summary delivery and pre
       ticket.id,
     );
     await client.goto(`/tickets/${ticket.id}`);
-    await client.getByLabel('Scope decision').selectOption('APPROVED');
-    await client.getByRole('button', { name: 'Record scope decision', exact: true }).click();
+    await approveScope(client, 1);
     await expect(client.getByText('Revision 1: Approved', { exact: true })).toBeVisible();
     await capturedNotice(
       staff,
@@ -338,7 +338,7 @@ test('captured workflow emails retain the record and section through sign-in wit
     });
     const scopeUrl = await notice(ticket.id, 'scope');
     await followSignedOut(scopeUrl, 'scope');
-    await client.getByRole('button', { name: 'Record scope decision', exact: true }).click();
+    await approveScope(client, 1);
     await expect(client.getByText('Revision 1: Approved', { exact: true })).toBeVisible();
     await client.reload();
     await expect(client.getByText('Revision 1: Approved', { exact: true })).toBeVisible();

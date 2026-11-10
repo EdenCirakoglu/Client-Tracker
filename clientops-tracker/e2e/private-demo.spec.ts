@@ -46,9 +46,9 @@ test('shipment demo retains revision 2, release and resolution when the client r
   ).resolves.toEqual([]);
   await page.getByRole('button', { name: 'Send feedback', exact: true }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Changes requested', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Changes requested', exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Changes requested', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Changes requested', exact: true })).toBeVisible();
   await expect(page.getByText('Revision 2: Approved', { exact: true })).toBeVisible();
   await expect(page.getByText('Resolved', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('1.5.0-demo', { exact: false }).first()).toBeVisible();
