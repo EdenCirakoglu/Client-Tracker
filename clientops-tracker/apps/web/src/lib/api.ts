@@ -103,6 +103,10 @@ async function apiRequest<T>(path: string, options: RequestOptions = {}) {
 
 export const api = {
   onboarding: () => apiRequest<OnboardingChecklist>('/api/dashboard/onboarding'),
+  clientOnboarding: (clientId: string) =>
+    apiRequest<ClientOnboarding>(
+      `/api/dashboard/onboarding/client?clientId=${encodeURIComponent(clientId)}`,
+    ),
   notificationPreferences: () =>
     apiRequest<NotificationPreferences>('/api/auth/notification-preferences'),
   updateNotificationPreferences: (workflowNotifications: boolean) =>
@@ -294,6 +298,22 @@ export interface OnboardingChecklist {
   scope: string;
   completed: number;
   steps: { key: string; title: string; href: string; complete: boolean }[];
+}
+
+export interface ClientOnboarding {
+  client: { id: string; name: string };
+  project: { id: string; name: string } | null;
+  reviewer: { id: string; name: string } | null;
+  invitation: { status: string; name: string } | null;
+  request: { id: string; title: string } | null;
+  decision: {
+    ticketId: string;
+    title: string;
+    actor: string | null;
+    action: string;
+    at: string;
+    section: string;
+  } | null;
 }
 export interface NotificationPreferences {
   workflowNotifications: boolean;

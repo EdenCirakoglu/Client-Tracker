@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   BarChart3,
+  BookOpen,
   BriefcaseBusiness,
   Building2,
   ClipboardList,
@@ -50,6 +51,7 @@ const navItems: NavItem[] = [
   { label: 'Progress summaries', href: '/summaries', icon: ClipboardList, roles: allRoles },
   { label: 'Accounts', href: '/users', icon: Users, roles: ['ADMIN'] },
   { label: 'My account', href: '/account', icon: Settings, roles: allRoles },
+  { label: 'Start here', href: '/guide', icon: BookOpen, roles: allRoles },
 ];
 interface AppShellProps {
   children: React.ReactNode;
