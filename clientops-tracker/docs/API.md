@@ -10,6 +10,14 @@ Both retain the documented stable ordering and current membership checks.
 ## Workflow Notification Additions
 
 - `GET /api/dashboard/onboarding`: ADMIN-only real-record setup checklist.
+- `GET /api/dashboard/onboarding/client?clientId=<uuid>`: ADMIN-only selected-client
+  setup. Returns client, earliest project/request, a currently active eligible CLIENT,
+  latest retained invitation delivery status and earliest recorded scope/outcome/
+  acceptance decision, each joined to that client's projects/accounts. Reads use a
+  consistent transaction and revalidate the current administrator. Every record query
+  is bounded to one row; no token, ciphertext, password or private mail body is returned.
+  Missing/invalid UUID is 400, nonexistent client 404, non-admin 403. An invitation
+  does not imply activated access; a decision does not necessarily mean acceptance.
 - `GET/PATCH /api/auth/notification-preferences`: own preference; PATCH accepts
   `{"workflowNotifications":false}` and requires the session/CSRF token.
   Account recovery and invitations are unaffected.

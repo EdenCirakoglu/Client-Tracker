@@ -2,12 +2,24 @@
 
 ## Current First-Customer Launch Checklist
 
-Updated 2026-11-08. Main is `cfec6e71a51975e224a2cee9ddda2238183b8b31`
+Updated 2026-11-10. Main is `cfec6e71a51975e224a2cee9ddda2238183b8b31`
 after #20 and #31 merged. Its main CI, both publications and a **new**
 digest-pinned registry rehearsal passed. PR #22 now targets main and has been reconciled; it remains draft and unmerged.
 The [review handoff](PR22_INTEGRATION.md) separates normal PR CI from the unresolved
 CodeQL policy gate.
 Historical results below keep their original revisions.
+
+First-customer guidance is a separate candidate on
+`feature/first-customer-guidance`, based on #34's
+`a6a343cb9f9d278dadf9377f26d6b96d2dd90eb9`. It adds selected-client setup,
+role-specific Start here guidance and next-actor explanations without a schema
+change. [Current evidence and claims](FIRST_CUSTOMER_READINESS.md),
+[reopenable user guide](FIRST_CUSTOMER_GUIDE.md),
+[human task card](FIRST_CUSTOMER_TASK_CARD.md) and
+[private staging/operator checklist](PRIVATE_STAGING.md) distinguish implementation,
+local fixtures, hosted checks and outstanding acceptance. Do not merge this stack
+into a parent feature branch; after each separately approved parent merge, retarget
+and revalidate the next PR against actual main.
 
 Branding follow-up: draft [PR #34](https://github.com/EdenCirakoglu/Client-Tracker/pull/34)
 is based on verified #22 head `9e25bc27d73ae1756c8fc185223704417de8642b`.
@@ -22,6 +34,7 @@ into the product branch. No contact, checkout or public launch is activated.
 | Published maintenance release  | [Exact cfec6e71 evidence](RELEASE_CFEC6E71.md): pulled images, migrations, login, ticket/comments, two-organisation denial, DB outage/recovery, recreation persistence and logout replay passed | Preserve evidence; do not attribute it to the product candidate                                                                    | Maintainer                     |
 | Product integration            | #22 retargeted to main; security/tsup fixes and migration 0007 retained                                                                                                                         | Final-head normal PR CI, audits and CodeQL policy; independent [CSRF review](CSRF_REVIEW.md)                                       | Maintainer + security reviewer |
 | Private five-minute demo       | [Runnable private shipment demo](PRIVATE_DEMO.md); existing workflow, not a new approval system                                                                                                 | Review the printed ticket; client changes persist independently of scope, release and resolution                                   | Maintainer                     |
+| Selected-client guidance       | Implemented on the #34-dependent candidate; scoped API/role guide/customer journey tests in [current evidence](FIRST_CUSTOMER_READINESS.md)                                                     | Review candidate CI and actual screenshots, then independent first-visit tasks; no parent merge inferred                           | Maintainer + owner             |
 | Remaining dependency decisions | Kit/esbuild and minimatch findings remain visible; November 4 Kit deadline expired without approval                                                                                             | Review supported remedies or make an explicit time-limited decision; no acceptance inferred from clean production audit            | Repository owner               |
 | Each future approved merge     | None authorized in this run; automatic image publication follows successful main push CI                                                                                                        | Verify exact main SHA CI, both publications and digest-pinned runtime **without rebuilding**, after each separately approved merge | Release maintainer             |
 | Human accessibility            | Automated checks are not a human screen-reader walkthrough                                                                                                                                      | Assign reviewer; record actual speech, versions and issues                                                                         | Accessibility reviewer         |
