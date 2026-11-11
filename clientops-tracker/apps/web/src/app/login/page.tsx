@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { ThemePicker } from '../../components/ui/preferences';
 import { BrandMark } from '../../components/ui/brand-mark';
 import { destinationAfterLogin } from '../../lib/return-destination';
+import { LoginIntro } from '../../components/login-intro';
 
 const demoUsers = [
   { label: 'Admin', email: 'admin@example.com', icon: ShieldCheck },
@@ -22,7 +23,7 @@ const demoUsers = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, status, sessionEnded } = useAuth();
+  const { login, status, sessionEnded, preserveDestination } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [demoEnabled, setDemoEnabled] = useState(false);
@@ -56,6 +57,7 @@ export default function LoginPage() {
 
   return (
     <main className="grid min-h-screen place-items-center bg-surface px-4 py-10">
+      <LoginIntro disabled={status === 'authenticated' || sessionEnded || !preserveDestination} />
       <div className="w-full max-w-md">
         <div className="mb-4 flex justify-end">
           <ThemePicker />
@@ -73,7 +75,9 @@ export default function LoginPage() {
 
           <section className="p-6 sm:p-8">
             <div>
-              <h2 className="text-xl font-semibold text-ink">Sign in</h2>
+              <h2 id="sign-in-heading" tabIndex={-1} className="text-xl font-semibold text-ink">
+                Sign in
+              </h2>
             </div>
 
             {sessionEnded ? (
