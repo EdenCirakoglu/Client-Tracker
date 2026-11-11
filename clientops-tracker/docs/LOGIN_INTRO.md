@@ -107,3 +107,79 @@ check now samples the real animation at its settled 900ms frame rather than an
 uncontrolled point during the fade. Contrast rules and production timing remain
 unchanged. Prior button-bearing captures are retained locally under
 `test-results/logo-intro-810c12b`.
+
+## November 11: Combined-Suite Rate Limit Diagnosis
+
+The [original #36 CI failure](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42916146800)
+at `23484934143dc4f885d70b34a172337053fd8d61` passed 27 browser cases and failed
+the final two workflow-notification cases waiting for `Continue as Developer`.
+Its archive SHA-256 was downloaded and verified as
+`e0c803a881dc81d1feff2aefab789b897678084abb41cf0ae412e83999f2bbce`.
+The captured-email case's screenshot shows a sign-in form with no intro overlay
+and no demo controls. The artifact alone did not record the configuration response.
+
+A diagnostic-only checkpoint, `b2c35902765f51d2d8db2ade13cf4182b419e3f4`,
+kept the combined 29-case suite and all production settings unchanged. It checks
+the actual login page's `/api/auth/config` response before looking for a demo
+button, without making an extra request or logging cookies/tokens/bodies.
+[Diagnostic CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43061447199)
+reproduced both failures as **HTTP 429**, with
+`limit=300, remaining=0, reset=743` and `reset=742` respectively. The other 27
+cases passed. The 300-request/15-minute authentication ingress budget is shared
+by the single runner IP; it includes configuration/session reads, not only logins.
+The login screen fails closed with demo access disabled when configuration fails.
+Extending a locator timeout or changing animation timing would not fix that cause.
+
+The scoped fix adapts PR #37 commit
+`97562213b686c6ca90d8501728979042138a9cf5`:
+
+- `Validate` keeps all **18 core business/account browser scenarios** and every
+  existing static, audit, API, migration, accessibility and operational check.
+- `Review browser journeys` owns a separate runner and fresh disposable Compose
+  fixtures for all **11 intro scenarios**, including real login/return-destination,
+  keyboard, reduced motion, failures, both themes and native 200% zoom.
+- Both jobs check out the exact PR head and retain privacy-gated browser artifacts
+  and cleanup. Test discovery confirms 18 + 11 = 29, with no omitted scenarios.
+- No application code, rate limit, token/session behaviour, duration, timeout,
+  retry policy, assertion, dependency or workflow permission is relaxed. The
+  existing API ingress-limit tests still verify exhaustion and recovery.
+- PR #37's intro component, login page, configuration and intro tests are identical
+  to the original #36 head; no Meridian UI work is needed for this fix. Its three
+  extra review cases are not copied into #36. Later integration must preserve its
+  broader test selection and obtain checks for the resulting revision.
+
+Reproduce each partition on its **own fresh isolated runner/stack**, from the
+pnpm workspace, after the normal frozen install and browser installation:
+
+```sh
+node scripts/hardening-stack.mjs start
+E2E_ALLOW_DISPOSABLE_DEMO=true VERIFY_URL=https://localhost:8443 ACCOUNT_SETUP_URL=https://localhost:8444 ACCOUNT_MAIL_URL=http://localhost:8026 node node_modules/@playwright/test/cli.js test --grep-invert 'login-intro.spec.ts'
+node scripts/hardening-stack.mjs stop
+```
+
+On the second fresh runner:
+
+```sh
+node scripts/hardening-stack.mjs start
+E2E_ALLOW_DISPOSABLE_DEMO=true VERIFY_URL=https://localhost:8443 pnpm test:e2e e2e/login-intro.spec.ts
+node scripts/hardening-stack.mjs stop
+```
+
+Do not run these fixed-name fixture commands over preserved local databases.
+CI creates fresh volumes on independent runners; this is not a limiter reset
+inside a test. The exact final run/results and archive checksums belong to the
+PR handoff. The deliberately failing diagnostic is retained as historical evidence.
+
+### Separate Review And Hosting Gates
+
+PR #22 remains at `9e25bc27d73ae1756c8fc185223704417de8642b` with passing
+application CI but **failing CSRF policy**, despite successful CodeQL execution.
+The [independent CSRF and cookie review packet](https://github.com/EdenCirakoglu/Client-Tracker/pull/22#issuecomment-6801804519)
+states two distinct decisions and pins the existing source/tests. Neither finding
+is dismissed or approved here. Human screen-reader acceptance remains outstanding.
+
+`Workers Builds: client-tracker` is a separate, failed Git-connected Cloudflare
+check, not application CI. Its GitHub check provides no diagnostic build log;
+the cause is not established here. The separate public fictional walkthrough
+returned HTTP 200 on November 11 and was not modified. No deployment, Cloudflare
+configuration, public walkthrough, image publication or merge is part of this fix.
