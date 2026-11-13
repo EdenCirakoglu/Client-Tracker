@@ -173,6 +173,15 @@ corrected full-page screenshots taken while scrolled and pointed accepted-delive
 captures at the actual delivery record instead of the ticket's first viewport.
 These are test/evidence corrections, not hidden product or permission changes.
 
+All four application CI jobs passed at `334996375911f681c071e40d5a26cd6e7247698e`
+in run [43474035545](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43474035545).
+Final visual inspection excluded that run's accepted-delivery element captures:
+the tall-element screenshot placed the sticky header over the acceptance heading.
+The capture now uses a normal viewport positioned below the real header and
+asserts that the acceptance heading is in view and unobscured. No application
+style is hidden or modified for the screenshot. Other matched captures retain
+their original source revisions; the final handoff records the follow-up run.
+
 Run from the worktree's `clientops-tracker` directory with Node 24, pnpm 9.15.4,
 Docker and a separately designated test database. Supply the local test URL
 privately as `TEST_DATABASE_URL`; do not point it to the retained demo database.

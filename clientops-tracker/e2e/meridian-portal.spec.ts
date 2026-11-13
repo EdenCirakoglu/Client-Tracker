@@ -169,9 +169,24 @@ async function capture(page: Page, name: string, section?: string) {
   const directory = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'test-results/meridian-portal');
   await mkdir(directory, { recursive: true });
   if (section) {
-    await page.locator(section).screenshot({
+    await page.locator(section).evaluate((element) => {
+      const headerHeight = document.querySelector('header')?.getBoundingClientRect().height ?? 0;
+      window.scrollTo({
+        top: element.getBoundingClientRect().top + window.scrollY - headerHeight - 16,
+        behavior: 'instant',
+      });
+    });
+    const heading = page.getByRole('heading', { name: 'Accepted by client', exact: true });
+    await expect(heading).toBeInViewport();
+    expect(
+      await heading.evaluate((element) => element.getBoundingClientRect().top),
+    ).toBeGreaterThan(
+      await page.locator('header').evaluate((element) => element.getBoundingClientRect().bottom),
+    );
+    await page.screenshot({
       path: resolve(directory, `portal-${name}.png`),
       animations: 'disabled',
+      fullPage: false,
     });
     return;
   }
