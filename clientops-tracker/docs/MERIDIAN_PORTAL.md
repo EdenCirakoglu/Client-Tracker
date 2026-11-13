@@ -131,6 +131,20 @@ reloads and checks persisted state; no assertion, permission or timeout was
 relaxed. The portal does not claim live multi-session updates. Keep that failed
 artifact associated with its original revision; a subsequent pass does not erase it.
 
+The initial core browser job also failed eight scenarios on outdated presentation
+contracts: login readiness waited for the now-collapsed Ticket breakdown content;
+ticket result text now includes its page; developer follow-up and installation
+checklist labels changed. Assertions were updated to the actual named controls,
+opening disclosure content when testing it. Authentication, privacy, counts,
+decisions, errors and persistence assertions remain. Separately, review reproduced
+and fixed Create/Invite actions retaining edit mode and project-filter reset
+retaining its URL parameter. A focused production-preview regression passed.
+
+The final local API rerun at the unchanged application source passed 209/209 in
+117.82 seconds. An earlier rerun omitted the custom Mailpit ports and failed setup;
+it was stopped, then run with SMTP_PORT=11062 and MAILPIT_URL=http://localhost:18062.
+No test or timeout change was used to address that environment mistake.
+
 Run from the worktree's `clientops-tracker` directory with Node 24, pnpm 9.15.4,
 Docker and a separately designated test database. Supply the local test URL
 privately as `TEST_DATABASE_URL`; do not point it to the retained demo database.
