@@ -163,6 +163,16 @@ content can silently escape analysis. The WCAG tags, timer, focus, zoom and
 completion assertions are unchanged; other application scans keep default axe.
 No error is caught or retried and no timeout is increased.
 
+That same run's core suite passed 16/18 scenarios. The two failures were a broad
+alert locator also matching Next.js's route announcer, and a summary-order check
+looking only for h2 despite correctly nested h3 subsections. The former now
+asserts the explicit ticket-not-found error inside main, retaining API 404 and
+no-content-leak checks. The latter includes both heading levels and explicitly
+requires both expected headings before comparing order. Capture review also
+corrected full-page screenshots taken while scrolled and pointed accepted-delivery
+captures at the actual delivery record instead of the ticket's first viewport.
+These are test/evidence corrections, not hidden product or permission changes.
+
 Run from the worktree's `clientops-tracker` directory with Node 24, pnpm 9.15.4,
 Docker and a separately designated test database. Supply the local test URL
 privately as `TEST_DATABASE_URL`; do not point it to the retained demo database.

@@ -165,9 +165,16 @@ async function accessible(page: Page) {
     })),
   ).toEqual([]);
 }
-async function capture(page: Page, name: string) {
+async function capture(page: Page, name: string, section?: string) {
   const directory = resolve(process.env.E2E_SCREENSHOT_DIR ?? 'test-results/meridian-portal');
   await mkdir(directory, { recursive: true });
+  if (section) {
+    await page.locator(section).screenshot({
+      path: resolve(directory, `portal-${name}.png`),
+      animations: 'disabled',
+    });
+    return;
+  }
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({
     path: resolve(directory, `portal-${name}.png`),
@@ -595,7 +602,8 @@ test('real reviewer decisions persist; staff and same-organisation non-reviewers
     for (const width of widths) {
       await reviewer.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
       await accessible(reviewer);
-      if (width === 390) await capture(reviewer, `accepted-delivery-${value}-${width}`);
+      if (width === 390)
+        await capture(reviewer, `accepted-delivery-${value}-${width}`, '#delivery');
     }
   }
 });

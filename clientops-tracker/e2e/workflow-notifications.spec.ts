@@ -227,7 +227,9 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     ).toBeVisible();
     await accessible(client);
     await capture(client, 'summary-client-mobile');
-    const headings = await client.locator('main h2').allTextContents();
+    const headings = await client.locator('main h2, main h3').allTextContents();
+    expect(headings).toContain('Delivery decisions');
+    expect(headings).toContain('Resolved requests');
     expect(headings.indexOf('Delivery decisions')).toBeLessThan(
       headings.indexOf('Resolved requests'),
     );

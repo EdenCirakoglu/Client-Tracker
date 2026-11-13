@@ -14,6 +14,12 @@ async function settled(page: Page) {
   ).toHaveCount(0);
 }
 
+async function capture(page: Page, path: string) {
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await page.screenshot({ path, fullPage: true, animations: 'disabled' });
+}
+
 async function fits(page: Page) {
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
@@ -72,10 +78,7 @@ for (const view of [
         (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
           .violations,
       ).toEqual([]);
-      await page.screenshot({
-        path: info.outputPath(`${route.slice(1).replaceAll('/', '-')}.png`),
-        fullPage: true,
-      });
+      await capture(page, info.outputPath(`${route.slice(1).replaceAll('/', '-')}.png`));
     }
   });
 }
@@ -297,10 +300,7 @@ test('mobile editors retain complete errors and input without duplicate saves', 
     expect(saves).toBe(before + 1);
     await expect(page.locator(entry.name)).toHaveValue('Portal failure fixture');
     await fits(page);
-    await page.screenshot({
-      path: info.outputPath(`error-${entry.route.slice(1).replaceAll('/', '-')}.png`),
-      fullPage: true,
-    });
+    await capture(page, info.outputPath(`error-${entry.route.slice(1).replaceAll('/', '-')}.png`));
   }
 });
 
@@ -369,7 +369,7 @@ test('summary preview publishes without email and retains review after failure',
     (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
       .violations,
   ).toEqual([]);
-  await page.screenshot({ path: info.outputPath('published-summary-mobile.png'), fullPage: true });
+  await capture(page, info.outputPath('published-summary-mobile.png'));
   await page.reload();
   await expect(
     page.getByRole('heading', { name: 'Notify client contacts', exact: true }),
@@ -391,7 +391,7 @@ test('public account forms fit mobile and preserve validation and token removal'
       (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
         .violations,
     ).toEqual([]);
-    await page.screenshot({ path: info.outputPath(`${route.slice(1)}.png`), fullPage: true });
+    await capture(page, info.outputPath(`${route.slice(1)}.png`));
   }
   await page.goto(`/reset-password#token=${'a'.repeat(64)}`);
   await expect(page).toHaveURL(/\/reset-password$/);
