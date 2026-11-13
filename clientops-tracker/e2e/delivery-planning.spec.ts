@@ -35,7 +35,9 @@ async function accessible(page: Page) {
 }
 async function settledDashboard(page: Page) {
   await expect(
-    page.getByRole('heading', { name: /^(Delivery follow-up|My decisions)$/ }),
+    page.getByRole('heading', {
+      name: /^(Commitments and follow-ups|Your next decision|Your next actions)$/,
+    }),
   ).toBeVisible();
   await expect(page.getByText(/Loading (delivery|releases|activity|queue|overview)/)).toHaveCount(
     0,

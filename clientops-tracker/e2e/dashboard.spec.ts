@@ -29,9 +29,28 @@ async function accessible(page: Page) {
 async function login(page: Page, role: string) {
   await page.goto('/login');
   await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
   await expect(
-    page.getByRole('region', { name: 'Needs attention' }).getByText('Loading tickets...'),
+    page.getByRole('heading', {
+      name:
+        role === 'Developer'
+          ? 'Your next actions'
+          : role === 'Client'
+            ? 'Organisation requests'
+            : 'Request follow-up',
+    }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', {
+        name:
+          role === 'Developer'
+            ? 'Your next actions'
+            : role === 'Client'
+              ? 'Organisation requests'
+              : 'Request follow-up',
+      })
+      .getByRole('status')
+      .filter({ hasText: /Loading/ }),
   ).toHaveCount(0);
 }
 
@@ -51,13 +70,22 @@ test('role queues, metric destinations and URL filters agree with authorised rec
     const page = await context.newPage();
     await login(page, role);
     const metrics = (await (await page.request.get('/api/dashboard/metrics')).json()).data;
-    const queue = page.getByRole('region', { name: 'Needs attention' });
+    const queue = page.getByRole('region', {
+      name:
+        role === 'Developer'
+          ? 'Your next actions'
+          : role === 'Client'
+            ? 'Organisation requests'
+            : 'Request follow-up',
+    });
     const selection =
-      role === 'Admin' ? 'Unassigned' : role === 'Developer' ? 'My work' : 'Your reply needed';
-    await expect(queue.getByRole('button', { name: selection, exact: true })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+      role === 'Admin' ? 'Unassigned' : role === 'Developer' ? 'Ready for me' : 'Replies needed';
+    await expect(
+      queue.getByRole('button', {
+        name: role === 'Developer' ? /^Ready for me/ : selection,
+        exact: role !== 'Developer',
+      }),
+    ).toHaveAttribute('aria-pressed', 'true');
     if (role === 'Client') {
       expect(metrics).not.toHaveProperty('developerWorkload');
       await expect(page.getByRole('heading', { name: 'Developer workload' })).toHaveCount(0);
@@ -67,10 +95,15 @@ test('role queues, metric destinations and URL filters agree with authorised rec
       const decisions = (
         await (await page.request.get('/api/dashboard/delivery?view=mine&limit=4')).json()
       ).data;
-      const personal = page.getByRole('region', { name: 'My decisions', exact: true });
-      await expect(
-        personal.getByText(`${decisions.total} awaiting your review`, { exact: true }),
-      ).toBeVisible();
+      const personal = page.getByRole('region', { name: 'Your next decision', exact: true });
+      if (decisions.total)
+        await expect(
+          personal.getByText(`${decisions.total} awaiting your review`, { exact: true }),
+        ).toBeVisible();
+      else
+        await expect(
+          personal.getByText('No decisions are awaiting your review.', { exact: true }),
+        ).toBeVisible();
       expect(decisions.items.every((item: { yourDecision: boolean }) => item.yourDecision)).toBe(
         true,
       );
@@ -99,7 +132,7 @@ test('role queues, metric destinations and URL filters agree with authorised rec
       ],
       ['Critical unresolved', 'criticalTickets', 'status=UNRESOLVED&priority=CRITICAL'],
       [
-        role === 'Client' ? 'Your reply needed' : 'Waiting for client',
+        role === 'Client' ? 'Waiting for your organisation' : 'Waiting for client',
         'ticketsWaitingForClient',
         'status=WAITING_FOR_CLIENT',
       ],
@@ -188,7 +221,7 @@ test('theme and navigation preferences work across responsive portal and account
   for (const width of [390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: width === 1280 ? 600 : 900 });
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Request follow-up' })).toBeVisible();
     await expect(page.getByText('Loading tickets...', { exact: true })).toHaveCount(0);
     await accessible(page);
     await capture(page, `dashboard-${width}`);
@@ -197,7 +230,10 @@ test('theme and navigation preferences work across responsive portal and account
       await capture(page, 'mobile-navigation');
       await page.keyboard.press('Escape');
       await expect(page.getByRole('button', { name: 'Open navigation' })).toBeFocused();
-      const firstLink = page.getByRole('region', { name: 'Needs attention' }).locator('li').first();
+      const firstLink = page
+        .getByRole('region', { name: 'Request follow-up' })
+        .locator('li')
+        .first();
       expect(await firstLink.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
   }
@@ -240,7 +276,7 @@ test('failed refresh is not an empty queue; long names and focused controls rema
   await expect(page.getByRole('link', { name: /^Unresolved:/ })).toHaveCount(0);
   await page.unroute('**/api/dashboard/metrics');
   await page.getByRole('button', { name: 'Retry', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Request follow-up' })).toBeVisible();
   await page.route('**/api/tickets/queue?*', (route) =>
     route.fulfill({
       status: 503,
@@ -250,7 +286,7 @@ test('failed refresh is not an empty queue; long names and focused controls rema
       }),
     }),
   );
-  const queue = page.getByRole('region', { name: 'Needs attention' });
+  const queue = page.getByRole('region', { name: 'Request follow-up' });
   await queue.getByRole('button', { name: 'Critical', exact: true }).click();
   await expect(queue.getByRole('alert')).toContainText('Tickets temporarily unavailable.');
   await expect(queue.getByRole('heading', { name: 'Nothing needs attention here' })).toHaveCount(0);
