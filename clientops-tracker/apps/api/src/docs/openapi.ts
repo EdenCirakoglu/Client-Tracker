@@ -379,7 +379,7 @@ export const openApiDocument = {
       get: {
         ...securedOperation('Paginated, scoped ticket queue'),
         description:
-          'data: {items: Ticket[], total, page, limit}. Full-scope count and page use one repeatable-read snapshot. CLIENT scope is enforced server-side. Legacy GET /api/tickets retains its array response. attention sorts priority CRITICAL first, then oldest createdAt, then UUID; newest sorts createdAt and UUID descending.',
+          'data: {items: Ticket[], total, page, limit}. Full-scope count and page use one repeatable-read snapshot. CLIENT scope is enforced server-side. Legacy GET /api/tickets retains its array response. attention sorts priority CRITICAL first, then oldest createdAt, then UUID; newest sorts createdAt and UUID descending. Only workflow requests add item fields workflow, workflowHref (/tickets/:id with optional #scope or #delivery), nextAction (navigation label), actionReason, and currentWorkflow: {scope, delivery}, each null or {id, revision, state} for the highest recorded revision, with scope.approverName and delivery.reviewerName from the stored client-visible name snapshots. Workflow waiting reasons name that actor; ticket-only waiting has no recorded actor. Legacy queue item fields are unchanged. Workflow precedence: changes (latest scope or delivery CHANGES_REQUESTED), waiting (no changes and latest scope PROPOSED, delivery PROPOSED/AWAITING_ACCEPTANCE, or ticket WAITING_FOR_CLIENT), ready (neither and unresolved). Pending workflow decisions remain visible on resolved/closed tickets; accepted delivery alone is not pending. All supplied legacy filters still intersect: status=UNRESOLVED would hide resolved tickets awaiting decisions.',
         parameters: [
           {
             name: 'status',
@@ -414,6 +414,13 @@ export const openApiDocument = {
             in: 'query',
             description: 'Internal only',
             schema: { type: 'string', enum: ['mine', 'unassigned'] },
+          },
+          {
+            name: 'workflow',
+            in: 'query',
+            description:
+              'Internal personal lanes, filtered in SQL before count/pagination using latest revision numbers. Requires assignment=mine (400 otherwise); CLIENT receives 403. Ready does not imply approved scope. Changes take precedence over waiting; scope changes take action-link precedence over delivery changes.',
+            schema: { type: 'string', enum: ['ready', 'changes', 'waiting'] },
           },
           {
             name: 'assignedToId',

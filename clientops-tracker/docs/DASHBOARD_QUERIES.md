@@ -16,6 +16,7 @@ transaction. No ticket descriptions are loaded to calculate dashboard metrics.
 | `status`               | A ticket status, or `UNRESOLVED` for OPEN, IN_PROGRESS and WAITING_FOR_CLIENT      |
 | `priority`, `category` | Existing schema enums                                                              |
 | `assignment`           | `mine` or `unassigned`; internal users only                                        |
+| `workflow`             | `ready`, `changes` or `waiting`; internal only, requires `assignment=mine`         |
 | `assignedToId`         | Exact assignee UUID; internal users only                                           |
 | `projectId`            | Project UUID, intersected with organisation scope                                  |
 | `search`               | Literal, case-insensitive title/description substring, up to 200 characters        |
@@ -30,6 +31,65 @@ can move records between separate requests; refresh to get the current queue.
 Unknown or invalid filters return the existing `400 VALIDATION_ERROR` envelope.
 Client assignment filters return 403. A foreign project filter returns no records,
 not another organisation's records.
+
+### Personal Workflow Lanes
+
+Use `GET /api/tickets/queue?assignment=mine&workflow=ready` (or `changes` / `waiting`).
+`workflow` is optional. It requires `assignment=mine` on the server; missing or
+`unassigned` assignment returns `400 VALIDATION_ERROR`. CLIENT users receive 403,
+including when assignment is omitted. ADMIN and DEVELOPER users see only tickets
+assigned to their own authenticated user ID. An additional `assignedToId` still
+intersects this restriction and cannot select another user's work.
+
+The latest scope proposal and latest delivery revision are independently selected
+by highest `revision`, not creation date. Each ticket belongs to at most one lane,
+evaluated in this order in SQL before counting and pagination:
+
+1. `changes`: latest scope **or** delivery state is `CHANGES_REQUESTED`.
+2. `waiting`: not changes, and latest scope is `PROPOSED`, latest delivery is
+   `PROPOSED` / `AWAITING_ACCEPTANCE`, or ticket status is `WAITING_FOR_CLIENT`.
+3. `ready`: neither above, and ticket status is OPEN, IN_PROGRESS or WAITING_FOR_CLIENT.
+
+Resolved and closed tickets remain assigned to `changes` or `waiting` while a
+workflow decision is pending; this endpoint does not change assignment or status.
+Accepted delivery does not itself create a pending decision. Resolved/closed
+tickets without other pending workflow work are excluded. Unresolved tickets with
+accepted delivery can remain ready. Ready means no pending changes/decision, not
+that scope was approved: missing or rejected scope is not invented as approval.
+
+All existing filters remain intersections. In particular, do not add
+`status=UNRESOLVED` when requesting a complete personal lane: that explicit filter
+would omit resolved/closed tickets still awaiting decisions. Existing internal
+scope spans clients; project and client filters only narrow it. Counts and action
+metadata use the same repeatable-read snapshot as the page. There is no post-page
+workflow filtering or count based only on a loaded page.
+
+Only requests with `workflow` add these item fields; legacy queue responses remain
+unchanged, including client responses:
+
+```ts
+workflow: 'ready' | 'changes' | 'waiting';
+workflowHref: string; // /tickets/:id, /tickets/:id#scope or /tickets/:id#delivery
+nextAction: string; // Display label for navigation, not an automatic mutation
+actionReason: string; // Recorded state; no predicted deadlines or approvals
+currentWorkflow: {
+  scope: { id: string; revision: number; state: string; approverName: string } | null;
+  delivery: { id: string; revision: number; state: string; reviewerName: string } | null;
+};
+```
+
+Scope states are `PROPOSED`, `APPROVED`, `REJECTED`, `CHANGES_REQUESTED`. Delivery
+states are `PROPOSED`, `AGREED`, `AWAITING_ACCEPTANCE`, `ACCEPTED`,
+`CHANGES_REQUESTED`. Null means no recorded revision. Both summaries are returned
+even when one determines the lane. Names are the client-visible snapshots stored on
+the revision, not a new account lookup; waiting reasons name that approver/reviewer.
+Ticket-only waiting remains generic because no designated actor is recorded.
+Actions prioritise scope changes, delivery
+changes, scope proposal, delivery proposal/acceptance, then ticket waiting. Ties
+between scope and delivery changes therefore link to `#scope`. For ready tickets,
+rejected scope links to `#scope`; otherwise recorded delivery links to `#delivery`,
+and tickets without delivery link to their detail page. These are navigation links,
+not permission to approve on behalf of a client.
 
 ## Metrics
 
