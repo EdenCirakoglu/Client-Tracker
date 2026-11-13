@@ -152,6 +152,17 @@ reported credential; the earlier review commits remain in history. The browser
 artifact gate then also failed closed because no core browser report existed.
 Neither gate was disabled or relaxed.
 
+Run 43471981764 at fffda836 passed both portal jobs but the inherited intro test
+hit `clock.runFor: Target page, context or browser has been closed`. The failure
+snapshot still contains the open login dialog. Installed Playwright 1.63.0 runs
+clock steps in every context frame; axe 4.13.0 creates and closes a temporary
+results page. Their concurrent lifetimes explain this clock-operation race, not
+an application login timeout. Only the intro's scan uses axe's documented
+same-page mode now, with an explicit zero-frame assertion so no cross-origin
+content can silently escape analysis. The WCAG tags, timer, focus, zoom and
+completion assertions are unchanged; other application scans keep default axe.
+No error is caught or retried and no timeout is increased.
+
 Run from the worktree's `clientops-tracker` directory with Node 24, pnpm 9.15.4,
 Docker and a separately designated test database. Supply the local test URL
 privately as `TEST_DATABASE_URL`; do not point it to the retained demo database.
