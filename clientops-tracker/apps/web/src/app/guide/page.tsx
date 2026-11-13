@@ -14,20 +14,22 @@ export default function GuidePage() {
   return (
     <ProtectedPage>
       <PageHeader title="Start here" description="Your next action, and how to know it worked." />
-      <div className="max-w-3xl space-y-8">
+      <div className="portal-briefing space-y-8">
         {admin ? (
           <Suspense fallback={<LoadingState />}>
             <ClientSetup />
           </Suspense>
         ) : (
-          <section>
-            <h2 className="text-lg font-semibold">
+          <section className="portal-section">
+            <p className="portal-kicker">{client ? 'Client workflow' : 'Delivery workflow'}</p>
+            <h2 className="portal-section-title">
               {client ? 'Make a request and review delivery' : 'Deliver a change for review'}
             </h2>
-            <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm leading-6">
+            <ol className="mt-4 list-decimal divide-y divide-border pl-5 text-sm leading-6 [&>li]:py-3 [&>li]:pl-2">
               {client ? (
                 <>
                   <li>
+                    <h3 className="mb-1 font-semibold">Record the request</h3>
                     <Link href="/tickets/new" className="text-brand-700 underline">
                       Create ticket
                     </Link>
@@ -35,6 +37,7 @@ export default function GuidePage() {
                     opens next. If no project exists, ask your agency contact to set it up.
                   </li>
                   <li>
+                    <h3 className="mb-1 font-semibold">Review the agreement</h3>
                     Open{' '}
                     <Link href="/delivery?view=mine" className="text-brand-700 underline">
                       My decisions
@@ -43,6 +46,7 @@ export default function GuidePage() {
                     reviewer can decide; other contacts can read the record.
                   </li>
                   <li>
+                    <h3 className="mb-1 font-semibold">Record your delivery decision</h3>
                     In Delivery and acceptance, compare the agreed outcome with Delivery evidence.
                     Choose Accept delivered work or Request changes, describe what remains
                     unresolved, then save. The recorded decision and actor stay on the ticket after
@@ -52,6 +56,7 @@ export default function GuidePage() {
               ) : (
                 <>
                   <li>
+                    <h3 className="mb-1 font-semibold">Choose the request</h3>
                     Open{' '}
                     <Link
                       href={`/tickets?status=UNRESOLVED&assignedToId=${user?.id ?? ''}`}
@@ -62,16 +67,19 @@ export default function GuidePage() {
                     . Read the original request and current scope before changing work.
                   </li>
                   <li>
+                    <h3 className="mb-1 font-semibold">Agree the work</h3>
                     In Scope change, propose any additional scope for a named client approver. In
                     Delivery and acceptance, Propose outcome sets the acceptance criteria, owner and
                     optional target. Request outcome agreement; wait for the client's decision.
                   </li>
                   <li>
+                    <h3 className="mb-1 font-semibold">Submit delivery evidence</h3>
                     Once agreed, choose Delivered in release from this ticket's project, add
                     Delivery notes for the client, then Request acceptance. Ask an administrator to
                     create a release if none exists. The designated client acts next.
                   </li>
                   <li>
+                    <h3 className="mb-1 font-semibold">Respond to requested changes</h3>
                     After Changes requested, read the feedback and Propose revised outcome. It
                     requires fresh agreement; previous decisions remain in Request and previous
                     revisions.
@@ -85,8 +93,11 @@ export default function GuidePage() {
             </p>
           </section>
         )}
-        <section aria-labelledby="how-to-title" className="border-t border-border pt-6">
-          <h2 id="how-to-title" className="text-lg font-semibold">
+        <section
+          aria-labelledby="how-to-title"
+          className="portal-section border-t border-border pt-6"
+        >
+          <h2 id="how-to-title" className="portal-section-title">
             How do I...?
           </h2>
           <div className="mt-3 divide-y divide-border text-sm leading-6">

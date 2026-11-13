@@ -26,8 +26,8 @@ const actions: Record<string, string> = {
 export function RecentReleases({ refresh }: { refresh: number }) {
   const state = useApiData(() => api.activity('kind=release&limit=3'), [refresh]);
   return (
-    <section aria-labelledby="recent-releases-heading">
-      <h2 id="recent-releases-heading" className="text-lg font-semibold">
+    <section aria-labelledby="recent-releases-heading" className="portal-section">
+      <h2 id="recent-releases-heading" className="portal-section-title">
         Recent releases
       </h2>
       {state.loading ? (
@@ -72,8 +72,8 @@ export function RecentActivity({ refresh, client }: RecentActivityProps) {
   }).toString();
   const state = useApiData(() => api.activity(query), [query, refresh]);
   return (
-    <section aria-labelledby="activity-heading" className="min-w-0">
-      <h2 id="activity-heading" className="text-lg font-semibold">
+    <section aria-labelledby="activity-heading" className="portal-section min-w-0">
+      <h2 id="activity-heading" className="portal-section-title">
         {client ? 'Public updates' : 'Recent activity'}
       </h2>
       <p className="mb-4 mt-1 text-xs text-muted">

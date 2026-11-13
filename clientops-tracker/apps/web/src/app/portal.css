@@ -1,0 +1,199 @@
+:root {
+  --portal-space: 24px;
+  --portal-title: 30px;
+  --portal-label: 11px;
+}
+.portal-main {
+  max-width: 1760px;
+  margin-inline: auto;
+}
+.portal-header,
+.portal-brand {
+  min-height: 72px;
+}
+.portal-shell .shell-sidebar {
+  background: rgb(var(--panel));
+}
+.nav-group {
+  padding: 20px 12px 6px;
+  color: rgb(var(--muted));
+  font:
+    10px 'JetBrains Mono Variable',
+    monospace;
+  text-transform: uppercase;
+}
+.nav-group:first-child {
+  padding-top: 0;
+}
+.portal-shell .nav-item {
+  min-height: 42px;
+  padding-block: 10px;
+  border: 1px solid transparent;
+}
+.portal-shell .nav-item[aria-current='page'] {
+  border-color: rgb(var(--accent-border));
+}
+.portal-page-header {
+  border-bottom: 1px solid rgb(var(--border));
+  padding-bottom: 24px;
+}
+.portal-page-title,
+.portal-display-title {
+  font-size: var(--portal-title);
+  line-height: 1.15;
+}
+.portal-display-title {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+}
+.portal-kicker {
+  display: block;
+  margin-bottom: 10px;
+  color: rgb(var(--accent));
+  font:
+    var(--portal-label) 'JetBrains Mono Variable',
+    monospace;
+}
+.portal-section-title {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.portal-section + .portal-section {
+  margin-top: var(--portal-space);
+}
+.portal-feature {
+  border-top: 2px solid rgb(var(--accent));
+  border-bottom: 1px solid rgb(var(--border));
+  background: rgb(var(--panel));
+  padding: 24px;
+  min-width: 0;
+}
+.portal-feature .portal-display-title {
+  max-width: 34ch;
+}
+.portal-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.portal-support {
+  min-width: 0;
+  border-top: 1px solid rgb(var(--border));
+  padding-top: 24px;
+}
+.portal-row {
+  padding-block: 16px;
+  border-bottom: 1px solid rgb(var(--border));
+  min-width: 0;
+}
+.portal-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid rgb(var(--border));
+  padding-bottom: 12px;
+}
+.portal-tabs button {
+  min-height: 44px;
+  padding: 8px 12px;
+  color: rgb(var(--muted));
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.portal-tabs button[aria-pressed='true'] {
+  background: rgb(var(--accent-bg));
+  color: rgb(var(--accent));
+  border-color: rgb(var(--accent-border));
+}
+.portal-form {
+  max-width: 880px;
+  min-width: 0;
+}
+.portal-form fieldset {
+  min-width: 0;
+}
+.portal-form legend {
+  font-size: 16px;
+  font-weight: 600;
+}
+.portal-input {
+  line-height: 1.5;
+}
+.portal-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.portal-records th {
+  background: rgb(var(--subtle));
+  font-family: 'JetBrains Mono Variable', monospace;
+  font-size: 10px;
+}
+.portal-records td {
+  padding-block: 12px;
+  line-height: 1.5;
+}
+.portal-records tbody tr:hover {
+  background: rgb(var(--subtle) / 0.4);
+}
+.portal-panel-header {
+  background: rgb(var(--subtle) / 0.35);
+}
+.portal-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.portal-briefing {
+  max-width: 1120px;
+  margin-inline: auto;
+  line-height: 1.7;
+}
+.portal-briefing h2 {
+  font-size: 18px;
+  line-height: 1.4;
+}
+.portal-briefing > section {
+  padding-block: 24px;
+  border-top: 1px solid rgb(var(--border));
+}
+.portal-button {
+  line-height: 1.4;
+  text-align: center;
+}
+.portal-denied p {
+  margin-inline: 0;
+}
+@media (min-width: 1280px) {
+  .portal-workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  }
+  .portal-support {
+    border-top: 0;
+    border-left: 1px solid rgb(var(--border));
+    padding: 0 0 0 24px;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --portal-space: 20px;
+    --portal-title: 28px;
+  }
+  .portal-feature {
+    padding: 20px 16px;
+  }
+  .portal-page-header {
+    padding-bottom: 20px;
+  }
+  .portal-records :is(th, td) {
+    padding-inline: 12px;
+  }
+  .portal-shell .portal-header {
+    min-height: 68px;
+  }
+  .portal-main {
+    padding-block: 20px;
+  }
+}

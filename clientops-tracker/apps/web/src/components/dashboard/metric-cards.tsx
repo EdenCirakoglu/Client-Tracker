@@ -18,7 +18,7 @@ export function MetricCards({ metrics, client }: MetricCardsProps) {
       query: 'status=UNRESOLVED&priority=CRITICAL',
     },
     {
-      label: client ? 'Your reply needed' : 'Waiting for client',
+      label: client ? 'Waiting for your organisation' : 'Waiting for client',
       value: metrics.ticketsWaitingForClient,
       query: 'status=WAITING_FOR_CLIENT',
     },
@@ -30,19 +30,19 @@ export function MetricCards({ metrics, client }: MetricCardsProps) {
   ];
   return (
     <section aria-labelledby="request-overview-title">
-      <h2 id="request-overview-title" className="mb-3 text-base font-semibold">
+      <h3 id="request-overview-title" className="mb-3 text-sm font-semibold">
         Request overview
-      </h2>
-      <div className="grid grid-cols-2 gap-3">
+      </h3>
+      <div className="divide-y divide-border">
         {items.map(({ label, value, query }) => (
           <Link
             key={label}
             href={`/tickets?${query}`}
             aria-label={`${label}: ${value}`}
-            className="rounded-lg border border-border bg-panel p-4 hover:border-brand-600"
+            className="flex min-h-12 items-center justify-between gap-4 py-3 hover:text-brand-700"
           >
-            <span className="block text-xs text-muted">{label}</span>
-            <span className="mt-2 block text-2xl font-semibold tabular-nums">{value}</span>
+            <span className="min-w-0 break-words text-xs text-muted">{label}</span>
+            <span className="shrink-0 text-lg font-semibold tabular-nums">{value}</span>
           </Link>
         ))}
       </div>

@@ -220,9 +220,11 @@ export function ScopeReview({
               </h3>
               <p className="mt-3 text-sm leading-6 text-muted">
                 {!isCurrent
-                  ? 'Earlier decisions stay in the record. Review the current proposal to make a new decision.'
+                  ? 'Earlier decisions stay in the record. View the current proposal.'
                   : current.state === 'PROPOSED'
-                    ? 'Approve this scope and estimate, or explain what needs to change. Delivery acceptance is a separate step.'
+                    ? canDecide
+                      ? 'Approve this scope and estimate, or explain what needs to change. Delivery acceptance is a separate step.'
+                      : `Awaiting a scope decision from ${current.approverName}. Delivery acceptance is a separate step.`
                     : current.state === 'APPROVED'
                       ? 'This decision applies only to this revision. Any revised scope needs fresh approval.'
                       : 'The team acts next: review the feedback and propose a new revision. This decision will remain in the history.'}

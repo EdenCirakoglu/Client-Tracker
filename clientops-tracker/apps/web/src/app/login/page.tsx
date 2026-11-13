@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogIn, ShieldCheck, UserCog, Users } from 'lucide-react';
 
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [demoEnabled, setDemoEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   useEffect(() => {
     void api
       .config()
@@ -43,6 +44,8 @@ export default function LoginPage() {
   }, [router, status]);
 
   async function handleLogin(nextEmail = email, nextPassword = password) {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     setError(null);
 
@@ -51,31 +54,32 @@ export default function LoginPage() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Login failed.');
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-surface px-4 py-10">
+    <main className="grid min-h-screen place-items-center bg-surface px-4 py-6 sm:py-10">
       <LoginIntro disabled={status === 'authenticated' || sessionEnded || !preserveDestination} />
       <div className="w-full max-w-md">
         <div className="mb-4 flex justify-end">
           <ThemePicker />
         </div>
-        <div className="overflow-hidden rounded-lg border border-border bg-panel">
-          <section className="border-b border-border p-6 sm:p-8">
+        <div className="portal-feature">
+          <section className="border-b border-border pb-5">
             <div>
               <BrandMark size={40} />
-              <h1 className="mt-4 text-[28px] font-semibold leading-tight">ClientOps Tracker</h1>
-              <p className="mt-3 text-sm leading-6 text-muted">
+              <h1 className="portal-display-title mt-3">ClientOps Tracker</h1>
+              <p className="mt-2 text-sm leading-6 text-muted">
                 Support and delivery operations for your team and clients.
               </p>
             </div>
           </section>
 
-          <section className="p-6 sm:p-8">
+          <section className="pt-5">
             <div>
-              <h2 id="sign-in-heading" tabIndex={-1} className="text-xl font-semibold text-ink">
+              <h2 id="sign-in-heading" tabIndex={-1} className="portal-section-title text-ink">
                 Sign in
               </h2>
             </div>
@@ -86,43 +90,46 @@ export default function LoginPage() {
               </p>
             ) : null}
             <form
-              className="mt-8 space-y-4"
+              className="portal-form mt-4 space-y-4"
               onSubmit={(event) => {
                 event.preventDefault();
                 void handleLogin();
               }}
             >
-              <div>
-                <FieldLabel htmlFor="login-email">Email</FieldLabel>
-                <Input
-                  id="login-email"
-                  required
-                  autoComplete="email"
-                  onChange={(event) => setEmail(event.target.value)}
-                  type="email"
-                  value={email}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? 'login-error' : undefined}
-                />
-              </div>
-              <div>
-                <FieldLabel htmlFor="login-password">Password</FieldLabel>
-                <PasswordInput
-                  id="login-password"
-                  visibilityLabel="password"
-                  required
-                  autoComplete="current-password"
-                  onChange={(event) => setPassword(event.target.value)}
-                  value={password}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? 'login-error' : undefined}
-                />
-              </div>
+              <fieldset disabled={submitting} className="min-w-0 space-y-4">
+                <legend className="sr-only">Sign-in credentials</legend>
+                <div>
+                  <FieldLabel htmlFor="login-email">Email</FieldLabel>
+                  <Input
+                    id="login-email"
+                    required
+                    autoComplete="email"
+                    onChange={(event) => setEmail(event.target.value)}
+                    type="email"
+                    value={email}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'login-error' : undefined}
+                  />
+                </div>
+                <div>
+                  <FieldLabel htmlFor="login-password">Password</FieldLabel>
+                  <PasswordInput
+                    id="login-password"
+                    visibilityLabel="password"
+                    required
+                    autoComplete="current-password"
+                    onChange={(event) => setPassword(event.target.value)}
+                    value={password}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'login-error' : undefined}
+                  />
+                </div>
+              </fieldset>
               {error ? (
                 <div
                   id="login-error"
                   role="alert"
-                  className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                  className="break-words rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
                 >
                   {error}
                 </div>
@@ -134,12 +141,12 @@ export default function LoginPage() {
             </form>
             <Link
               href="/forgot-password"
-              className="mt-4 inline-block text-sm font-medium text-brand-700 underline"
+              className="mt-2 inline-flex min-h-11 items-center text-sm font-medium text-brand-700 underline"
             >
               Forgot password?
             </Link>
             {demoEnabled ? (
-              <div className="mt-6 grid gap-2">
+              <div className="mt-4 grid gap-2 border-t border-border pt-4">
                 <p className="mb-1 text-xs font-medium text-muted">Disposable demo access</p>
                 {demoUsers.map((demo) => {
                   const Icon = demo.icon;

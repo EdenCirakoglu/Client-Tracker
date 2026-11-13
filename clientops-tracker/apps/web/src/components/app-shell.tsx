@@ -22,7 +22,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../lib/auth';
 import { api } from '../lib/api';
 import { useApiData } from '../lib/use-api-data';
@@ -177,7 +177,9 @@ export function AppShell({ children }: AppShellProps) {
       .finally(() => setLoggingOut(false));
   };
   return (
-    <div className={`min-h-screen bg-surface ${collapsed ? 'shell-collapsed' : 'shell-expanded'}`}>
+    <div
+      className={`portal-shell min-h-screen bg-surface ${collapsed ? 'shell-collapsed' : 'shell-expanded'}`}
+    >
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-panel focus:p-3"
@@ -192,7 +194,7 @@ export function AppShell({ children }: AppShellProps) {
         aria-label={sidebarOpen ? 'Navigation' : undefined}
         className={`shell-sidebar fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-panel transition-transform lg:visible lg:translate-x-0 ${sidebarOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}
       >
-        <div className="flex min-h-20 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
+        <div className="portal-brand flex min-h-20 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
           <Link
             href="/dashboard"
             aria-label="ClientOps Tracker home"
@@ -202,7 +204,7 @@ export function AppShell({ children }: AppShellProps) {
             <BrandMark size={36} />
             <span className="nav-label text-sm font-semibold">
               ClientOps Tracker
-              <span className="block text-xs font-normal text-muted">Operations portal</span>
+              <span className="block text-xs font-normal text-muted">Support &amp; delivery</span>
             </span>
           </Link>
           <button
@@ -223,21 +225,35 @@ export function AppShell({ children }: AppShellProps) {
             .map((item) => {
               const Icon = item.icon;
               const active = activeItem?.href === item.href;
+              const group =
+                item.href === '/dashboard'
+                  ? 'Workspace'
+                  : item.href === '/releases'
+                    ? 'Delivery records'
+                    : item.href === '/account'
+                      ? 'Your account'
+                      : null;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-label={item.label}
-                  aria-current={active ? 'page' : undefined}
-                  onClick={() => setSidebarOpen(false)}
-                  className={`nav-item flex min-h-11 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium ${active ? 'bg-brand-50 text-brand-700' : 'text-muted hover:bg-slate-100 hover:text-ink'}`}
-                >
-                  <Icon className="h-[18px] w-[18px]" />
-                  <span className="nav-label">{item.label}</span>
-                  <span className="nav-tooltip" aria-hidden="true">
-                    {item.label}
-                  </span>
-                </Link>
+                <Fragment key={item.href}>
+                  {group ? (
+                    <p className="nav-group nav-label" aria-hidden="true">
+                      {group}
+                    </p>
+                  ) : null}
+                  <Link
+                    href={item.href}
+                    aria-label={item.label}
+                    aria-current={active ? 'page' : undefined}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`nav-item flex min-h-11 items-center gap-3 rounded-md px-3 py-3 text-sm font-medium ${active ? 'bg-brand-50 text-brand-700' : 'text-muted hover:bg-slate-100 hover:text-ink'}`}
+                  >
+                    <Icon className="h-[18px] w-[18px]" />
+                    <span className="nav-label">{item.label}</span>
+                    <span className="nav-tooltip" aria-hidden="true">
+                      {item.label}
+                    </span>
+                  </Link>
+                </Fragment>
               );
             })}
         </nav>
@@ -279,7 +295,7 @@ export function AppShell({ children }: AppShellProps) {
         />
       ) : null}
       <div className="shell-content" inert={sidebarOpen || undefined}>
-        <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between gap-3 border-b border-border bg-panel px-4 py-3 lg:px-8">
+        <header className="portal-header sticky top-0 z-20 flex min-h-20 items-center justify-between gap-3 border-b border-border bg-panel px-4 py-3 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               aria-label="Open navigation"
@@ -396,7 +412,7 @@ export function AppShell({ children }: AppShellProps) {
             </button>
           </div>
         </header>
-        <main id="main-content" tabIndex={-1} className="px-4 py-6 lg:p-8">
+        <main id="main-content" tabIndex={-1} className="portal-main px-4 py-6 lg:p-8">
           {logoutError ? (
             <p role="alert" className="mb-4 text-sm text-red-700">
               {logoutError}

@@ -43,11 +43,13 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-panel p-8 text-center">
-      <Inbox className="mx-auto h-8 w-8 text-slate-400" />
-      <h3 className="mt-3 text-sm font-semibold text-ink">{title}</h3>
-      <p className="mx-auto mt-1 max-w-md text-sm text-muted">{description}</p>
-      {action ? <div className="mt-4">{action}</div> : null}
+    <div className="portal-empty border-y border-border py-6">
+      <Inbox className="h-5 w-5 text-muted" aria-hidden="true" />
+      <div>
+        <h3 className="text-sm font-semibold text-ink">{title}</h3>
+        <p className="mt-1 max-w-xl text-sm leading-6 text-muted">{description}</p>
+        {action ? <div className="mt-3">{action}</div> : null}
+      </div>
     </div>
   );
 }

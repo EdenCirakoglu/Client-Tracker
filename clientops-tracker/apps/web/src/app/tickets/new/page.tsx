@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
 import { Send } from 'lucide-react';
@@ -10,7 +10,6 @@ import { ProtectedPage } from '../../../components/app-shell';
 import { PageHeader } from '../../../components/page-header';
 import { titleCase } from '../../../lib/format';
 import { Button } from '../../../components/ui/button';
-import { Card, CardHeader } from '../../../components/ui/card';
 import { FieldLabel, Input, Select, Textarea } from '../../../components/ui/input';
 import { ErrorState, LoadingState } from '../../../components/ui/states';
 import { api } from '../../../lib/api';
@@ -30,6 +29,7 @@ function NewTicket() {
   const [priority, setPriority] = useState<TicketPriority>('MEDIUM');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const submitting = useRef(false);
 
   const projects = useMemo(() => projectsState.data ?? [], [projectsState.data]);
   useEffect(() => {
@@ -38,6 +38,8 @@ function NewTicket() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setSaving(true);
     setError(null);
 
@@ -54,6 +56,7 @@ function NewTicket() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Ticket could not be created.');
     } finally {
+      submitting.current = false;
       setSaving(false);
     }
   }
@@ -86,18 +89,22 @@ function NewTicket() {
         </section>
       ) : null}
 
-      <div className="max-w-3xl">
-        <Card>
-          <CardHeader title="Ticket details" />
-          <form className="space-y-4 p-5" onSubmit={handleSubmit}>
-            {projectsState.loading ? <LoadingState label="Loading projects..." /> : null}
-            {projectsState.error ? (
-              <ErrorState message={projectsState.error} onRetry={projectsState.reload} />
-            ) : null}
+      <section className="portal-section max-w-3xl" aria-labelledby="ticket-details-title">
+        <h2 id="ticket-details-title" className="portal-section-title mb-4">
+          Ticket details
+        </h2>
+        <form className="portal-form space-y-6" onSubmit={handleSubmit}>
+          {projectsState.loading ? <LoadingState label="Loading projects..." /> : null}
+          {projectsState.error ? (
+            <ErrorState message={projectsState.error} onRetry={projectsState.reload} />
+          ) : null}
+          <fieldset disabled={saving} className="min-w-0 space-y-4">
+            <legend className="mb-3">Project and request</legend>
             <div>
               <FieldLabel htmlFor="new-project">Project</FieldLabel>
               <Select
                 id="new-project"
+                disabled={projectsState.loading || !!projectsState.error || projects.length === 0}
                 onChange={(event) => setProjectId(event.target.value)}
                 required
                 value={projectId}
@@ -123,12 +130,16 @@ function NewTicket() {
               <FieldLabel htmlFor="new-description">Description</FieldLabel>
               <Textarea
                 id="new-description"
+                rows={6}
                 onChange={(event) => setDescription(event.target.value)}
                 required
                 value={description}
               />
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+          </fieldset>
+          <fieldset disabled={saving} className="min-w-0 border-t border-border pt-4">
+            <legend className="pr-3">Classification</legend>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <FieldLabel htmlFor="new-category">Category</FieldLabel>
                 <Select
@@ -158,23 +169,31 @@ function NewTicket() {
                 </Select>
               </div>
             </div>
-            {error ? (
-              <p role="alert" className="text-sm text-red-700">
-                {error}
-              </p>
-            ) : null}
-            {!projectsState.loading && !projectsState.error && projects.length === 0 ? (
-              <p role="status" className="text-sm text-muted">
-                No projects are available. Contact your account manager to get started.
-              </p>
-            ) : null}
-            <Button disabled={saving || projects.length === 0} type="submit">
+          </fieldset>
+          {error ? (
+            <p role="alert" className="break-words text-sm text-red-700">
+              {error}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-4 border-t border-border pt-4">
+            <Button
+              disabled={
+                saving || projectsState.loading || !!projectsState.error || projects.length === 0
+              }
+              type="submit"
+            >
               <Send className="h-4 w-4" />
               {saving ? 'Creating ticket...' : 'Create ticket'}
             </Button>
-          </form>
-        </Card>
-      </div>
+            <Link
+              href="/tickets"
+              className="inline-flex min-h-11 items-center text-sm text-brand-700"
+            >
+              Cancel
+            </Link>
+          </div>
+        </form>
+      </section>
     </ProtectedPage>
   );
 }

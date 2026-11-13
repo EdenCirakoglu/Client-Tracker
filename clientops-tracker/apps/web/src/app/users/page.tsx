@@ -1,7 +1,8 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LoadingState } from '../../components/ui/states';
+import { ErrorState, LoadingState } from '../../components/ui/states';
+import { PageHeader } from '../../components/page-header';
 import { Mail, Save, X } from 'lucide-react';
 import { ProtectedPage } from '../../components/app-shell';
 import { Button } from '../../components/ui/button';
@@ -19,6 +20,7 @@ function Accounts() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState<Account | null>(null);
   const [name, setName] = useState('');
@@ -27,13 +29,16 @@ function Accounts() {
   const [clientId, setClientId] = useState('');
   const [disabled, setDisabled] = useState(false);
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   async function load() {
+    setLoading(true);
+    setLoadError(null);
     try {
       const [nextAccounts, nextClients] = await Promise.all([api.users(), api.clients()]);
       setAccounts(nextAccounts);
       setClients(nextClients);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Unable to load accounts.');
+      setLoadError(caught instanceof Error ? caught.message : 'Unable to load accounts.');
     } finally {
       setLoading(false);
     }
@@ -54,9 +59,12 @@ function Accounts() {
     setRole('DEVELOPER');
     setClientId('');
     setDisabled(false);
+    setError(null);
   }
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -74,6 +82,7 @@ function Accounts() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to save account.');
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -88,7 +97,19 @@ function Accounts() {
     );
   return (
     <>
-      <h1 className="text-2xl font-semibold text-ink">Accounts</h1>
+      <PageHeader
+        title="Accounts"
+        description="Workspace access, invitations and client contacts."
+        action={
+          <a
+            href="#invite-account"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700"
+          >
+            <Mail className="h-4 w-4" />
+            Invite account
+          </a>
+        }
+      />
       {clients.some((client) => client.id === selectedClient) ? (
         <Link
           className="mt-2 inline-flex min-h-11 items-center text-sm text-brand-700 underline"
@@ -97,23 +118,30 @@ function Accounts() {
           Back to this client's setup
         </Link>
       ) : null}
-      {error ? (
-        <p role="alert" className="mt-4 text-sm text-red-700">
-          {error}
-        </p>
-      ) : null}
       {message ? (
         <p role="status" className="mt-4 text-sm text-brand-700">
           {message}
         </p>
       ) : null}
-      <div className="mt-6 grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <section aria-label="Workspace accounts" className="min-w-0">
+      <div className="portal-workspace mt-6">
+        <section aria-label="Workspace accounts" className="portal-section min-w-0">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="portal-section-title">Workspace accounts</h2>
+            {!loading && !loadError ? (
+              <p className="portal-kicker">{accounts.length} accounts</p>
+            ) : null}
+          </div>
           {loading ? (
-            <p role="status">Loading accounts...</p>
+            <LoadingState label="Loading accounts..." />
+          ) : loadError ? (
+            <ErrorState message={loadError} onRetry={load} />
+          ) : !accounts.length ? (
+            <p role="status" className="py-4 text-sm text-muted">
+              No accounts found.
+            </p>
           ) : (
             <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Accounts table">
-              <table className="w-full text-left text-sm">
+              <table className="portal-records w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="p-3">Name</th>
@@ -125,10 +153,10 @@ function Accounts() {
                 </thead>
                 <tbody>
                   {accounts.map((account) => (
-                    <tr className="border-b border-border" key={account.id}>
+                    <tr className="portal-row border-b border-border" key={account.id}>
                       <td className="p-3">
-                        <p className="font-medium">{account.name}</p>
-                        <p className="text-muted">{account.email}</p>
+                        <p className="font-semibold">{account.name}</p>
+                        <p className="break-words text-xs text-muted">{account.email}</p>
                       </td>
                       <td className="p-3">
                         {account.role === 'ADMIN'
@@ -151,6 +179,7 @@ function Accounts() {
                       <td className="p-3">
                         <Button
                           variant="secondary"
+                          disabled={busy}
                           onClick={() => {
                             setEditing(account);
                             setName(account.name);
@@ -159,6 +188,8 @@ function Accounts() {
                             setClientId(account.clientId ?? '');
                             setDisabled(account.accountStatus === 'DISABLED');
                             setMessage(null);
+                            setError(null);
+                            document.getElementById('account-role')?.focus();
                           }}
                         >
                           {account.accountStatus === 'INVITED' ? 'Resend' : 'Edit'}
@@ -171,97 +202,114 @@ function Accounts() {
             </div>
           )}
         </section>
-        <section>
-          <h2 className="text-lg font-semibold">
+        <section className="portal-support" aria-labelledby="account-editor-title">
+          <p className="portal-kicker">{editing ? editing.email : 'Access management'}</p>
+          <h2 id="account-editor-title" className="portal-section-title">
             {editing ? 'Manage account' : 'Invite a teammate or client'}
           </h2>
           <form
             id="invite-account"
-            className="mt-4 scroll-mt-24 space-y-4"
+            className="portal-form mt-4 scroll-mt-24 space-y-4"
             onSubmit={(event) => void submit(event)}
           >
-            <div>
-              <FieldLabel htmlFor="account-name">Name</FieldLabel>
-              <Input
-                id="account-name"
-                required
-                maxLength={120}
-                value={name}
-                disabled={!!editing}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </div>
-            <div>
-              <FieldLabel htmlFor="account-email">Email</FieldLabel>
-              <Input
-                id="account-email"
-                type="email"
-                required
-                value={email}
-                disabled={!!editing}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </div>
-            <div>
-              <FieldLabel htmlFor="account-role">Role</FieldLabel>
-              <Select
-                id="account-role"
-                value={role}
-                onChange={(event) => setRole(event.target.value as UserRole)}
-              >
-                <option value="ADMIN">Administrator</option>
-                <option value="DEVELOPER">Developer</option>
-                <option value="CLIENT">Client</option>
-              </Select>
-            </div>
-            {role === 'CLIENT' ? (
+            <fieldset disabled={busy} className="min-w-0 space-y-4">
               <div>
-                <FieldLabel htmlFor="account-client">Organisation</FieldLabel>
-                <Select
-                  id="account-client"
+                <FieldLabel htmlFor="account-name">Name</FieldLabel>
+                <Input
+                  id="account-name"
                   required
-                  value={clientId}
-                  onChange={(event) => setClientId(event.target.value)}
+                  maxLength={120}
+                  value={name}
+                  disabled={!!editing}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor="account-email">Email</FieldLabel>
+                <Input
+                  id="account-email"
+                  type="email"
+                  required
+                  value={email}
+                  disabled={!!editing}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </div>
+              <div>
+                <FieldLabel htmlFor="account-role">Role</FieldLabel>
+                <Select
+                  id="account-role"
+                  value={role}
+                  onChange={(event) => setRole(event.target.value as UserRole)}
                 >
-                  <option value="">Choose organisation</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))}
+                  <option value="ADMIN">Administrator</option>
+                  <option value="DEVELOPER">Developer</option>
+                  <option value="CLIENT">Client</option>
                 </Select>
               </div>
-            ) : null}
-            {editing && editing.accountStatus !== 'INVITED' ? (
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={disabled}
-                  onChange={(event) => setDisabled(event.target.checked)}
-                />
-                Disable account
-              </label>
-            ) : null}
-            <div className="flex gap-2">
-              <Button type="submit" disabled={busy}>
-                {editing && editing.accountStatus !== 'INVITED' ? (
-                  <Save className="h-4 w-4" />
-                ) : (
-                  <Mail className="h-4 w-4" />
-                )}
-                {busy
-                  ? 'Saving...'
-                  : editing && editing.accountStatus !== 'INVITED'
-                    ? 'Save account'
-                    : 'Send invitation'}
-              </Button>
-              {editing ? (
-                <Button variant="secondary" onClick={reset} type="button">
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
+              {role === 'CLIENT' ? (
+                <div>
+                  <FieldLabel htmlFor="account-client">Organisation</FieldLabel>
+                  <Select
+                    id="account-client"
+                    disabled={loading || !!loadError}
+                    required
+                    value={clientId}
+                    onChange={(event) => setClientId(event.target.value)}
+                  >
+                    <option value="">Choose organisation</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name}
+                      </option>
+                    ))}
+                  </Select>
+                  {!loading && !loadError && !clients.length ? (
+                    <p className="mt-2 text-sm text-muted">
+                      No client organisations yet.{' '}
+                      <Link href="/clients" className="text-brand-700 underline">
+                        Create client
+                      </Link>
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
-            </div>
+              {editing && editing.accountStatus !== 'INVITED' ? (
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={disabled}
+                    onChange={(event) => setDisabled(event.target.checked)}
+                  />
+                  Disable account
+                </label>
+              ) : null}
+              {error ? (
+                <p role="alert" className="break-words text-sm text-red-700">
+                  {error}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" disabled={busy || loading || !!loadError}>
+                  {editing && editing.accountStatus !== 'INVITED' ? (
+                    <Save className="h-4 w-4" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  {busy
+                    ? 'Saving...'
+                    : editing && editing.accountStatus !== 'INVITED'
+                      ? 'Save account'
+                      : 'Send invitation'}
+                </Button>
+                {editing ? (
+                  <Button variant="secondary" onClick={reset} type="button">
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                ) : null}
+              </div>
+            </fieldset>
           </form>
         </section>
       </div>

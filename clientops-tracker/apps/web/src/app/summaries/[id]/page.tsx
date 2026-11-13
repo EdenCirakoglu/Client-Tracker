@@ -1,5 +1,4 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ProtectedPage } from '../../../components/app-shell';
@@ -8,8 +7,9 @@ import { SummaryPublication } from '../../../components/summary-publication';
 import { ErrorState, LoadingState } from '../../../components/ui/states';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
+import { useApiData } from '../../../lib/use-api-data';
 import { formatDate, formatUtcDate } from '../../../lib/format';
-import type { ProgressSummary, SummarySection } from '../../../lib/types';
+import type { SummarySection } from '../../../lib/types';
 
 const sectionTitles: Record<string, string> = {
   approvals: 'Scope decisions',
@@ -38,8 +38,13 @@ const readingOrder = [
 export default function SummaryPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [summary, setSummary] = useState<ProgressSummary | null>(null);
-  const [error, setError] = useState('');
+  const {
+    data: summary,
+    setData: setSummary,
+    error,
+    loading,
+    reload,
+  } = useApiData(() => api.summary(id), [id]);
   const orderedSections = [...(summary?.sections ?? [])].sort((a, b) => {
     const rank = (key: string) =>
       readingOrder.includes(key) ? readingOrder.indexOf(key) : readingOrder.length;
@@ -48,72 +53,115 @@ export default function SummaryPage() {
   const emptySections = orderedSections.filter(
     (section) => !section.items.length && !section.truncated,
   );
-  async function load() {
-    setError('');
-    try {
-      setSummary(await api.summary(id));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Summary could not be loaded.');
-    }
-  }
-  useEffect(() => {
-    if (user) void load();
-  }, [id, user?.id]);
   return (
     <ProtectedPage>
       <Link href="/summaries" className="mb-4 inline-block text-sm text-brand-700">
         Back to summaries
       </Link>
-      <PageHeader title={summary ? `${summary.clientName}: progress update` : 'Progress update'} />
-      {error ? <ErrorState message={error} onRetry={load} /> : null}
-      {!summary && !error ? <LoadingState /> : null}
-      {summary ? (
-        <div className="max-w-4xl space-y-6">
-          <div className="space-y-2 border-b border-border pb-5 text-sm text-muted">
-            <p className="text-base font-semibold text-ink">
-              Week: {formatUtcDate(summary.periodStart)} to{' '}
-              {formatUtcDate(new Date(Date.parse(summary.periodEnd) - 1).toISOString())} (UTC).
-            </p>
-            <p>
-              Prepared by {summary.createdBy} on {formatDate(summary.createdAt)}. Fixed snapshot;
-              record links open the current permitted state.
-            </p>
-            <p>
-              {summary.publishedAt
-                ? `Published by ${summary.publishedBy} on ${formatDate(summary.publishedAt)}.`
-                : 'Draft - not visible to clients.'}
-            </p>
-          </div>
-          <section
-            aria-labelledby="summary-decisions-heading"
-            className="border-l-2 border-brand-600 pl-4"
-          >
-            <h2 id="summary-decisions-heading" className="text-lg font-semibold">
-              Client decisions and replies
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              Recorded at preparation time. Open each request to review its current state.
-            </p>
-          </section>
-          {orderedSections
-            .filter((section) => section.items.length || section.truncated)
-            .map((section) => (
-              <SnapshotSection key={section.key} section={section} />
-            ))}
-          {emptySections.length ? (
-            <details className="border-t border-border pt-4">
-              <summary className="min-h-11 cursor-pointer text-sm font-semibold">
-                {emptySections.length} sections with no recorded items
-              </summary>
-              <div className="mt-3 space-y-4">
-                {emptySections.map((section) => (
+      <PageHeader
+        title={summary && !loading ? `${summary.clientName}: progress update` : 'Progress update'}
+        action={
+          summary && !loading && user?.role !== 'CLIENT' ? (
+            <a
+              href="#summary-publication"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
+            >
+              {summary.publishedAt ? 'Notify client contacts' : 'Publish this update'}
+            </a>
+          ) : undefined
+        }
+      />
+      {error ? <ErrorState message={error} onRetry={reload} /> : null}
+      {loading ? <LoadingState /> : null}
+      {summary && !loading && !error ? (
+        <div className={user?.role !== 'CLIENT' ? 'portal-workspace' : 'portal-briefing'}>
+          <div className="min-w-0 space-y-6">
+            <div className="portal-section space-y-2 border-b border-border pb-5 text-sm text-muted">
+              <p className="text-base font-semibold text-ink">
+                Week: {formatUtcDate(summary.periodStart)} to{' '}
+                {formatUtcDate(new Date(Date.parse(summary.periodEnd) - 1).toISOString())} (UTC).
+              </p>
+              <p>
+                Prepared by {summary.createdBy} on {formatDate(summary.createdAt)}. Fixed snapshot;
+                record links open the current permitted state.
+              </p>
+              <p>
+                {summary.publishedAt
+                  ? `Published by ${summary.publishedBy} on ${formatDate(summary.publishedAt)}.`
+                  : 'Draft - not visible to clients.'}
+              </p>
+            </div>
+            <section
+              aria-labelledby="summary-decisions-heading"
+              className="portal-section space-y-4 border-l-2 border-brand-600 pl-4"
+            >
+              <h2 id="summary-decisions-heading" className="portal-section-title">
+                Client decisions and replies
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                Recorded at preparation time. Open each request to review its current state.
+              </p>
+              {!orderedSections.some(
+                (section) =>
+                  decisionKeys.includes(section.key) && (section.items.length || section.truncated),
+              ) ? (
+                <p className="text-sm text-muted">
+                  No client decisions or replies recorded in this snapshot.
+                </p>
+              ) : null}
+              {orderedSections
+                .filter(
+                  (section) =>
+                    decisionKeys.includes(section.key) &&
+                    (section.items.length || section.truncated),
+                )
+                .map((section) => (
                   <SnapshotSection key={section.key} section={section} />
                 ))}
-              </div>
-            </details>
-          ) : null}
+            </section>
+            <section
+              className="portal-section space-y-5"
+              aria-labelledby="summary-progress-heading"
+            >
+              <h2 id="summary-progress-heading" className="portal-section-title">
+                Delivery and progress
+              </h2>
+              {orderedSections
+                .filter(
+                  (section) =>
+                    !decisionKeys.includes(section.key) &&
+                    (section.items.length || section.truncated),
+                )
+                .map((section) => (
+                  <SnapshotSection key={section.key} section={section} />
+                ))}
+              {!orderedSections.some(
+                (section) =>
+                  !decisionKeys.includes(section.key) &&
+                  (section.items.length || section.truncated),
+              ) ? (
+                <p className="text-sm text-muted">
+                  No delivery or progress items recorded in this snapshot.
+                </p>
+              ) : null}
+            </section>
+            {emptySections.length ? (
+              <details className="border-t border-border pt-4">
+                <summary className="min-h-11 cursor-pointer text-sm font-semibold">
+                  {emptySections.length} sections with no recorded items
+                </summary>
+                <div className="mt-3 space-y-4">
+                  {emptySections.map((section) => (
+                    <SnapshotSection key={section.key} section={section} />
+                  ))}
+                </div>
+              </details>
+            ) : null}
+          </div>
           {user?.role !== 'CLIENT' ? (
-            <SummaryPublication summary={summary} onPublished={setSummary} />
+            <aside id="summary-publication" className="portal-support scroll-mt-24">
+              <SummaryPublication key={summary.id} summary={summary} onPublished={setSummary} />
+            </aside>
           ) : null}
         </div>
       ) : null}
@@ -129,26 +177,26 @@ function SnapshotSection({ section }: SnapshotSectionProps) {
     <section
       className={
         decisionKeys.includes(section.key) && section.items.length
-          ? 'journal-decision'
+          ? 'border-t border-border pt-4'
           : 'border-t border-border pt-5'
       }
     >
-      <h2 className="mb-1 break-words text-base font-semibold">
+      <h3 className="mb-1 break-words text-base font-semibold">
         {sectionTitles[section.key] ?? section.label}
-      </h2>
+      </h3>
       <p className="mb-3 text-xs text-muted">{section.label}</p>
       {section.items.length ? (
-        <ul className="space-y-4">
+        <ul className="divide-y divide-border">
           {section.items.map((item, index) => (
-            <li key={`${item.href}-${index}`}>
+            <li key={`${item.href}-${index}`} className="py-3 first:pt-0">
               <Link
-                className="text-sm font-semibold text-brand-700 underline-offset-4 hover:underline"
+                className="break-words text-sm font-semibold text-brand-700 underline-offset-4 hover:underline"
                 href={item.href}
               >
                 {item.title}
               </Link>
               {item.detail ? (
-                <p className="mt-1 whitespace-pre-wrap text-sm">{item.detail}</p>
+                <p className="mt-1 whitespace-pre-wrap break-words text-sm">{item.detail}</p>
               ) : null}
               {item.recordedAt ? (
                 <p className="mt-1 text-xs text-muted">{formatDate(item.recordedAt)}</p>

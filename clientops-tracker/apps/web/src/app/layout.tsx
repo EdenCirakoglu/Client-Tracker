@@ -7,6 +7,7 @@ import '@fontsource-variable/jetbrains-mono/wght.css';
 import '@fontsource/instrument-serif/latin-400.css';
 import './globals.css';
 import './meridian.css';
+import './portal.css';
 
 export const metadata: Metadata = {
   title: 'ClientOps Tracker',
