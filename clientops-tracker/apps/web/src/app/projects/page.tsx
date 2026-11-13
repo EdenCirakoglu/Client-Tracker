@@ -41,7 +41,9 @@ function Projects() {
   const projectsState = useApiData(() => api.projects(), []);
   const clientsState = useApiData(() => api.clients(), []);
   useEffect(() => {
-    if (clientsState.data?.some((client) => client.id === selectedClient)) {
+    if (!selectedClient) {
+      setClientFilter('ALL');
+    } else if (clientsState.data?.some((client) => client.id === selectedClient)) {
       setClientFilter(selectedClient);
       setForm((value) => ({ ...value, clientId: selectedClient }));
     }
@@ -125,6 +127,21 @@ function Projects() {
           canManage ? (
             <a
               href="#project-form"
+              aria-disabled={saving}
+              onClick={(event) => {
+                if (submitting.current) {
+                  event.preventDefault();
+                  return;
+                }
+                setEditing(null);
+                setForm({
+                  ...emptyProjectForm,
+                  clientId: clientById.has(selectedClient) ? selectedClient : '',
+                });
+                setFormError(null);
+                setMessage('');
+                requestAnimationFrame(() => document.getElementById('projects-name')?.focus());
+              }}
               className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700"
             >
               <Plus className="h-4 w-4" />
@@ -264,6 +281,11 @@ function Projects() {
                       onClick={() => {
                         setStatusFilter('ALL');
                         setClientFilter('ALL');
+                        const next = new URL(window.location.href);
+                        if (next.searchParams.has('clientId')) {
+                          next.searchParams.delete('clientId');
+                          window.history.pushState(null, '', next);
+                        }
                       }}
                     >
                       Reset filters

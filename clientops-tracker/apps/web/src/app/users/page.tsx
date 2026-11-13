@@ -103,6 +103,20 @@ function Accounts() {
         action={
           <a
             href="#invite-account"
+            aria-disabled={busy}
+            onClick={(event) => {
+              if (submitting.current) {
+                event.preventDefault();
+                return;
+              }
+              reset();
+              if (clients.some((client) => client.id === selectedClient)) {
+                setRole('CLIENT');
+                setClientId(selectedClient);
+              }
+              setMessage(null);
+              requestAnimationFrame(() => document.getElementById('account-name')?.focus());
+            }}
             className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700"
           >
             <Mail className="h-4 w-4" />

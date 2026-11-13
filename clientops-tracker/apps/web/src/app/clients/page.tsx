@@ -110,6 +110,18 @@ export default function ClientsPage() {
           canManage ? (
             <a
               href="#client-form"
+              aria-disabled={saving}
+              onClick={(event) => {
+                if (submitting.current) {
+                  event.preventDefault();
+                  return;
+                }
+                setEditing(null);
+                setForm(emptyForm);
+                setFormError(null);
+                setMessage('');
+                requestAnimationFrame(() => document.getElementById('clients-name')?.focus());
+              }}
               className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700"
             >
               <Plus className="h-4 w-4" />

@@ -265,7 +265,7 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
             ) : null}
             <Link
               href="/guide"
-              className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+              className="mr-3 inline-flex min-h-11 items-center text-sm text-brand-700 underline"
             >
               Request-to-acceptance guide
             </Link>

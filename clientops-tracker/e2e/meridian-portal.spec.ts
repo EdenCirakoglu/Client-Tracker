@@ -563,6 +563,9 @@ test('real reviewer decisions persist; staff and same-organisation non-reviewers
   });
   await workflowLane(staff, ticket, 'waiting');
   await observer.goto(`${url}#delivery`);
+  // This observer is already at the same URL. Hash navigation does not reload
+  // revisions changed in a different session; verify the persisted read explicitly.
+  await observer.reload();
   await ready(observer);
   await expect(
     observer.getByText(`Awaiting a delivery decision from ${person.name}.`, { exact: true }),

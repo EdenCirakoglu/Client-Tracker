@@ -107,6 +107,121 @@ test('personal workflow filters preserve URL history and mobile context', async 
   await expect(page).toHaveURL(/\/tickets$/);
 });
 
+test('editor create actions clear edit state and project reset preserves URL history', async ({
+  page,
+}) => {
+  await signIn(page);
+  const writes: string[] = [];
+  await page.route('**/api/**', async (route) => {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(route.request().method())) {
+      await route.continue();
+    } else {
+      writes.push(`${route.request().method()} ${route.request().url()}`);
+      await route.abort();
+    }
+  });
+
+  for (const entry of [
+    {
+      route: '/clients',
+      action: 'Create client',
+      heading: 'Create client',
+      name: '#clients-name',
+      form: '#client-form',
+      submit: 'Create client',
+    },
+    {
+      route: '/projects',
+      action: 'Create project',
+      heading: 'Create project',
+      name: '#projects-name',
+      form: '#project-form',
+      submit: 'Create project',
+    },
+    {
+      route: '/users',
+      action: 'Invite account',
+      heading: 'Invite a teammate or client',
+      name: '#account-name',
+      form: '#invite-account',
+      submit: 'Send invitation',
+    },
+  ]) {
+    await page.goto(
+      entry.route === '/projects' ? '/projects?clientId=unknown-client' : entry.route,
+    );
+    await settled(page);
+    await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+    await expect(page.locator(entry.name)).not.toHaveValue('');
+    if (entry.route === '/clients') {
+      await page.locator('#clients-phone').fill('123456789');
+    } else if (entry.route === '/projects') {
+      await page.locator('#projects-description').fill('Unsaved project edit');
+      await page.locator('#projects-status').selectOption('PAUSED');
+    } else {
+      await expect(page.locator('#account-name')).toBeDisabled();
+      await page.getByLabel('Disable account', { exact: true }).check();
+      await page.locator('#account-role').selectOption('CLIENT');
+      await page.locator('#account-client').selectOption({ index: 1 });
+    }
+
+    await page.getByRole('link', { name: entry.action, exact: true }).click();
+    await expect(page.getByRole('heading', { name: entry.heading, exact: true })).toBeVisible();
+    await expect(page.locator(entry.name)).toHaveValue('');
+    await expect(page.locator(entry.name)).toBeEnabled();
+    await expect(page.locator(entry.name)).toBeFocused();
+    expect(new URL(page.url()).hash).toBe(entry.form);
+    await expect(
+      page.locator(entry.form).getByRole('button', { name: entry.submit, exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(entry.form).getByRole('button', { name: 'Cancel' })).toHaveCount(0);
+    if (entry.route === '/clients') {
+      await expect(page.locator('#clients-contact-email')).toHaveValue('');
+      await expect(page.locator('#clients-phone')).toHaveValue('');
+    } else if (entry.route === '/projects') {
+      await expect(page.locator('#projects-client')).toHaveValue('');
+      await expect(page.locator('#projects-description')).toHaveValue('');
+      await expect(page.locator('#projects-status')).toHaveValue('ACTIVE');
+    } else {
+      await expect(page.locator('#account-email')).toHaveValue('');
+      await expect(page.locator('#account-email')).toBeEnabled();
+      await expect(page.locator('#account-role')).toHaveValue('DEVELOPER');
+      await expect(page.locator('#account-client')).toHaveCount(0);
+      await expect(page.getByLabel('Disable account', { exact: true })).toHaveCount(0);
+    }
+  }
+
+  await page.goto('/projects');
+  await settled(page);
+  const clientFilter = page.getByLabel('Filter by client');
+  const clientId = await clientFilter.locator('option').nth(1).getAttribute('value');
+  expect(clientId).toBeTruthy();
+  const query = `from=portal-regression&tag=one&tag=two`;
+  const filteredUrl = `/projects?clientId=${clientId}&${query}#project-form`;
+  const resetUrl = `/projects?${query}#project-form`;
+  await page.goto(filteredUrl);
+  await settled(page);
+  await expect(clientFilter).toHaveValue(clientId!);
+  await page.getByLabel('Filter by status').selectOption('PAUSED');
+  await expect(page.getByRole('heading', { name: 'No projects found', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Reset filters', exact: true }).click();
+  await expect(page).toHaveURL(resetUrl);
+  await expect(clientFilter).toHaveValue('ALL');
+  await expect(page.getByLabel('Filter by status')).toHaveValue('ALL');
+  await page.goBack();
+  await expect(page).toHaveURL(filteredUrl);
+  await expect(clientFilter).toHaveValue(clientId!);
+  await page.goForward();
+  await expect(page).toHaveURL(resetUrl);
+  await expect(clientFilter).toHaveValue('ALL');
+  await page.reload();
+  await settled(page);
+  await expect(page).toHaveURL(resetUrl);
+  await expect(clientFilter).toHaveValue('ALL');
+  await expect(page.getByLabel('Filter by status')).toHaveValue('ALL');
+  expect(writes).toEqual([]);
+});
+
 test('mobile editors retain complete errors and input without duplicate saves', async ({
   page,
 }, info) => {
