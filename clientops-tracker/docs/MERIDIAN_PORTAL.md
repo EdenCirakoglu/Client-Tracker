@@ -145,6 +145,13 @@ The final local API rerun at the unchanged application source passed 209/209 in
 it was stopped, then run with SMTP_PORT=11062 and MAILPIT_URL=http://localhost:18062.
 No test or timeout change was used to address that environment mistake.
 
+Run 43471024095 at c059594 was stopped at the core privacy gate because the route
+evidence document contained a workstation-specific path. It was replaced with a
+portable worktree-relative instruction. This was personal path metadata, not a
+reported credential; the earlier review commits remain in history. The browser
+artifact gate then also failed closed because no core browser report existed.
+Neither gate was disabled or relaxed.
+
 Run from the worktree's `clientops-tracker` directory with Node 24, pnpm 9.15.4,
 Docker and a separately designated test database. Supply the local test URL
 privately as `TEST_DATABASE_URL`; do not point it to the retained demo database.
@@ -200,17 +207,32 @@ Do not reuse these destructive verification fixtures for a retained preview or
 customer database. HTML results: `playwright-report/index.html`; structured results:
 `test-results/browser-results.json`; zoom: `test-results/portal-zoom/portal-native-200.json`.
 
-## Remaining Acceptance
+## Evidence and Remaining Acceptance
 
-| Check                                                        | Recorded status                                                                                                                                                                                                                |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Dashboard implementation checkpoint                          | Web typecheck and scoped Prettier check passed during implementation; not a final-head claim.                                                                                                                                  |
-| Dashboard browser checks                                     | All three roles, both themes, 1440/390 widths passed overflow, runtime-error and axe checks. API totals/actions/links, selected-client persistence, simulated empty/error states and independent metrics failure were checked. |
-| Final portal build, lint, typecheck and complete test suites | Pending coordinating agent's final-head results.                                                                                                                                                                               |
-| Matched final screenshot provenance and hashes               | Pending final implementation commit and evidence record.                                                                                                                                                                       |
-| Human screen-reader acceptance                               | Pending; automated axe is not a substitute.                                                                                                                                                                                    |
-| Final CI                                                     | Pending. Coordinator must add the exact tested commit, run URL and actual result.                                                                                                                                              |
+The [matched captures](assets/screenshots/meridian-portal/README.md) retain their
+source revisions, conditions and hashes. After captures are from clean
+`304e02017ecab2310aec36cbc7020dced25b8709`; subsequent test/documentation-only
+commits do not change the application source or relabel the images.
+All twelve after-dashboard views were visually inspected. Route captures and
+accepted-delivery states are additionally produced by their hosted browser jobs.
 
-Final implementation commit and CI sign-off are intentionally unset. Historical
-#37 passes, intermediate captures and local dashboard checks do not establish a
-passed portal-wide release gate. No deployment or production readiness is claimed.
+The final handoff on [PR #43](https://github.com/EdenCirakoglu/Client-Tracker/pull/43)
+records the actual tested head, CI run, each job result and artifact digests.
+Use that exact revision, not the check count alone. Core, intro/review, dashboard
+and route jobs must all pass; a successful scanner execution is not a CSRF policy
+approval. A separate Git-connected Cloudflare build is neither application CI nor
+evidence about the unchanged public static walkthrough.
+
+Human screen-reader and independent first-visit acceptance are pending. In each
+role, read the page title and next-action region, navigate sidebar/theme controls,
+open a filter disclosure, submit an invalid form, then reach a permitted decision
+or its named-reviewer explanation. Confirm announced labels, focus after errors,
+drawer containment and saved confirmation. Record reader/browser versions and
+actual spoken output using the [existing task card](FIRST_CUSTOMER_TASK_CARD.md).
+Automated axe, keyboard and native zoom checks are not a human walkthrough.
+
+No merge, release, production deployment, public walkthrough change or security
+disposition is authorized by this evidence. Parent integration, inherited
+CSRF/cookie review and the two development-tool findings remain owner/reviewer
+decisions. Trusted HTTPS, SMTP, off-host restore, monitoring and actual operator
+acceptance remain separate launch requirements.

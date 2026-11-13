@@ -90,7 +90,7 @@ predates these fixes and does not verify them.
 
 Executed from the isolated worktree:
 
-`C:/Users/PnP/Desktop/Client Tracker/artifacts/worktrees/meridian-portal/clientops-tracker`
+the review worktree's `clientops-tracker` directory
 
 ```powershell
 $env:VERIFY_URL='http://localhost:3082'
