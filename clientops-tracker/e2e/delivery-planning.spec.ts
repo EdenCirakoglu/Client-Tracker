@@ -43,8 +43,15 @@ async function settledDashboard(page: Page) {
     0,
   );
   await expect(
-    page.getByRole('link', { name: /^(View delivery plan|View all decisions)$/ }),
+    page.getByRole('link', {
+      name: /^(View delivery plan|View all decisions|Team delivery follow-ups)$/,
+    }),
   ).toBeVisible();
+  await expect(
+    page.getByRole('link', {
+      name: /^(View delivery plan|View all decisions|Team delivery follow-ups)$/,
+    }),
+  ).toHaveAttribute('href', /^\/delivery(?:\?view=mine)?$/);
   await expect(page.getByRole('status').filter({ hasText: /Loading/ })).toHaveCount(0);
 }
 

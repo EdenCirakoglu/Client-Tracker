@@ -70,6 +70,14 @@ test('role queues, metric destinations and URL filters agree with authorised rec
     const page = await context.newPage();
     await login(page, role);
     const metrics = (await (await page.request.get('/api/dashboard/metrics')).json()).data;
+    const breakdown = page.locator('details').filter({
+      has: page.locator('summary').filter({ hasText: /^Ticket breakdown$/ }),
+    });
+    await expect(breakdown).not.toHaveAttribute('open');
+    await breakdown.locator('summary').click();
+    await expect(breakdown.getByRole('heading', { name: 'Tickets by status' })).toBeVisible();
+    await expect(breakdown.getByRole('heading', { name: 'Tickets by priority' })).toBeVisible();
+    await breakdown.locator('summary').click();
     const queue = page.getByRole('region', {
       name:
         role === 'Developer'
@@ -144,7 +152,9 @@ test('role queues, metric destinations and URL filters agree with authorised rec
       const result = (await (await page.request.get(`/api/tickets/queue?${query}`)).json()).data;
       expect(result.total).toBe(metrics[key!]);
       if (result.total)
-        await expect(page.getByRole('status')).toHaveText(`${result.total} tickets found`);
+        await expect(page.getByRole('status')).toHaveText(
+          `${result.total} tickets foundPage ${result.page}`,
+        );
       else await expect(page.getByRole('heading', { name: 'No tickets found' })).toBeVisible();
       await page.reload();
       await expect(page.getByRole('heading', { name: 'Tickets', exact: true })).toBeVisible();
