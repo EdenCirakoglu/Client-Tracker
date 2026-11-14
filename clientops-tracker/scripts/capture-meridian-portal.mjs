@@ -93,8 +93,6 @@ async function capture(page, pending, role, theme, viewport, filename, fullPage)
   const bytes = await page.screenshot({
     path: resolve(directory, filename),
     fullPage,
-    route: new URL(page.url()).pathname,
-    sidebar,
     animations: 'disabled',
     caret: 'hide',
     scale: 'css',
@@ -106,6 +104,8 @@ async function capture(page, pending, role, theme, viewport, filename, fullPage)
     theme,
     filename,
     fullPage,
+    route: new URL(page.url()).pathname,
+    sidebar,
     sha256: createHash('sha256').update(bytes).digest('hex'),
   });
 }
@@ -272,6 +272,4 @@ try {
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2));
   }
 }
-console.log(
-  `Captured ${manifest.captures.length} dashboard PNGs and manifest.json in ${directory}.`,
-);
+console.log(`Captured ${manifest.captures.length} portal PNGs and manifest.json in ${directory}.`);

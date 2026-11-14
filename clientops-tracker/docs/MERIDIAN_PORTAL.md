@@ -1,5 +1,14 @@
 # Meridian Portal Review
 
+## November 14 Visual Follow-Up
+
+The owner's supplied specification is reconciled in
+[MERIDIAN_SPEC_RECONCILIATION](MERIDIAN_SPEC_RECONCILIATION.md). This follow-up
+restores the intended proportions, typography, card/control geometry and
+task-first dashboard grid without changing the API or real decision semantics.
+The prior final-head evidence at `79c71b7` remains historical, not evidence for
+the follow-up head. New matched captures have their own manifests and directory.
+
 ## Candidate and Boundary
 
 Branch: `feature/meridian-portal`, based on PR #37 at
