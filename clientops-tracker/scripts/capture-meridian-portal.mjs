@@ -149,9 +149,10 @@ try {
         if (signIn) signIns += 1;
         await route.continue();
       });
-      await context.addInitScript(() =>
-        globalThis.localStorage.setItem('clientops:sidebar', 'expanded'),
-      );
+      await context.addInitScript(() => {
+        if (!globalThis.localStorage.getItem('clientops:sidebar'))
+          globalThis.localStorage.setItem('clientops:sidebar', 'expanded');
+      });
       const page = await context.newPage();
       page.on('pageerror', () => {
         scriptErrors += 1;
