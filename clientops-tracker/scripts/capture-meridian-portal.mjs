@@ -42,7 +42,7 @@ const manifest = {
 };
 
 async function settled(page, pending) {
-  expect(new URL(page.url()).pathname).toMatch(/^\/(dashboard|tickets\/[\da-f-]+)$/i);
+  await expect(page).toHaveURL(/\/(dashboard|tickets\/[\da-f-]+)$/i);
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
   await expect.poll(() => pending.size, { message: 'Dashboard API reads have finished' }).toBe(0);
   await expect(
