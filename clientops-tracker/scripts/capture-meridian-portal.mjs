@@ -15,6 +15,9 @@ const loopback = (url) =>
 if (!loopback(target) || target.pathname !== '/' || target.search || target.hash)
   throw new Error('VERIFY_URL must be an HTTP(S) loopback origin without credentials or a path.');
 const origin = target.origin;
+const ticketId = process.env.CAPTURE_TICKET_ID;
+if (ticketId && !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(ticketId))
+  throw new Error('CAPTURE_TICKET_ID must identify an existing fictional ticket.');
 const directory = resolve(process.env.UI_EVIDENCE_DIR ?? 'test-results/meridian-portal-captures');
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 const roles = ['Admin', 'Developer', 'Client'];
@@ -39,7 +42,7 @@ const manifest = {
 };
 
 async function settled(page, pending) {
-  await expect(page).toHaveURL(`${origin}/dashboard`);
+  expect(new URL(page.url()).pathname).toMatch(/^\/(dashboard|tickets\/[\da-f-]+)$/i);
   await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible();
   await expect.poll(() => pending.size, { message: 'Dashboard API reads have finished' }).toBe(0);
   await expect(
@@ -61,14 +64,18 @@ async function settled(page, pending) {
 async function capture(page, pending, role, theme, viewport, filename, fullPage) {
   await settled(page, pending);
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-  await expect(page.locator('.portal-shell')).toHaveClass(/\bshell-expanded\b/);
+  const sidebar = filename.includes('collapsed') ? 'collapsed' : 'expanded';
+  await expect(page.locator('.portal-shell')).toHaveClass(new RegExp(`\\bshell-${sidebar}\\b`));
   await expect(page.getByRole('dialog', { name: 'Navigation', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => globalThis.localStorage.getItem('clientops:sidebar'))).toBe(
-    'expanded',
+    sidebar,
   );
   if (viewport.width === 1440)
     await expect(
-      page.getByRole('button', { name: 'Collapse navigation', exact: true }),
+      page.getByRole('button', {
+        name: sidebar === 'expanded' ? 'Collapse navigation' : 'Expand navigation',
+        exact: true,
+      }),
     ).toBeVisible();
   else
     await expect(
@@ -86,6 +93,8 @@ async function capture(page, pending, role, theme, viewport, filename, fullPage)
   const bytes = await page.screenshot({
     path: resolve(directory, filename),
     fullPage,
+    route: new URL(page.url()).pathname,
+    sidebar,
     animations: 'disabled',
     caret: 'hide',
     scale: 'css',
@@ -195,6 +204,45 @@ try {
               'admin-dark-first-screen.png',
               false,
             );
+          if (ticketId && role === 'Client') {
+            await page.goto(`/tickets/${ticketId}`);
+            await expect(
+              page.getByRole('heading', { name: 'Revision river', exact: true }),
+            ).toBeVisible();
+            await capture(
+              page,
+              pending,
+              role,
+              theme,
+              viewport,
+              `ticket-client-${theme}-${viewport.width}.png`,
+              true,
+            );
+            if (viewport.width === 1440) {
+              await page.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
+              await capture(
+                page,
+                pending,
+                role,
+                theme,
+                viewport,
+                `ticket-client-${theme}-1440-collapsed.png`,
+                true,
+              );
+              await page.goto('/dashboard');
+              await capture(
+                page,
+                pending,
+                role,
+                theme,
+                viewport,
+                `dashboard-client-${theme}-1440-collapsed.png`,
+                true,
+              );
+              await page.getByRole('button', { name: 'Expand navigation', exact: true }).click();
+            }
+            await page.goto('/dashboard');
+          }
         }
       }
       expect(signIns, `${role} sign-in budget`).toBe(1);
@@ -204,9 +252,9 @@ try {
       await context.close();
     }
   }
-  expect(manifest.captures.filter((item) => item.fullPage)).toHaveLength(12);
+  expect(manifest.captures.filter((item) => item.fullPage)).toHaveLength(ticketId ? 20 : 12);
   expect(manifest.captures.filter((item) => !item.fullPage)).toHaveLength(1);
-  expect(new Set(manifest.captures.map((item) => item.filename)).size).toBe(13);
+  expect(new Set(manifest.captures.map((item) => item.filename)).size).toBe(ticketId ? 21 : 13);
   expect(git(['rev-parse', 'HEAD']), 'Git revision must not change during capture').toBe(
     manifest.revision,
   );
