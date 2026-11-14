@@ -7,8 +7,10 @@ export default function Page() {
   const [sessionEnded, setSessionEnded] = useState(false);
   return (
     <ProtectedPage>
-      <AccountForm mode="change" onPasswordChanged={() => setSessionEnded(true)} />
-      {!sessionEnded ? <NotificationPreferences /> : null}
+      <div className="portal-form">
+        <AccountForm mode="change" onPasswordChanged={() => setSessionEnded(true)} />
+        {!sessionEnded ? <NotificationPreferences /> : null}
+      </div>
     </ProtectedPage>
   );
 }

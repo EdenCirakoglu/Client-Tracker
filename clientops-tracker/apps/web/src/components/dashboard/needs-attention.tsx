@@ -8,6 +8,7 @@ import { useApiData } from '../../lib/use-api-data';
 import type { UserRole } from '../../lib/types';
 import { useState } from 'react';
 import { openedAge, ticketReference } from '../../lib/format';
+import { DeveloperWorkflow } from './developer-workflow';
 
 interface NeedsAttentionProps {
   role: UserRole;
@@ -15,11 +16,19 @@ interface NeedsAttentionProps {
 }
 
 export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
+  return role === 'DEVELOPER' ? (
+    <DeveloperWorkflow refresh={refresh} />
+  ) : (
+    <TicketAttention role={role} refresh={refresh} />
+  );
+}
+
+function TicketAttention({ role, refresh }: NeedsAttentionProps) {
   const [selected, setSelected] = useState('');
   const tabs =
     role === 'CLIENT'
       ? [
-          { id: 'reply', label: 'Your reply needed' },
+          { id: 'reply', label: 'Replies needed' },
           { id: 'active', label: 'Active requests' },
         ]
       : [
@@ -37,10 +46,10 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
   const filters = query.toString();
   const state = useApiData(() => api.ticketQueue(`${filters}&limit=5`), [filters, refresh]);
   return (
-    <section aria-labelledby="attention-heading" className="min-w-0">
+    <section aria-labelledby="attention-heading" className="portal-section min-w-0">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 id="attention-heading" className="text-lg font-semibold">
-          Needs attention
+        <h2 id="attention-heading" className="portal-section-title">
+          {role === 'CLIENT' ? 'Organisation requests' : 'Request follow-up'}
         </h2>
         <Link
           href={`/tickets?${filters}`}
@@ -51,7 +60,7 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
         </Link>
       </div>
       <div
-        className="mb-4 flex flex-wrap gap-1 border-b border-border pb-3"
+        className="portal-tabs mb-4 flex flex-wrap gap-1"
         role="group"
         aria-label="Attention queue"
       >
@@ -85,9 +94,9 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
             {tab === 'mine' ? ' assigned to you' : ''}
           </p>
           {state.data.items.length ? (
-            <ul className="divide-y divide-border rounded-lg border border-border bg-panel">
+            <ul className="divide-y divide-border">
               {state.data.items.map((ticket) => (
-                <li key={ticket.id} className="px-4 py-3">
+                <li key={ticket.id} className="portal-row py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="mb-1 text-xs text-muted">
@@ -112,7 +121,7 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                     <span>
                       {tab === 'reply'
-                        ? 'Your reply needed'
+                        ? 'Waiting for your organisation'
                         : tab === 'critical'
                           ? 'Critical priority'
                           : (ticket.assignee?.name ?? 'Unassigned')}
@@ -144,7 +153,9 @@ export function NeedsAttention({ role, refresh }: NeedsAttentionProps) {
               description={
                 tab === 'mine'
                   ? 'Your assigned requests are up to date.'
-                  : 'Choose another queue or view all support requests.'
+                  : role === 'CLIENT'
+                    ? 'No matching requests in your organisation.'
+                    : 'No matching requests in this queue.'
               }
               action={
                 <Link

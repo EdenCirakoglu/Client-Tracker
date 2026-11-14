@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, Plus, Trash2 } from 'lucide-react';
@@ -8,15 +8,19 @@ import { AccessDenied } from '../../../components/access-denied';
 import { PageHeader } from '../../../components/page-header';
 import { Button } from '../../../components/ui/button';
 import { FieldLabel, Input, Select, Textarea } from '../../../components/ui/input';
-import { ErrorState } from '../../../components/ui/states';
+import { ErrorState, LoadingState } from '../../../components/ui/states';
 import { api } from '../../../lib/api';
-import type { Client, SummaryInput, Ticket } from '../../../lib/types';
+import type { SummaryInput, Ticket } from '../../../lib/types';
 import { useAuth } from '../../../lib/auth';
+import { useApiData } from '../../../lib/use-api-data';
 
 export default function NewSummaryPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [clients, setClients] = useState<Client[]>([]);
+  const clientsState = useApiData(
+    () => (user?.role === 'CLIENT' ? Promise.resolve([]) : api.clients()),
+    [user?.role],
+  );
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketSearch, setTicketSearch] = useState('');
   const [total, setTotal] = useState(0);
@@ -29,17 +33,17 @@ export default function NewSummaryPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [loadingTickets, setLoadingTickets] = useState(false);
-  useEffect(() => {
-    if (user && user.role !== 'CLIENT')
-      void api
-        .clients()
-        .then(setClients)
-        .catch((e: Error) => setError(e.message));
-  }, [user?.id]);
+  const [ticketError, setTicketError] = useState('');
+  const [ticketRetry, setTicketRetry] = useState(0);
+  const submitting = useRef(false);
   useEffect(() => {
     let active = true;
-    if (!form.clientId || user?.role === 'CLIENT') {
+    setTickets([]);
+    setTotal(0);
+    setTicketError('');
+    if (!form.clientId || !user || user.role === 'CLIENT') {
       setTickets([]);
+      setLoadingTickets(false);
       return;
     }
     setLoadingTickets(true);
@@ -59,7 +63,7 @@ export default function NewSummaryPage() {
           }
         })
         .catch((e: Error) => {
-          if (active) setError(e.message);
+          if (active) setTicketError(e.message);
         })
         .finally(() => {
           if (active) setLoadingTickets(false);
@@ -69,9 +73,11 @@ export default function NewSummaryPage() {
       active = false;
       clearTimeout(timer);
     };
-  }, [form.clientId, ticketSearch, user?.role]);
+  }, [form.clientId, ticketSearch, user?.id, user?.role, ticketRetry]);
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setError('');
     setBusy(true);
     try {
@@ -80,6 +86,8 @@ export default function NewSummaryPage() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Summary could not be prepared.');
       setBusy(false);
+    } finally {
+      submitting.current = false;
     }
   }
   if (user?.role === 'CLIENT')
@@ -94,42 +102,62 @@ export default function NewSummaryPage() {
         Back to summaries
       </Link>
       <PageHeader title="Prepare client summary" />
-      <form onSubmit={submit} className="max-w-3xl space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <FieldLabel htmlFor="summary-client">Client organisation</FieldLabel>
-            <Select
-              id="summary-client"
-              required
-              disabled={busy}
-              value={form.clientId}
-              onChange={(e) => {
-                setForm({ ...form, clientId: e.target.value, upcoming: [], blocked: [] });
-                setTicketSearch('');
-              }}
-            >
-              <option value="">Select client</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
+      <form onSubmit={submit} className="portal-form space-y-6">
+        <fieldset disabled={busy} className="portal-section min-w-0">
+          <legend className="mb-4">Client and reporting period</legend>
+          {clientsState.loading ? (
+            <LoadingState label="Loading clients..." />
+          ) : clientsState.error ? (
+            <ErrorState message={clientsState.error} onRetry={clientsState.reload} />
+          ) : !clientsState.data?.length ? (
+            <p role="status" className="mb-4 text-sm text-muted">
+              No clients are available.{' '}
+              {user?.role === 'ADMIN' ? (
+                <Link className="text-brand-700 underline" href="/clients">
+                  Create client
+                </Link>
+              ) : (
+                'Ask an administrator to create a client organisation.'
+              )}
+            </p>
+          ) : null}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <FieldLabel htmlFor="summary-client">Client organisation</FieldLabel>
+              <Select
+                id="summary-client"
+                required
+                disabled={busy || clientsState.loading || !!clientsState.error}
+                value={form.clientId}
+                onChange={(e) => {
+                  setForm({ ...form, clientId: e.target.value, upcoming: [], blocked: [] });
+                  setTicketSearch('');
+                  setError('');
+                }}
+              >
+                <option value="">Select client</option>
+                {(clientsState.data ?? []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <FieldLabel htmlFor="summary-week">Week beginning (UTC)</FieldLabel>
+              <Input
+                id="summary-week"
+                type="date"
+                required
+                max={new Date().toISOString().slice(0, 10)}
+                disabled={busy}
+                value={form.weekStart}
+                onChange={(e) => setForm({ ...form, weekStart: e.target.value })}
+              />
+            </div>
           </div>
-          <div>
-            <FieldLabel htmlFor="summary-week">Week beginning (UTC)</FieldLabel>
-            <Input
-              id="summary-week"
-              type="date"
-              required
-              max={new Date().toISOString().slice(0, 10)}
-              disabled={busy}
-              value={form.weekStart}
-              onChange={(e) => setForm({ ...form, weekStart: e.target.value })}
-            />
-          </div>
-        </div>
-        <p className="text-sm text-muted">
+        </fieldset>
+        <p className="border-l-2 border-brand-600 pl-4 text-sm text-muted">
           Review the draft before publishing. Commitments and blocker notes below will be visible to
           this client.
         </p>
@@ -143,6 +171,7 @@ export default function NewSummaryPage() {
                 id="summary-search"
                 type="search"
                 maxLength={200}
+                disabled={busy}
                 value={ticketSearch}
                 onChange={(e) => setTicketSearch(e.target.value)}
               />
@@ -151,14 +180,32 @@ export default function NewSummaryPage() {
                   ? 'Finding tickets...'
                   : `${Math.min(total, 50)} of ${total} matches`}
               </p>
+              {ticketError ? (
+                <ErrorState
+                  message={ticketError}
+                  onRetry={() => setTicketRetry((value) => value + 1)}
+                />
+              ) : !loadingTickets && total === 0 ? (
+                <p className="mt-2 text-sm text-muted">
+                  No matching tickets.{' '}
+                  {ticketSearch
+                    ? 'Try another search.'
+                    : 'Commitments and blockers need a supporting ticket.'}
+                </p>
+              ) : null}
             </div>
             {(['upcoming', 'blocked'] as const).map((key) => (
-              <section key={key} className="space-y-3 border-t border-border pt-4">
-                <h2 className="font-semibold">
+              <section key={key} className="portal-section space-y-3 border-t border-border pt-4">
+                <h2 className="portal-section-title">
                   {key === 'upcoming' ? 'Upcoming commitments' : 'Blocked work'}
                 </h2>
+                {!form[key].length ? (
+                  <p className="text-sm text-muted">
+                    {key === 'upcoming' ? 'No commitments added.' : 'No blockers added.'}
+                  </p>
+                ) : null}
                 {form[key].map((note, index) => (
-                  <div key={index} className="space-y-3 border-l-2 border-border pl-4">
+                  <div key={index} className="portal-row space-y-3 border-l-2 border-border pl-4">
                     <div>
                       <FieldLabel htmlFor={`${key}-ticket-${index}`}>
                         Supporting ticket {index + 1}
@@ -166,7 +213,7 @@ export default function NewSummaryPage() {
                       <Select
                         id={`${key}-ticket-${index}`}
                         required
-                        disabled={busy || loadingTickets}
+                        disabled={busy || loadingTickets || !!ticketError}
                         value={note.ticketId}
                         onChange={(e) =>
                           setForm({
@@ -215,6 +262,7 @@ export default function NewSummaryPage() {
                       type="button"
                       variant="secondary"
                       aria-label={`Remove ${key === 'upcoming' ? 'commitment' : 'blocker'} ${index + 1}`}
+                      title={`Remove ${key === 'upcoming' ? 'commitment' : 'blocker'} ${index + 1}`}
                       disabled={busy}
                       onClick={() =>
                         setForm({ ...form, [key]: form[key].filter((_, i) => i !== index) })
@@ -240,8 +288,11 @@ export default function NewSummaryPage() {
           </>
         ) : null}
         {error ? <ErrorState message={error} /> : null}
-        <div className="flex flex-wrap items-center gap-4">
-          <Button disabled={busy || !form.clientId} type="submit">
+        <div className="flex flex-wrap items-center gap-4 border-t border-border pt-4">
+          <Button
+            disabled={busy || !form.clientId || clientsState.loading || !!clientsState.error}
+            type="submit"
+          >
             <Eye className="h-4 w-4" />
             {busy ? 'Preparing...' : 'Preview summary'}
           </Button>

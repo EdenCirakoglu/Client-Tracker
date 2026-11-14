@@ -21,7 +21,7 @@ interface DeliveryRecordProps {
 const stateLabels: Record<DeliveryRevision['state'], string> = {
   PROPOSED: 'Outcome awaiting agreement',
   AGREED: 'Outcome agreed',
-  AWAITING_ACCEPTANCE: 'Delivered - awaiting your confirmation',
+  AWAITING_ACCEPTANCE: 'Delivered - awaiting client confirmation',
   ACCEPTED: 'Accepted by client',
   CHANGES_REQUESTED: 'Changes requested',
 };
@@ -175,8 +175,8 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h3 className="meridian-heading text-3xl text-ink">
-                    {current.state === 'AWAITING_ACCEPTANCE' && internal
-                      ? 'Delivered - awaiting client confirmation'
+                    {current.state === 'AWAITING_ACCEPTANCE' && canDecide
+                      ? 'Delivered - awaiting your confirmation'
                       : stateLabels[current.state]}
                   </h3>
                   <span className="meridian-meta text-muted">
@@ -236,11 +236,6 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
                     ]}
                   />
                 ) : null}
-                {current.state === 'ACCEPTED' ? (
-                  <p className="text-sm text-muted">
-                    Acceptance is recorded separately from ticket resolution.
-                  </p>
-                ) : null}
               </>
             ) : (
               <p className="text-sm text-muted">
@@ -250,25 +245,27 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
                   : 'The team acts next: they will propose acceptance criteria for your reviewer.'}
               </p>
             )}
-            {current ? (
+            {current && current.state !== 'ACCEPTED' ? (
               <p
                 className="border-l-2 border-brand-600 pl-3 text-sm leading-6"
                 aria-label="Who acts next"
               >
                 {current.state === 'PROPOSED'
-                  ? `${current.reviewerName} acts next: review this revision and agree the outcome or request changes. Delivery cannot be submitted for acceptance before agreement.`
+                  ? canDecide
+                    ? 'Review this revision and agree the outcome or request changes. Delivery cannot be submitted for acceptance before agreement.'
+                    : `Awaiting outcome agreement from ${current.reviewerName}.`
                   : current.state === 'AGREED'
                     ? `${current.ownerName ?? 'The team'} acts next: link a release from this project, add client-visible delivery notes and request acceptance.`
                     : current.state === 'AWAITING_ACCEPTANCE'
-                      ? `${current.reviewerName} acts next: compare the delivery evidence with the agreed outcome and record a decision below.`
-                      : current.state === 'CHANGES_REQUESTED'
-                        ? `${current.ownerName ?? 'The team'} acts next: read the recorded feedback and propose a revised outcome for fresh agreement.`
-                        : 'Client acceptance is recorded. The ticket status and release remain separate records.'}
+                      ? canDecide
+                        ? 'Compare the delivery evidence with the agreed outcome and record a decision below.'
+                        : `Awaiting a delivery decision from ${current.reviewerName}.`
+                      : `${current.ownerName ?? 'The team'} acts next: read the recorded feedback and propose a revised outcome for fresh agreement.`}
               </p>
             ) : null}
             <Link
               href="/guide"
-              className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+              className="mr-3 inline-flex min-h-11 items-center text-sm text-brand-700 underline"
             >
               Request-to-acceptance guide
             </Link>
@@ -503,7 +500,11 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
             </Button>
           </>
         )}
-        <p role="status" aria-label="Delivery update" className="text-sm text-brand-700">
+        <p
+          role="status"
+          aria-label="Delivery update"
+          className={current?.state === 'ACCEPTED' && !busy ? 'sr-only' : 'text-sm text-brand-700'}
+        >
           {busy ? 'Saving...' : message}
         </p>
         {error ? <ErrorState message={error} onRetry={load} /> : null}
@@ -539,9 +540,11 @@ function RevisionDetails({ revision }: { revision: DeliveryRevision }) {
           {revision.deliveryNotes ? (
             <p className="mt-2 whitespace-pre-wrap">{revision.deliveryNotes}</p>
           ) : null}
-          <p className="mt-2 text-xs text-muted">
-            Release delivery and client acceptance are recorded separately from ticket resolution.
-          </p>
+          {revision.state !== 'ACCEPTED' ? (
+            <p className="mt-2 text-xs text-muted">
+              Release delivery and client acceptance are recorded separately from ticket resolution.
+            </p>
+          ) : null}
         </div>
       ) : null}
       <ol className="space-y-2 border-l-2 border-border pl-4">

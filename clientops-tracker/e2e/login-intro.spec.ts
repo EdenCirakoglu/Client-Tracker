@@ -6,6 +6,13 @@ test.use({ reducedMotion: 'no-preference' });
 
 const intro = (page: Page) => page.getByRole('dialog', { name: 'ClientOps Tracker', exact: true });
 
+async function analyzeIntro(page: Page) {
+  // The context-wide clock can race axe's temporary results-page close. This
+  // frame-free screen can use axe.run without omitting cross-origin content.
+  await expect(page.locator('iframe, frame')).toHaveCount(0);
+  return new AxeBuilder({ page }).setLegacyMode().withTags(['wcag2a', 'wcag2aa']).analyze();
+}
+
 async function whileClockAdvances<T>(page: Page, action: () => Promise<T>): Promise<T> {
   let settled = false;
   const result = action();
@@ -58,13 +65,7 @@ test('first arrival reveals the exact logo, traps focus, completes and does not 
   await page.keyboard.press('Shift+Tab');
   await expect(intro(page)).toBeFocused();
   await settleReveal(page);
-  expect(
-    (
-      await whileClockAdvances(page, () =>
-        new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze(),
-      )
-    ).violations,
-  ).toEqual([]);
+  expect((await whileClockAdvances(page, () => analyzeIntro(page))).violations).toEqual([]);
   await expect(intro(page).locator('img')).toHaveAttribute('src', '/brand/journal-v3.png');
   expect(
     await intro(page)
@@ -184,9 +185,7 @@ for (const view of [
     await expect(intro(page).locator('img')).toBeInViewport();
     await expect(intro(page).getByText('ClientOps Tracker', { exact: true })).toBeInViewport();
     await whileClockAdvances(page, async () => {
-      expect(
-        (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations,
-      ).toEqual([]);
+      expect((await analyzeIntro(page)).violations).toEqual([]);
       await page.screenshot({ path: `test-results/logo-intro/${view.name}.png` });
     });
     await page.keyboard.press('Escape');
@@ -225,9 +224,7 @@ test('native 200 percent browser zoom keeps the button-free intro readable', asy
       true,
     );
     await whileClockAdvances(page, async () => {
-      expect(
-        (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations,
-      ).toEqual([]);
+      expect((await analyzeIntro(page)).violations).toEqual([]);
       const cdp = await context.newCDPSession(page);
       const capture = await cdp.send('Page.captureScreenshot', {
         format: 'png',

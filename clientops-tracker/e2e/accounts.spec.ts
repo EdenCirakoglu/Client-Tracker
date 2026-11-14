@@ -20,9 +20,18 @@ async function login(page: Page, email: string, password: string) {
   await page.goto('/login');
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
+  const metrics = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/dashboard/metrics',
+  );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
+  expect((await metrics).ok()).toBe(true);
+  await expect(page.getByRole('heading', { name: 'Request overview', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('status', { includeHidden: true }).filter({ hasText: /Loading|Checking/ }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel('Loading count', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
 }
 async function emailLink(page: Page, email: string, reset = false) {
   let link = '';

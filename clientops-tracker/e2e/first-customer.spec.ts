@@ -266,7 +266,9 @@ test('selected-client setup and fresh role accounts complete separate acceptance
       );
       expect(denied.status()).toBe(403);
       await outsider!.goto(ticketPath);
-      await expect(outsider!.getByRole('alert')).toBeVisible();
+      await expect(outsider!.getByRole('main').getByRole('alert')).toContainText(
+        'Ticket was not found.',
+      );
       await expect(
         outsider!.getByText(
           'Show active and archived shipments when searching by their reference.',

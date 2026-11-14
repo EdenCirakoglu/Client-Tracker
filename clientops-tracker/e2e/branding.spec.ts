@@ -33,7 +33,7 @@ test('journal identity survives themes, collapse and mobile navigation without d
   await page.goto('/login');
   await page.getByRole('button', { name: 'Light theme', exact: true }).click();
   await page.getByRole('button', { name: 'Continue as Client', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your next decision' })).toBeVisible();
   await page.getByLabel('Account menu').click();
   await page.getByRole('button', { name: 'Dark theme', exact: true }).click();
   await page.getByLabel('Account menu').click();

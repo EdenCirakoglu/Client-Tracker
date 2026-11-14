@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { api } from '../lib/api';
 import type { ProgressSummary } from '../lib/types';
@@ -18,7 +18,15 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const submitting = useRef(false);
   async function publish() {
+    if (
+      submitting.current ||
+      (!summary.publishedAt && !reviewed) ||
+      (summary.publishedAt && !selected.length)
+    )
+      return;
+    submitting.current = true;
     setBusy(true);
     setError('');
     setMessage('');
@@ -35,15 +43,16 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Publication failed.');
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
   return (
-    <section
-      aria-labelledby="summary-publication-heading"
-      className="space-y-4 border-t border-border pt-5"
-    >
-      <h2 id="summary-publication-heading" className="text-lg font-semibold">
+    <section aria-labelledby="summary-publication-heading" className="portal-form space-y-4">
+      <p className="portal-kicker">
+        {summary.publishedAt ? 'Published snapshot' : 'Client publication'}
+      </p>
+      <h2 id="summary-publication-heading" className="portal-section-title">
         {summary.publishedAt ? 'Notify client contacts' : 'Publish this update'}
       </h2>
       {!summary.publishedAt ? (
@@ -66,10 +75,13 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
           <ErrorState message={contacts.error} onRetry={contacts.reload} />
         ) : contacts.data?.length ? (
           contacts.data.map((contact) => (
-            <label key={contact.id} className="flex min-h-11 items-center gap-3 text-sm">
+            <label
+              key={contact.id}
+              className="portal-row flex min-h-11 items-start gap-3 break-words text-sm"
+            >
               <input
                 type="checkbox"
-                className="h-4 min-h-0 w-4 shrink-0"
+                className="mt-1 h-4 min-h-0 w-4 shrink-0"
                 disabled={!contact.workflowNotifications}
                 checked={selected.includes(contact.id)}
                 onChange={(e) =>
@@ -92,7 +104,9 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
           </p>
         )}
       </fieldset>
+      <p className="text-xs text-muted">{selected.length} contacts selected</p>
       <Button
+        className="h-auto min-h-11 w-full whitespace-normal py-2"
         onClick={publish}
         disabled={
           busy ||
@@ -114,11 +128,11 @@ export function SummaryPublication({ summary, onPublished }: SummaryPublicationP
         contact has at most one delivery request per summary; mail retries can produce duplicates.
       </p>
       {error ? (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="break-words text-sm text-red-700">
           {error}
         </p>
       ) : null}
-      <p role="status" aria-label="Summary update" className="text-sm text-brand-700">
+      <p role="status" aria-label="Summary update" className="break-words text-sm text-brand-700">
         {message}
       </p>
     </section>

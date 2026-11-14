@@ -11,8 +11,8 @@ interface OnboardingChecklistProps {
 export function OnboardingChecklist({ refresh }: OnboardingChecklistProps) {
   const state = useApiData(api.onboarding, [refresh]);
   return (
-    <section aria-labelledby="onboarding-heading" className="mb-6 border-b border-border pb-5">
-      <h2 id="onboarding-heading" className="text-lg font-semibold">
+    <section aria-labelledby="onboarding-heading" className="portal-section">
+      <h2 id="onboarding-heading" className="portal-section-title">
         Installation setup
       </h2>
       {state.loading ? (
@@ -24,12 +24,14 @@ export function OnboardingChecklist({ refresh }: OnboardingChecklistProps) {
           <p className="mt-1 text-xs text-muted">
             {state.data.completed} of {state.data.steps.length} steps complete. {state.data.scope}.
           </p>
-          <details className="mt-3" open={state.data.completed < state.data.steps.length}>
-            <summary className="cursor-pointer text-sm font-medium">Setup checklist</summary>
+          <details className="mt-3">
+            <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium">
+              Installation checklist
+            </summary>
             <p className="mt-3 text-xs leading-5 text-muted">
               These steps count records across all clients, not one client's completed onboarding.
             </p>
-            <ol className="mt-3 grid gap-x-6 sm:grid-cols-2">
+            <ol className="mt-3 divide-y divide-border">
               {state.data.steps.map((step) => (
                 <li key={step.key}>
                   <Link

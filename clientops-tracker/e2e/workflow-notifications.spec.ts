@@ -6,7 +6,18 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 async function login(page: Page, role: string) {
+  const configuration = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/auth/config',
+  );
   await page.goto('/login');
+  const response = await configuration;
+  expect(
+    response.status(),
+    `Demo login configuration; auth budget remaining: ${response.headers()['ratelimit'] ?? 'unknown'}`,
+  ).toBe(200);
+  expect((await response.json()).data.demoEnabled, 'Disposable demo access must be enabled').toBe(
+    true,
+  );
   await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 }
@@ -109,7 +120,7 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await expect(admin.getByRole('heading', { name: 'Installation setup' })).toBeVisible();
     const checklist = admin.getByRole('region', { name: 'Installation setup' });
     if ((await checklist.locator('details').getAttribute('open')) === null)
-      await checklist.getByText('Setup checklist', { exact: true }).click();
+      await checklist.getByText('Installation checklist', { exact: true }).click();
     await expect(
       checklist.getByRole('link', { name: /Add client organisation details/ }),
     ).toBeVisible();
@@ -216,7 +227,9 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     ).toBeVisible();
     await accessible(client);
     await capture(client, 'summary-client-mobile');
-    const headings = await client.locator('main h2').allTextContents();
+    const headings = await client.locator('main h2, main h3').allTextContents();
+    expect(headings).toContain('Delivery decisions');
+    expect(headings).toContain('Resolved requests');
     expect(headings.indexOf('Delivery decisions')).toBeLessThan(
       headings.indexOf('Resolved requests'),
     );

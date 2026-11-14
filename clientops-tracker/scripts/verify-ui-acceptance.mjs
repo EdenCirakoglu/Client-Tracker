@@ -46,7 +46,16 @@ async function screenshot(page, name, fullPage = true) {
 async function login(page, role) {
   await page.goto(`${origin}/login`);
   await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', {
+      name:
+        role === 'Developer'
+          ? 'Your next actions'
+          : role === 'Client'
+            ? 'Your next decision'
+            : 'Client setup',
+    }),
+  ).toBeVisible();
   await expect(page.getByText('Loading tickets...', { exact: true })).toHaveCount(0);
 }
 try {
@@ -68,19 +77,35 @@ try {
     }
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${origin}/dashboard`);
-    await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', {
+        name:
+          role === 'Developer'
+            ? 'Your next actions'
+            : role === 'Client'
+              ? 'Your next decision'
+              : 'Client setup',
+      }),
+    ).toBeVisible();
     await expect(page.getByText('Loading tickets...', { exact: true })).toHaveCount(0);
     await screenshot(page, `${role.toLowerCase()}-mobile-dashboard`, false);
     if (!before) {
       const decisions = page.getByRole('region', {
-        name: role === 'Client' ? 'My decisions' : 'Delivery follow-up',
+        name:
+          role === 'Client'
+            ? 'Your next decision'
+            : role === 'Developer'
+              ? 'Your next actions'
+              : 'Client setup',
         exact: true,
       });
       await expect(decisions.getByText('Loading delivery plan...', { exact: true })).toHaveCount(0);
-      const workingArea = (await decisions.locator('li').count())
-        ? decisions
-        : page.getByRole('region', { name: 'Needs attention' });
-      const action = workingArea.locator('li').first().locator('a').last();
+      const action =
+        role === 'Developer'
+          ? decisions.locator('li').first().locator('a').last()
+          : role === 'Client'
+            ? decisions.locator('a.meridian-primary')
+            : decisions.getByRole('combobox', { name: 'Client to set up' });
       await expect(action).toBeInViewport();
       expect(await page.getByText('0d since opened', { exact: true }).count()).toBe(0);
     }
