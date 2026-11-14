@@ -45,36 +45,40 @@ export default function DashboardPage() {
         </div>
       </div>
       {user ? (
-        <div key={user.id} className="portal-workspace">
-          <div className="min-w-0 space-y-8">
-            {user.role === 'ADMIN' ? <ClientSetupSummary refresh={refresh} /> : null}
-            {client ? <DeliveryFollowUp refresh={refresh} personal /> : null}
-            {developer ? <NeedsAttention key={user.id} role={user.role} refresh={refresh} /> : null}
-            {user.role === 'ADMIN' ? <DeliveryFollowUp refresh={refresh} /> : null}
-            {!developer ? (
-              <NeedsAttention key={user.id} role={user.role} refresh={refresh} />
-            ) : null}
-          </div>
-          <aside className="portal-support min-w-0 space-y-8" aria-label="Supporting information">
-            {developer ? (
+        <div key={user.id} className="portal-dashboard">
+          {user.role === 'ADMIN' ? <ClientSetupSummary refresh={refresh} /> : null}
+          <div className="portal-workspace">
+            <div className="portal-primary-stack">
+              {client ? <DeliveryFollowUp refresh={refresh} personal /> : null}
+              {developer ? (
+                <NeedsAttention key={user.id} role={user.role} refresh={refresh} />
+              ) : null}
+              {user.role === 'ADMIN' ? <DeliveryFollowUp refresh={refresh} /> : null}
+              {!developer ? (
+                <NeedsAttention key={user.id} role={user.role} refresh={refresh} />
+              ) : null}
+            </div>
+            <aside className="portal-support" aria-label="Supporting information">
+              {developer ? (
+                <Link
+                  href="/delivery"
+                  className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
+                >
+                  Team delivery follow-ups
+                </Link>
+              ) : null}
+              <DashboardSnapshot refresh={refresh} />
+              <RecentReleases refresh={refresh} />
+              <RecentActivity key={user.id + '-' + refresh} refresh={refresh} client={client} />
+              {user.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
               <Link
-                href="/delivery"
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
+                href="/guide"
+                className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
               >
-                Team delivery follow-ups
+                {user.role === 'ADMIN' ? 'Client setup guide' : 'Help and guidance'}
               </Link>
-            ) : null}
-            <DashboardSnapshot refresh={refresh} />
-            <RecentReleases refresh={refresh} />
-            <RecentActivity key={user.id + '-' + refresh} refresh={refresh} client={client} />
-            {user.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
-            <Link
-              href="/guide"
-              className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
-            >
-              {user.role === 'ADMIN' ? 'Client setup guide' : 'Help and guidance'}
-            </Link>
-          </aside>
+            </aside>
+          </div>
         </div>
       ) : null}
     </ProtectedPage>

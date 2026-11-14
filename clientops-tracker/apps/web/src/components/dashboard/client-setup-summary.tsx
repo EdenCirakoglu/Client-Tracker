@@ -32,7 +32,6 @@ export function ClientSetupSummary({ refresh }: { refresh: number }) {
   }
   return (
     <section className="portal-section portal-feature" aria-labelledby="setup-heading">
-      <p className="portal-kicker mb-2">Client operations</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="setup-heading" className="portal-section-title">
           Client setup
@@ -50,8 +49,8 @@ export function ClientSetupSummary({ refresh }: { refresh: number }) {
         <ErrorState message={clients.error} onRetry={clients.reload} />
       ) : clients.data ? (
         clients.data.length ? (
-          <>
-            <div className="mt-3 max-w-lg">
+          <div className="portal-setup-content">
+            <div className="min-w-0">
               <FieldLabel htmlFor="dashboard-setup-client">Client to set up</FieldLabel>
               <Select
                 id="dashboard-setup-client"
@@ -64,14 +63,14 @@ export function ClientSetupSummary({ refresh }: { refresh: number }) {
                   </option>
                 ))}
               </Select>
-            </div>
-            {selected ? (
-              <>
+              {selected ? (
                 <p className="mt-3 break-words text-xs text-muted">
                   Selected client: {selected.name}
                 </p>
-                <ClientNextStep key={selected.id} clientId={selected.id} refresh={refresh} />
-              </>
+              ) : null}
+            </div>
+            {selected ? (
+              <ClientNextStep key={selected.id} clientId={selected.id} refresh={refresh} />
             ) : (
               <Link
                 href="/guide"
@@ -80,7 +79,7 @@ export function ClientSetupSummary({ refresh }: { refresh: number }) {
                 Open client setup guide <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
             )}
-          </>
+          </div>
         ) : (
           <div className="mt-3">
             <p className="text-sm text-muted">No client organisations recorded.</p>
@@ -136,7 +135,7 @@ function ClientNextStep({ clientId, refresh }: { clientId: string; refresh: numb
               detail: 'First client decision recorded. This is not necessarily acceptance.',
             };
   return (
-    <div className="mt-4 border-t border-border pt-4">
+    <div className="portal-setup-next">
       <p className="break-words text-sm text-muted">{next.detail}</p>
       <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1">
         <Link

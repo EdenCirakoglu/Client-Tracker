@@ -10,7 +10,8 @@
 }
 .ticket-heading {
   max-width: 980px;
-  font-size: 40px;
+  font-size: 48px;
+  line-height: 1.08;
 }
 .ticket-context {
   display: flex;
@@ -22,7 +23,7 @@
 }
 .meridian-workspace {
   display: grid;
-  gap: 24px;
+  gap: 16px;
   align-items: start;
 }
 .meridian-review-rail {
@@ -177,8 +178,8 @@
   display: block;
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.55;
 }
 .diff-table tbody {
   display: block;
@@ -237,6 +238,9 @@
 .decision-panel {
   padding: 24px;
   border-top: 2px solid rgb(var(--accent));
+}
+.decision-panel .meridian-heading {
+  font-size: 32px;
 }
 .decision-facts {
   margin: 24px 0 16px;
@@ -305,6 +309,7 @@
   background: rgb(var(--panel));
   border: 0;
   border-left: 1px solid rgb(var(--border));
+  border-radius: 24px 0 0 24px;
 }
 .review-dialog::backdrop {
   background: rgb(15 22 19 / 0.65);
@@ -331,7 +336,15 @@
     grid-template-columns: minmax(0, 1fr) 340px;
   }
 }
+@media (min-width: 1600px) {
+  .meridian-workspace {
+    grid-template-columns: minmax(0, 1fr) 372px;
+  }
+}
 @media (max-width: 767px) {
+  .review-dialog {
+    border-radius: 0;
+  }
   .ticket-heading {
     font-size: 32px;
   }

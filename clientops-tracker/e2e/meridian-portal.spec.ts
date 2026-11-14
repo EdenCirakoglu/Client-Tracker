@@ -263,6 +263,27 @@ test('three roles land on the dashboard first and retain theme and sidebar prefe
       await expect(
         page.getByRole('button', { name: 'Collapse navigation', exact: true }),
       ).toBeVisible();
+      const sidebar = page.locator('#navigation');
+      expect((await sidebar.boundingBox())?.width, 'Expanded navigation proportion').toBe(232);
+      const header = await page.getByRole('banner').boundingBox();
+      expect(header?.height, 'Header baseline leaves room for readable account context').toBe(64);
+      const main = await page.getByRole('main').boundingBox();
+      const work = await page.locator('.portal-primary-stack').boundingBox();
+      const support = await page
+        .getByRole('complementary', { name: 'Supporting information' })
+        .boundingBox();
+      expect(work && main && work.x - main.x, 'Desktop page gutter').toBe(32);
+      expect(
+        work && support && support.x - work.x - work.width,
+        'Task/support separation',
+      ).toBeCloseTo(16);
+      expect(work!.width, 'Tasks dominate supporting data').toBeGreaterThan(support!.width * 1.8);
+      await page.evaluate(async () => {
+        await document.fonts.load('italic 32px "Instrument Serif"');
+      });
+      expect(
+        await page.evaluate(() => document.fonts.check('italic 32px "Instrument Serif"')),
+      ).toBe(true);
       const nav = page.getByRole('navigation', { name: 'Main navigation' });
       const routes = navigation.filter(([, path]) =>
         path === '/users' ? role === 'Admin' : path === '/clients' ? role !== 'Client' : true,
@@ -291,6 +312,7 @@ test('three roles land on the dashboard first and retain theme and sidebar prefe
         );
       }
       await page.getByRole('button', { name: 'Collapse navigation', exact: true }).click();
+      expect((await sidebar.boundingBox())?.width, 'Collapsed rail proportion').toBe(72);
       for (const value of themes) {
         await theme(page, value);
         await page.reload();
