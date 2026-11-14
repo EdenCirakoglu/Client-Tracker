@@ -340,6 +340,14 @@ test('failed refresh is not an empty queue; long names and focused controls rema
     const clientPage = await clientContext.newPage();
     await login(clientPage, 'Client');
     await expect(clientPage.locator('header').getByTitle(longName)).toBeVisible();
+    const snapshot = await clientPage
+      .getByRole('region', { name: 'Organisation snapshot', exact: true })
+      .boundingBox();
+    expect(snapshot, 'Organisation snapshot remains rendered').not.toBeNull();
+    expect(
+      snapshot!.x + snapshot!.width,
+      'Long organisation names wrap inside the panel',
+    ).toBeLessThanOrEqual(390);
     await accessible(clientPage);
     await clientPage.goto(`/tickets/${ticket.id}`);
     await expect(clientPage.getByRole('heading', { name: longTitle })).toBeVisible();

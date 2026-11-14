@@ -61,6 +61,14 @@ removed, retry added or timeout increased. Final results belong to the later PR
 head, not the failed run. The dashboard/ticket comparison captures below predate
 this operational-page correction and retain their original attribution.
 
+The same run's broader dashboard regression also exposed an intrinsic grid-size
+issue with unbroken organisation names. In a read-only synthetic-text diagnostic,
+the 390px viewport expanded to 863px; explicit `minmax(0, 1fr)` tracks restored a
+390px document without hiding or truncating the text. The existing real-record
+long-name test is retained, with a focused snapshot-boundary assertion added.
+No database records were changed by the diagnostic. Its result is not a real-data
+product screenshot or a substitute for the final full browser run.
+
 ## Evidence and Reproduction
 
 Application-source checkpoint: `3297183` (full SHA in the screenshot manifest).

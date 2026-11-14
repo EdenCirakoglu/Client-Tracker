@@ -111,6 +111,7 @@ body {
 .portal-primary-stack,
 .portal-support {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--portal-space);
   min-width: 0;
 }
