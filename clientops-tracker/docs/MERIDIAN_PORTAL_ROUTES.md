@@ -1,5 +1,16 @@
 # Meridian Portal Routes
 
+## Evidence Status
+
+The route inventory remains current. The preliminary runs, pending statements
+and fixture effects below are the November 13 historical record, not the latest
+PR status. The later clean-source verification at `79c71b7` is recorded in
+[MERIDIAN_PORTAL](MERIDIAN_PORTAL.md). The November 14 visual refinement,
+matched captures and implementation boundaries are in
+[the specification reconciliation](MERIDIAN_SPEC_RECONCILIATION.md).
+Use the latest [PR #43 handoff](https://github.com/EdenCirakoglu/Client-Tracker/pull/43)
+for the exact tested head and hosted results; earlier evidence is not relabelled.
+
 ## Scope
 
 This inventory covers the whole Meridian portal increment: role-specific
