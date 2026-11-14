@@ -47,6 +47,20 @@ support for the proposed search, calendar, notifications, passkeys or release ga
 Performance budgets and human usability targets in the document are targets, not
 measurements from this visual pass.
 
+## Integrated Regression
+
+Fresh CI at `9725caf` exposed a shared-grid defect in the staff summary reader:
+older operational pages did not use the dashboard's primary-stack class, so their
+main content occupied one of twelve columns. The failed summary-publication
+assertion and screenshot are retained in run `43613560658`, route job
+`132503630873`. This was an application regression, not a timing failure.
+The correction assigns full-width stacked spans to every workspace child and an
+eight-column desktop span to primary content. Route checks now assert usable
+reading widths as well as overflow and publication behavior. No assertion was
+removed, retry added or timeout increased. Final results belong to the later PR
+head, not the failed run. The dashboard/ticket comparison captures below predate
+this operational-page correction and retain their original attribution.
+
 ## Evidence and Reproduction
 
 Application-source checkpoint: `3297183` (full SHA in the screenshot manifest).

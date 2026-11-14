@@ -24,6 +24,22 @@ async function fits(page: Page) {
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
   ).toBe(true);
+  for (const workspace of await page.locator('.portal-workspace').all()) {
+    const outer = await workspace.boundingBox();
+    const primary = await workspace.locator(':scope > :first-child').boundingBox();
+    expect(outer).not.toBeNull();
+    expect(primary).not.toBeNull();
+    if ((page.viewportSize()?.width ?? 1440) < 1200) {
+      expect(primary!.width, 'Stacked primary content uses the full reading width').toBeCloseTo(
+        outer!.width,
+        0,
+      );
+    } else {
+      expect(primary!.width, 'Primary records keep a usable dominant column').toBeGreaterThan(
+        outer!.width * 0.6,
+      );
+    }
+  }
   const outside = await page
     .locator('form input:not([type="hidden"]), form select, form textarea, form button')
     .evaluateAll((elements) =>
@@ -350,6 +366,7 @@ test('summary preview publishes without email and retains review after failure',
   await page.getByRole('button', { name: 'Preview summary', exact: true }).click();
   await expect(page).toHaveURL(/\/summaries\/[a-f0-9-]{36}$/);
   await expect(page.getByText('Draft - not visible to clients.', { exact: true })).toBeVisible();
+  await fits(page);
   await expect(
     page.getByRole('heading', { name: 'Client decisions and replies', exact: true }),
   ).toBeVisible();
