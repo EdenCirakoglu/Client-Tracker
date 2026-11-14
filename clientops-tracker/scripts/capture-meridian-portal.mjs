@@ -207,7 +207,7 @@ try {
           if (ticketId && role === 'Client') {
             await page.goto(`/tickets/${ticketId}`);
             await expect(
-              page.getByRole('heading', { name: 'Revision river', exact: true }),
+              page.getByRole('heading', { name: 'Revision River', exact: true }),
             ).toBeVisible();
             await capture(
               page,
