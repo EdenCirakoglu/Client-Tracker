@@ -1,6 +1,25 @@
 # Meridian Design QA
 
-final result: passed
+final result: blocked
+
+## November 15 Composition Follow-Up
+
+Current visual QA is in progress against the original Meridian concept and the
+owner's journal-logo / `#1d2120` / real-product overrides. The November 14 result
+below is historical and was not accepted by the owner as sufficient fidelity.
+
+Resolved in the current application: direct role-specific grid regions instead of
+two wrapper stacks; opaque primary/reading/summary gradients with inset highlights;
+compact selected-client setup and snapshot counts; earlier scope River/diff/action;
+active requests shown after a successful empty initial reply query. Explicit tab
+selection and error states are preserved. The first new developer capture showed
+excessive grid whitespace; the three-record preview was then implemented, retaining
+the full count and filtered destination.
+
+The [composition review](docs/MERIDIAN_COMPOSITION_REVIEW.md) records source revisions,
+commands, failures and the full route mapping. Matched final captures, native zoom
+and final-head hosted verification are required before closing this QA checkpoint.
+Human screen-reader and owner design acceptance remain separate and pending.
 
 ## November 14 Specification Fidelity Follow-Up
 

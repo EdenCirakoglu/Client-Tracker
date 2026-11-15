@@ -1,5 +1,11 @@
 # Meridian Specification Reconciliation
 
+Current follow-up: [November 15 composition and surface review](MERIDIAN_COMPOSITION_REVIEW.md).
+The November 14 geometry pass below was not accepted as visual fidelity by the
+owner. Preserve its evidence as historical; direct dashboard regions, compact
+empty states and differentiated tonal surfaces are reviewed separately in the
+new matched capture set. Neither report claims the entire specification is complete.
+
 ## Boundary
 
 This is the November 14 visual follow-up to draft PR #43, not a replacement app.
