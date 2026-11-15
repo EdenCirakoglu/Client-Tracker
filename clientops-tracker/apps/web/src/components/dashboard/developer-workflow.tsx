@@ -27,9 +27,9 @@ const filters = (lane: Lane) => `assignment=mine&workflow=${lane}&order=attentio
 
 export function DeveloperWorkflow({ refresh }: { refresh: number }) {
   const [selected, setSelected] = useState<Lane>('ready');
-  const ready = useApiData(() => api.ticketQueue(`${filters('ready')}&limit=5`), [refresh]);
-  const changes = useApiData(() => api.ticketQueue(`${filters('changes')}&limit=5`), [refresh]);
-  const waiting = useApiData(() => api.ticketQueue(`${filters('waiting')}&limit=5`), [refresh]);
+  const ready = useApiData(() => api.ticketQueue(`${filters('ready')}&limit=3`), [refresh]);
+  const changes = useApiData(() => api.ticketQueue(`${filters('changes')}&limit=3`), [refresh]);
+  const waiting = useApiData(() => api.ticketQueue(`${filters('waiting')}&limit=3`), [refresh]);
   const states = { ready, changes, waiting };
   const state = states[selected];
   const lane = lanes.find((item) => item.id === selected)!;
