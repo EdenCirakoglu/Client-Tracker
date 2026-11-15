@@ -16,11 +16,19 @@ if (!loopback(target) || target.pathname !== '/' || target.search || target.hash
   throw new Error('VERIFY_URL must be an HTTP(S) loopback origin without credentials or a path.');
 const origin = target.origin;
 const ticketId = process.env.CAPTURE_TICKET_ID;
+const extraTickets = Object.entries({
+  delivered: process.env.CAPTURE_DELIVERED_ID,
+  changes: process.env.CAPTURE_CHANGES_ID,
+}).filter(([, id]) => id);
+for (const [, id] of extraTickets)
+  if (!/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id))
+    throw new Error('Additional captures must identify existing fictional tickets.');
 if (ticketId && !/^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(ticketId))
   throw new Error('CAPTURE_TICKET_ID must identify an existing fictional ticket.');
 const directory = resolve(process.env.UI_EVIDENCE_DIR ?? 'test-results/meridian-portal-captures');
 const expect = playwrightExpect.configure({ timeout: 30_000 });
 const roles = ['Admin', 'Developer', 'Client'];
+if (process.env.CAPTURE_EMPTY_CLIENT === 'true') roles.push('EmptyClient');
 const themes = ['light', 'dark'];
 const viewports = [
   { width: 1440, height: 1000 },
@@ -106,6 +114,27 @@ async function capture(page, pending, role, theme, viewport, filename, fullPage)
     fullPage,
     route: new URL(page.url()).pathname,
     sidebar,
+    scrollY: await page.evaluate(() => globalThis.scrollY),
+    reducedMotion: 'reduce',
+    styles: await page.evaluate(() => {
+      const properties = (selector) => {
+        const node = globalThis.document.querySelector(selector);
+        if (!node) return null;
+        const style = globalThis.getComputedStyle(node);
+        return {
+          fontFamily: style.fontFamily,
+          fontSize: style.fontSize,
+          lineHeight: style.lineHeight,
+          background: style.background,
+          borderRadius: style.borderRadius,
+        };
+      };
+      return {
+        body: properties('body'),
+        heading: properties('h1'),
+        surface: properties('.portal-section, .portal-panel'),
+      };
+    }),
     sha256: createHash('sha256').update(bytes).digest('hex'),
   });
 }
@@ -167,11 +196,17 @@ try {
         (item) =>
           new URL(item.url()).pathname === '/api/auth/login' && item.request().method() === 'POST',
       );
-      await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
+      if (role === 'EmptyClient') {
+        await page.getByLabel('Email', { exact: true }).fill('bluewave@example.com');
+        await page.getByLabel('Password', { exact: true }).fill('password123');
+        await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+      } else await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
       expect((await response).status(), 'Exactly one UI sign-in attempt per role').toBe(200);
       await settled(page, pending);
       await expect(
-        page.getByLabel('Account menu', { exact: true }).getByText(role, { exact: true }),
+        page
+          .getByLabel('Account menu', { exact: true })
+          .getByText(role === 'EmptyClient' ? 'Client' : role, { exact: true }),
       ).toBeVisible();
       for (const theme of themes) {
         await page.getByLabel('Account menu', { exact: true }).click();
@@ -244,6 +279,21 @@ try {
             }
             await page.goto('/dashboard');
           }
+          if (role === 'Client') {
+            for (const [state, id] of extraTickets) {
+              await page.goto(`/tickets/${id}`);
+              await capture(
+                page,
+                pending,
+                role,
+                theme,
+                viewport,
+                `ticket-${state}-${theme}-${viewport.width}.png`,
+                true,
+              );
+              await page.goto('/dashboard');
+            }
+          }
         }
       }
       expect(signIns, `${role} sign-in budget`).toBe(1);
@@ -253,9 +303,16 @@ try {
       await context.close();
     }
   }
-  expect(manifest.captures.filter((item) => item.fullPage)).toHaveLength(ticketId ? 20 : 12);
+  const extras =
+    extraTickets.length * themes.length * viewports.length +
+    (roles.includes('EmptyClient') ? 4 : 0);
+  expect(manifest.captures.filter((item) => item.fullPage)).toHaveLength(
+    (ticketId ? 20 : 12) + extras,
+  );
   expect(manifest.captures.filter((item) => !item.fullPage)).toHaveLength(1);
-  expect(new Set(manifest.captures.map((item) => item.filename)).size).toBe(ticketId ? 21 : 13);
+  expect(new Set(manifest.captures.map((item) => item.filename)).size).toBe(
+    (ticketId ? 21 : 13) + extras,
+  );
   expect(git(['rev-parse', 'HEAD']), 'Git revision must not change during capture').toBe(
     manifest.revision,
   );
