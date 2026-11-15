@@ -1,10 +1,10 @@
 # Meridian Design QA
 
-final result: blocked
+final result: passed (engineering visual QA; owner fidelity acceptance pending)
 
 ## November 15 Composition Follow-Up
 
-Current visual QA is in progress against the original Meridian concept and the
+Current visual QA uses the original Meridian concept and the
 owner's journal-logo / `#1d2120` / real-product overrides. The November 14 result
 below is historical and was not accepted by the owner as sufficient fidelity.
 
@@ -17,8 +17,21 @@ excessive grid whitespace; the three-record preview was then implemented, retain
 the full count and filtered destination.
 
 The [composition review](docs/MERIDIAN_COMPOSITION_REVIEW.md) records source revisions,
-commands, failures and the full route mapping. Matched final captures, native zoom
-and final-head hosted verification are required before closing this QA checkpoint.
+commands, failures and the full route mapping. Final matched captures use clean
+`8ebccd7` before and `7f169909` after, with the same fictional records and capture
+conditions. Admin first-screen and developer desktop pairs were inspected together;
+the final client scope comparison, mobile changes-requested record, empty client
+queue and native-zoom focus capture were also inspected. No additional actionable
+clipping, overlap or illegibility was found in these views. This does not mean
+every PNG was manually inspected, nor that the concept is reproduced pixel for pixel.
+
+The current implementation improves composition and tonal hierarchy without
+inventing concept metrics or changing the decision model. Delivery acceptance
+keeps its longer evidence-first form and real history. Normal tracking, the lighter
+canvas, original logo and real reviewer controls are deliberate deviations.
+The [capture index](docs/assets/screenshots/meridian-composition/README.md) separates
+visual inspection from automated results. Native 200% zoom, keyboard drawer and
+axe checks passed on `7f169909`; final-head hosted status is in the PR handoff.
 Human screen-reader and owner design acceptance remain separate and pending.
 
 ## November 14 Specification Fidelity Follow-Up

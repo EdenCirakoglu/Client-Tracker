@@ -27,7 +27,11 @@ and JetBrains Mono, 14px/21.7px body, 232px sidebar and 18px surfaces. The missi
 tonal treatment was rendered behavior, not an assumed browser-cache problem.
 
 The web was rebuilt and restarted independently of the API/database. The final
-preview inspection records its build ID, served asset hashes and computed styles.
+preview build is `oiyEjsZDSVJse0WnKnyHL`. At `7f169909`, all ten served
+CSS/JavaScript assets matched the rebuilt files; the browser confirmed the same
+fonts and geometry plus the new opaque gradient surface. The
+[inspection report](assets/screenshots/meridian-composition/validation/preview-inspection.json)
+records the hashes and computed styles.
 The retained demo database is `clientops_portal_demo`; API tests use the separate
 explicitly disposable `clientops_portal_test`. Neither development databases nor
 previous verification volumes were reset. Local regression fixtures add fictional
@@ -45,7 +49,8 @@ records; they do not overwrite existing decisions.
 | Ticket composition    | Extra header/disclosure gaps and taller River            | Smaller context, navigation, disclosure and River spacing; comparison and action appear earlier together                               | Exact revision, full text, reviewer checks, feedback and history retained                    |
 | Typography and brand  | Genuine self-hosted faces and journal logo               | Retained Instrument Serif statements, Geist 14px/1.55 reading, sparse JetBrains identifiers, charcoal `#1d2120`                        | Normal letter spacing retained; no replacement logo, simulated signature or invented metrics |
 
-All operational pages inherit the reading surface through the existing `Card`.
+Routes using the existing `Card` inherit the reading surface. Compact operational
+tables and form sections remain unframed rather than becoming uniform cards.
 Primary treatment is reserved for current decision/action regions; history and
 snapshot sections use the quieter summary treatment. Existing selected borders,
 focus styles and reduced-motion rules remain. Hover movement applies only to
@@ -75,6 +80,11 @@ behavioral inventory.
 
 At `923131d`, local lint, typecheck, web production build, 209 API tests, 34 helper
 tests, formatting and all 13 focused portal/route browser scenarios passed.
+At `7f169909`, the three Meridian role, real-decision and resilience browser
+scenarios passed again against the final application build (zero retries/skips).
+Frozen offline installation, lint, typecheck and both application builds also
+passed for the final application source. Formatting of the added JSON evidence
+initially failed; repository Prettier corrected it without changing capture data.
 The API build initially failed resolving its config inside the filesystem sandbox;
 the identical command succeeded outside it. No application fix or dependency
 change was needed for that environment failure.
@@ -83,8 +93,9 @@ The first read-only capture harness left a dashboard read in flight before its
 next navigation. It now waits for that read to settle. No timeout increased.
 A later capture reached the existing auth limiter after repeated local runs:
 HTTP 429, measured `Retry-After: 336`. That failed manifest is retained locally;
-the next capture waits for normal expiry, without restarting/resetting the limiter
-or weakening protection. A capture failure is not reported as a passing browser run.
+the next capture passed after normal expiry, without restarting/resetting the
+limiter or weakening protection. A capture failure is not reported as a passing
+browser run.
 
 The initial visual inspection found excessive developer-column whitespace. The
 three-record preview addresses that concrete finding. Before/after comparisons
@@ -96,8 +107,12 @@ to `74d7c63`. Both versions use the same API and origin, not mocks or edited pix
 [Matched captures and manifests](assets/screenshots/meridian-composition/README.md)
 record role, route, viewport, theme, sidebar, scroll, reduced-motion preference,
 source revision and SHA-256. Capture success and visual inspection are distinct
-from automated accessibility and workflow results. Fresh final-head CI and native
-200% results are linked from the PR handoff, not attributed to the earlier run.
+from automated accessibility and workflow results. Native Chrome 200% passed on
+clean `7f169909` for all roles and both themes: 20 page/drawer checks, axe, focus
+containment, Escape and focus restoration. This used Chrome Settings, not CSS zoom.
+Fresh final-head hosted results are linked from the PR handoff, not attributed to
+the earlier run. The public screenshot manifests identify `8ebccd7` before and
+`7f169909` after; later documentation-only commits do not relabel those captures.
 
 ## Reproduction
 
