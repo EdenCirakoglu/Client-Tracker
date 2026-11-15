@@ -1,6 +1,6 @@
 # Private Staging and Release Handoff
 
-Preparation only, 2026-11-10. **No first-customer release is approved for deployment.**
+Preparation rechecked 2026-11-15. **No first-customer release is approved for deployment.**
 The published maintenance release is `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
 It does not include the product, branding or guidance candidates. Its registry
 verification is not acceptance of their features or of real hosting services.
@@ -9,11 +9,38 @@ Use this numbered checklist with the existing [operator controls](OPERATOR_CONTR
 Do not use the production GitHub deployment workflow for staging. Keep the public
 fictional walkthrough unchanged; never redirect it to a writable demo.
 
+## Current Entry Gates
+
+Use the [exact PR stack and check results](RELEASE_INTEGRATION.md) before this
+checklist. PR #22's normal CI passes but its CodeQL policy fails; independent
+[CSRF and production-cookie review](CSRF_REVIEW.md) remains required. Both
+[development-tool decisions](DEPENDENCY_REMEDIATION.md) are still unapproved.
+#37 conflicts with its newer #36 base; #43's existing visual evidence stays tied
+to `46c2c8575a193e0ca08088f65647552acbcef8e6`, with owner acceptance pending.
+No new paid host, writable preview or public service is authorized.
+
+Cloudflare's Git build is not this portal's staging procedure. Its configured
+`npx wrangler preview` fails for missing `previews` configuration before building
+the application. Target/root settings need owner confirmation; adding that block
+alone is not a Compose deployment. Do not run it to bypass these gates or alter
+the working static walkthrough. Keep the failing check visible until the intended
+target and a separately authorized configuration are reviewed.
+
+For alert #3, inspect the deployed, resolved Compose configuration privately:
+API must have `NODE_ENV=production`, trusted HTTPS origins, `TRUST_PROXY=1`, and
+no published API/database ports. Only Nginx forwards to API and overwrites
+`X-Forwarded-Proto` with `https`; plain HTTP redirects before session issuance.
+Never treat an arbitrary client's forwarded header as proof of TLS. Confirm
+`__Host-clientops.sid`, Secure, HttpOnly, SameSite=Lax, Path=/ and no Domain in a
+real browser on the intended trusted host. Verify missing/invalid/cross-session
+CSRF proofs fail and valid authorised requests persist. Local proxy simulations
+and historical fixture TLS are not real-service or independent security approval.
+
 ## One Operator Checklist
 
 1. **Approve the candidate and inputs, before purchase.** Resolve independent
    CSRF/cookie review and tooling-risk decisions, then approve each stacked merge
-   separately (#22, #34, guidance). Successful main push CI automatically publishes
+   separately (#22 -> #34 -> #35 -> #36 -> #37 -> #43). Successful main push CI automatically publishes
    API/web images. After **each** approved merge, record main SHA, main CI, both
    publishing jobs, OCI labels, digests and a digest-pinned no-build rehearsal.
    Rebase/merge-parent, retarget and revalidate the next PR only after its parent lands.

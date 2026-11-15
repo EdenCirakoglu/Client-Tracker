@@ -1,4 +1,103 @@
-# Release Integration Decisions: 6 November 2026
+# Release Integration Decisions
+
+## Current Preparation: 15 November 2026
+
+No PR is merged, retargeted, closed or approved in this preparation. No alert is
+dismissed and no deployment/check configuration changes. Visual acceptance stays
+with the owner: preserve PR #43 at `46c2c8575a193e0ca08088f65647552acbcef8e6`.
+The isolated `release/security-integration-review-2026-11-15` branch starts there;
+its incremental changes are security regression tests and release documentation,
+not application/design/dependency changes. Tests can be reviewed/backported
+separately; they do not establish a security disposition.
+
+### Refreshed Stack
+
+Fetched main remains `cfec6e71a51975e224a2cee9ddda2238183b8b31`. Its existing
+[main CI, publications and immutable image evidence](RELEASE_CFEC6E71.md) remain
+valid for that maintenance revision, not for the product stack. No registry
+rehearsal was repeated: source/release revision did not change. The PR #43
+[four-job CI run](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43719140818)
+and [matched visual evidence](MERIDIAN_COMPOSITION_REVIEW.md) remain historical
+evidence for their recorded sources; no new visual claim is made here.
+
+| Draft PR                                                       | Actual head                                | Base ref (actual current tip)                                                       | Current conclusion / integration work                                                                                                                                                                                                                                                                                                                                        |
+| -------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22) | `9e25bc27d73ae1756c8fc185223704417de8642b` | main, `cfec6e71a51975e224a2cee9ddda2238183b8b31`                                    | Mergeable; [normal CI passes](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42499222820), [analysis executes](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42499216703), but [CodeQL policy fails: one high alert](https://github.com/EdenCirakoglu/Client-Tracker/runs/128788230364). Next independent review, not ready for merge approval. |
+| [#34](https://github.com/EdenCirakoglu/Client-Tracker/pull/34) | `a6a343cb9f9d278dadf9377f26d6b96d2dd90eb9` | feature/agency-onboarding-notifications, `9e25bc27d73ae1756c8fc185223704417de8642b` | Mergeable; [CI passes](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42504475000). No applicable CodeQL result in head checks; refresh against approved main later.                                                                                                                                                                                           |
+| [#35](https://github.com/EdenCirakoglu/Client-Tracker/pull/35) | `c9cda1d89f30dc01c04cc23983611302484b6c28` | feature/journal-brand-product-hunt, `a6a343cb9f9d278dadf9377f26d6b96d2dd90eb9`      | Mergeable; [CI passes](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42865593388); Workers build fails separately. No current CodeQL result in head checks.                                                                                                                                                                                                   |
+| [#36](https://github.com/EdenCirakoglu/Client-Tracker/pull/36) | `36a50f13eb30d4de6d26a989e3693b9f77035193` | feature/first-customer-guidance, `c9cda1d89f30dc01c04cc23983611302484b6c28`         | Mergeable; [both CI jobs pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43063977172); Workers fails. Later fixture-isolation/diagnostic fixes must survive integration.                                                                                                                                                                                  |
+| [#37](https://github.com/EdenCirakoglu/Client-Tracker/pull/37) | `6b07dee441281b959cbc2cb64fd4e5fdc89fcc56` | feature/logo-intro, `36a50f13eb30d4de6d26a989e3693b9f77035193`                      | **Conflicting base**; [historical CI passes](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42926264757), not verification of the later #36 integration. Workers fails; no current CodeQL result.                                                                                                                                                              |
+| [#43](https://github.com/EdenCirakoglu/Client-Tracker/pull/43) | `46c2c8575a193e0ca08088f65647552acbcef8e6` | feature/meridian-ticket-review, `6b07dee441281b959cbc2cb64fd4e5fdc89fcc56`          | Mergeable against its present base; four CI jobs pass; Workers fails; no current CodeQL result. Design remains unchanged and owner acceptance pending.                                                                                                                                                                                                                       |
+
+The #37 API response still reported cached `base.sha` `23484934143dc4f885d70b34a172337053fd8d61`;
+the fetched base branch and branch API resolve to `36a50f13eb30d4de6d26a989e3693b9f77035193`.
+Read-only `git merge-tree --write-tree origin/feature/meridian-ticket-review origin/feature/logo-intro`
+returned exit 1: only `.github/workflows/ci.yml` conflicts. The notification test
+auto-merges. Reconcile the browser-job selection while retaining #36's isolated
+fixtures/config-response diagnostics and #37's scope-review helper/new tests.
+Do not take an entire older workflow or test file. #43 already carries the later
+CI isolation; no changes to these branches were needed or performed here.
+
+### Security and Tooling Gates
+
+[Fresh request-path/cookie review](CSRF_REVIEW.md) separates reproducible controls
+from the independent decisions on alerts #1 and #3. The former is present on the
+exact #22 head; the latter remains open on main, not a second new #22 policy alert.
+The two [full-audit development findings](DEPENDENCY_REMEDIATION.md) remain
+unresolved; proposed temporary restrictions are **not accepted**. A clean runtime
+npm audit is not a clean full audit, OS scan or application-security assessment.
+
+### Cloudflare: Diagnosed Separately
+
+The owner-supplied November 15 log for Worker `client-tracker`, build
+`583b8eab-070e-49d4-945f-2066a39e9955`, establishes this failure:
+
+- Clone succeeded. No dependencies/build output were detected for caching.
+- The configured deploy command was `npx wrangler preview`; npm installed
+  unpinned Wrangler `4.162.0` because none was present.
+- It exited 1: Wrangler configuration lacks the required `previews` block.
+  This is a configuration failure before application compilation, not flaky CI.
+- [Cloudflare documents that requirement](https://developers.cloudflare.com/workers/previews/configuration/).
+  Adding only `previews: {}` would address this first validation error, **not**
+  prove a valid or authorized application deployment.
+
+GitHub check `132827219764` reports this separate Worker build, not the successful
+four-job application CI. The configured root directory and any separate build
+command are still unconfirmed: the cache message alone cannot identify the root.
+No Wrangler/OpenNext deployment configuration exists in the reviewed repository.
+The working portal is Next.js standalone + Express + PostgreSQL + worker + Nginx
+under Compose, not a ready-made Workers service. A Workers port is not authorized.
+
+The existing public `proud-credit-1b94` site is a different static fictional
+walkthrough. Read-only HTTP check returned 200 and title
+`ClientOps Tracker | Fictional walkthrough preview`; it was not modified.
+Keep its already working release untouched. Owner next input: confirm whether
+`client-tracker` is meant to preview a **separate static artifact**, and provide
+its configured root/build settings. Only after target approval should a narrowly
+scoped, pinned Wrangler/static-assets configuration be prepared. No preview
+command, deployment, check removal or Git-connection change was performed.
+
+### Next Eligible Action
+
+Review **#22**, head `9e25bc27d73ae1756c8fc185223704417de8642b`, base
+`cfec6e71a51975e224a2cee9ddda2238183b8b31`, with the independent security packet.
+It is eligible for review, **not currently recommended for merge**. Keep the
+sequence #22 -> #34 -> #35 -> #36 -> #37 -> #43 as separately approved decisions.
+After each approved parent lands, retarget the next PR to actual main, inspect
+the incremental diff, resolve conflicts and rerun normal CI plus applicable
+CodeQL analysis **and policy**. Do not merge a product PR into its feature base.
+
+Every approved main merge automatically publishes API/web images after successful
+main CI. Record the resulting SHA, exact main CI and both publication jobs, image
+revision labels and digests. Pull both by digest without rebuilding; verify
+migrations, login, workflow/tenant denial, restart persistence and applicable
+recovery in an isolated stack before advancing. Migration 0007 and the outbox
+worker require compatible writers: stop/drain incompatible older API/workers,
+back up, migrate explicitly, then start the supported pair. An arbitrary older
+image is not a rollback plan. [Private staging gates](PRIVATE_STAGING.md) remain
+separate from these source/release checks.
+
+## Historical 6 November Decisions
 
 ## Post-Merge Update
 
