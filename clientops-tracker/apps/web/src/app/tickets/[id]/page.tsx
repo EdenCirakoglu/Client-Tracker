@@ -189,7 +189,7 @@ export default function TicketDetailPage() {
 
   return (
     <ProtectedPage>
-      <div className="mb-5">
+      <div className="ticket-hero">
         {ticket ? (
           <p className="meridian-meta mb-3 text-brand-700">
             {ticketReference(ticket.id)} / {titleCase(ticket.category)}
@@ -210,7 +210,7 @@ export default function TicketDetailPage() {
       {ticket ? (
         <nav
           aria-label="Delivery journal"
-          className="mb-5 flex flex-wrap gap-x-6 border-y border-border py-1 text-sm font-semibold text-brand-700"
+          className="ticket-journal-nav flex flex-wrap gap-x-6 border-y border-border text-sm font-semibold text-brand-700"
         >
           <a
             href="#request"
@@ -242,8 +242,8 @@ export default function TicketDetailPage() {
       ) : null}
 
       {ticket ? (
-        <div className="space-y-6">
-          <div className="space-y-6">
+        <div className="ticket-sections">
+          <div className="ticket-sections">
             <details id="request" className="meridian-details scroll-mt-24">
               <summary className="font-semibold">
                 {ticket.originalDescription ? 'Original request' : 'Request'}

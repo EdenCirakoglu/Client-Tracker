@@ -11,7 +11,11 @@ interface OnboardingChecklistProps {
 export function OnboardingChecklist({ refresh }: OnboardingChecklistProps) {
   const state = useApiData(api.onboarding, [refresh]);
   return (
-    <section aria-labelledby="onboarding-heading" className="portal-section">
+    <section
+      aria-labelledby="onboarding-heading"
+      className="portal-section dashboard-installation"
+      data-surface="summary"
+    >
       <h2 id="onboarding-heading" className="portal-section-title">
         Installation setup
       </h2>

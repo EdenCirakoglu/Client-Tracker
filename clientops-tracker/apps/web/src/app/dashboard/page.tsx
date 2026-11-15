@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const developer = user?.role === 'DEVELOPER';
   return (
     <ProtectedPage>
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="portal-kicker mb-2">{client ? 'Client journal' : 'Overview'}</p>
           <h1 className="portal-display-title break-words">
@@ -45,39 +45,30 @@ export default function DashboardPage() {
         </div>
       </div>
       {user ? (
-        <div key={user.id} className="portal-dashboard">
+        <div key={user.id} className={`portal-dashboard dashboard-${user.role.toLowerCase()}`}>
           {user.role === 'ADMIN' ? <ClientSetupSummary refresh={refresh} /> : null}
-          <div className="portal-workspace">
-            <div className="portal-primary-stack">
-              {client ? <DeliveryFollowUp refresh={refresh} personal /> : null}
-              {developer ? (
-                <NeedsAttention key={user.id} role={user.role} refresh={refresh} />
-              ) : null}
-              {user.role === 'ADMIN' ? <DeliveryFollowUp refresh={refresh} /> : null}
-              {!developer ? (
-                <NeedsAttention key={user.id} role={user.role} refresh={refresh} />
-              ) : null}
-            </div>
-            <aside className="portal-support" aria-label="Supporting information">
-              {developer ? (
-                <Link
-                  href="/delivery"
-                  className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
-                >
-                  Team delivery follow-ups
-                </Link>
-              ) : null}
-              <DashboardSnapshot refresh={refresh} />
-              <RecentReleases refresh={refresh} />
-              <RecentActivity key={user.id + '-' + refresh} refresh={refresh} client={client} />
-              {user.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
+          {client ? <DeliveryFollowUp refresh={refresh} personal /> : null}
+          {user.role === 'ADMIN' ? <DeliveryFollowUp refresh={refresh} /> : null}
+          <NeedsAttention key={user.id} role={user.role} refresh={refresh} />
+          <DashboardSnapshot refresh={refresh} />
+          <RecentReleases refresh={refresh} />
+          <RecentActivity key={user.id + '-' + refresh} refresh={refresh} client={client} />
+          {user.role === 'ADMIN' ? <OnboardingChecklist refresh={refresh} /> : null}
+          <div className="dashboard-guidance flex flex-wrap gap-x-6">
+            {developer ? (
               <Link
-                href="/guide"
-                className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+                href="/delivery"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
               >
-                {user.role === 'ADMIN' ? 'Client setup guide' : 'Help and guidance'}
+                Team delivery follow-ups
               </Link>
-            </aside>
+            ) : null}
+            <Link
+              href="/guide"
+              className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+            >
+              {user.role === 'ADMIN' ? 'Client setup guide' : 'Help and guidance'}
+            </Link>
           </div>
         </div>
       ) : null}

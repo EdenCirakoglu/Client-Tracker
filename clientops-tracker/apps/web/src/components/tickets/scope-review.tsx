@@ -201,7 +201,11 @@ export function ScopeReview({
         </div>
         {!compareOnly ? (
           <aside className="meridian-review-rail" aria-label="Scope decision and history">
-            <Card id="scope-decision-panel" className="decision-panel scroll-mt-24">
+            <Card
+              id="scope-decision-panel"
+              surface="primary"
+              className="decision-panel scroll-mt-24"
+            >
               <p className="meridian-meta text-brand-700">
                 {to === 0 ? 'Original request / recorded' : `Scope approval / revision ${to}`}
               </p>
@@ -323,7 +327,7 @@ export function ScopeReview({
                   : 'Earlier decisions remain in the history'}
               </p>
             </Card>
-            <Card className="p-5">
+            <Card surface="summary" className="p-5">
               <h3 className="mb-4 text-base font-semibold">Decision log</h3>
               <ol className="decision-log">
                 {proposals.slice(0, 4).map((p) => (

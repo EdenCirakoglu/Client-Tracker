@@ -1,11 +1,15 @@
 export function Card({
   children,
   className = '',
+  surface = 'reading',
   ...props
-}: React.ComponentPropsWithoutRef<'section'>) {
+}: React.ComponentPropsWithoutRef<'section'> & {
+  surface?: 'primary' | 'reading' | 'summary';
+}) {
   return (
     <section
       {...props}
+      data-surface={surface}
       className={`portal-panel min-w-0 rounded-lg border border-border bg-panel ${className}`}
     >
       {children}

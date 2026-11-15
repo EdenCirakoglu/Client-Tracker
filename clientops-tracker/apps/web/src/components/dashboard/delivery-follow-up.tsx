@@ -26,7 +26,9 @@ export function DeliveryFollowUp({ refresh, personal = false }: DeliveryFollowUp
   return (
     <section
       aria-labelledby="delivery-follow-up-title"
-      className={personal ? 'portal-section portal-feature' : 'portal-section'}
+      className="portal-section dashboard-decisions"
+      data-surface={data?.total === 0 ? 'summary' : 'primary'}
+      data-empty={!loading && !error && data?.total === 0}
     >
       {personal ? <p className="portal-kicker mb-2">Assigned to you</p> : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -48,26 +50,28 @@ export function DeliveryFollowUp({ refresh, personal = false }: DeliveryFollowUp
       ) : data ? (
         <>
           {data.total === 0 ? (
-            <div className="py-4">
+            <div className="decision-empty">
               <p className="text-sm text-muted">
                 {personal
                   ? 'No decisions are awaiting your review.'
                   : 'No delivery decisions or commitments need follow-up.'}
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
                 <Link
                   href="/tickets/new"
-                  className="meridian-primary inline-flex max-w-full items-center gap-3 rounded-md bg-action text-sm font-semibold text-white"
+                  className="inline-flex min-h-11 max-w-full items-center gap-2 text-sm font-semibold text-brand-700"
                 >
                   {personal ? 'Request a change' : 'Record a request'}
                   <ArrowRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                 </Link>
-                <Link
-                  href={personal ? '/tickets?status=UNRESOLVED' : '/projects'}
-                  className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
-                >
-                  {personal ? 'View active organisation requests' : 'View projects'}
-                </Link>
+                {!personal ? (
+                  <Link
+                    href="/projects"
+                    className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
+                  >
+                    View projects
+                  </Link>
+                ) : null}
               </div>
             </div>
           ) : (
@@ -95,7 +99,7 @@ export function DeliveryFollowUp({ refresh, personal = false }: DeliveryFollowUp
                 </div>
               ) : null}
               {personal && next ? (
-                <div className="py-5">
+                <div className="decision-next">
                   <p className="meridian-meta break-words text-muted">
                     {ticketReference(next.ticketId)} / {next.projectName} /{' '}
                     {next.source === 'scope' ? 'Scope' : 'Outcome'} R{next.revision}
@@ -105,7 +109,7 @@ export function DeliveryFollowUp({ refresh, personal = false }: DeliveryFollowUp
                       {next.title}
                     </Link>
                   </h3>
-                  <p className="mt-3 break-words text-sm leading-6">{next.reason}</p>
+                  <p className="mt-3 break-words text-sm leading-relaxed">{next.reason}</p>
                   <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 text-xs">
                     <div>
                       <dt className="text-muted">Recorded state</dt>
@@ -136,9 +140,27 @@ export function DeliveryFollowUp({ refresh, personal = false }: DeliveryFollowUp
                 <DeliveryPlanList items={data.items} />
               )}
               {personal && data.items.length > 1 ? (
-                <div className="border-t border-border pt-4">
+                <div className="decision-additional border-t border-border pt-3">
                   <h3 className="text-sm font-semibold">Also awaiting your review</h3>
-                  <DeliveryPlanList items={data.items.slice(1)} />
+                  <ul className="divide-y divide-border">
+                    {data.items.slice(1).map((item) => (
+                      <li key={`${item.source}-${item.ticketId}`} className="py-3">
+                        <Link
+                          href={item.href}
+                          className="flex min-h-11 items-center justify-between gap-3 font-medium text-sm hover:text-brand-700"
+                        >
+                          <span className="min-w-0">
+                            <span className="block break-words">{item.title}</span>
+                            <span className="mt-1 block text-xs font-normal text-muted">
+                              {item.projectName} / {item.source === 'scope' ? 'Scope' : 'Outcome'} R
+                              {item.revision} / {titleCase(item.state)}
+                            </span>
+                          </span>
+                          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ) : null}
               <p className="mt-2 text-xs text-muted">
@@ -156,7 +178,7 @@ export function DeliveryFollowUp({ refresh, personal = false }: DeliveryFollowUp
                 })}
               </time>
             </span>
-            {personal ? (
+            {personal && data.total > 0 ? (
               <Link
                 href="/delivery"
                 className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"

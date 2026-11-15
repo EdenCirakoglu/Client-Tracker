@@ -33,7 +33,7 @@ export function MetricCards({ metrics, client }: MetricCardsProps) {
       <h3 id="request-overview-title" className="mb-3 text-sm font-semibold">
         Request overview
       </h3>
-      <div className="divide-y divide-border">
+      <div className="snapshot-metrics divide-y divide-border">
         {items.map(({ label, value, query }) => (
           <Link
             key={label}

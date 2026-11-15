@@ -34,7 +34,11 @@ export function DeveloperWorkflow({ refresh }: { refresh: number }) {
   const state = states[selected];
   const lane = lanes.find((item) => item.id === selected)!;
   return (
-    <section className="portal-section portal-feature" aria-labelledby="workflow-heading">
+    <section
+      className="portal-section dashboard-work"
+      data-surface="primary"
+      aria-labelledby="workflow-heading"
+    >
       <p className="portal-kicker mb-2">Assigned to you</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="workflow-heading" className="portal-section-title">

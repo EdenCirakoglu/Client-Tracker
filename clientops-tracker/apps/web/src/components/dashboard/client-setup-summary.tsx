@@ -31,7 +31,11 @@ export function ClientSetupSummary({ refresh }: { refresh: number }) {
     }
   }
   return (
-    <section className="portal-section portal-feature" aria-labelledby="setup-heading">
+    <section
+      className="portal-section dashboard-setup"
+      data-surface={clients.data?.length === 0 ? 'primary' : 'summary'}
+      aria-labelledby="setup-heading"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 id="setup-heading" className="portal-section-title">
           Client setup
@@ -63,11 +67,6 @@ export function ClientSetupSummary({ refresh }: { refresh: number }) {
                   </option>
                 ))}
               </Select>
-              {selected ? (
-                <p className="mt-3 break-words text-xs text-muted">
-                  Selected client: {selected.name}
-                </p>
-              ) : null}
             </div>
             {selected ? (
               <ClientNextStep key={selected.id} clientId={selected.id} refresh={refresh} />

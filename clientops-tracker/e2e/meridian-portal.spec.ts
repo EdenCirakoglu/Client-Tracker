@@ -268,16 +268,67 @@ test('three roles land on the dashboard first and retain theme and sidebar prefe
       const header = await page.getByRole('banner').boundingBox();
       expect(header?.height, 'Header baseline leaves room for readable account context').toBe(64);
       const main = await page.getByRole('main').boundingBox();
-      const work = await page.locator('.portal-primary-stack').boundingBox();
-      const support = await page
-        .getByRole('complementary', { name: 'Supporting information' })
-        .boundingBox();
+      const emptyDecision =
+        role === 'Developer'
+          ? null
+          : await page.locator('.dashboard-decisions').getAttribute('data-empty');
+      const workRegion = page.locator(
+        role === 'Developer'
+          ? '.dashboard-work'
+          : role === 'Client' && emptyDecision === 'true'
+            ? '.dashboard-requests'
+            : '.dashboard-decisions',
+      );
+      const work = await workRegion.boundingBox();
+      const support = await page.locator('.dashboard-snapshot').boundingBox();
       expect(work && main && work.x - main.x, 'Desktop page gutter').toBe(32);
       expect(
         work && support && support.x - work.x - work.width,
         'Task/support separation',
       ).toBeCloseTo(16);
       expect(work!.width, 'Tasks dominate supporting data').toBeGreaterThan(support!.width * 1.8);
+      expect(
+        await workRegion.evaluate((node) =>
+          node.parentElement?.classList.contains('portal-dashboard'),
+        ),
+        'Working region is a direct grid child, not a long column wrapper',
+      ).toBe(true);
+      expect(
+        await page
+          .locator('.dashboard-snapshot')
+          .evaluate((node) => node.parentElement?.classList.contains('portal-dashboard')),
+      ).toBe(true);
+      const surfaces = await page
+        .locator('.dashboard-snapshot, .dashboard-releases')
+        .evaluateAll((nodes) =>
+          nodes.map((node) => ({
+            image: getComputedStyle(node).backgroundImage,
+            transform: getComputedStyle(node).transform,
+          })),
+        );
+      expect(
+        surfaces.every(
+          (surface) => surface.image.includes('linear-gradient') && surface.transform === 'none',
+        ),
+      ).toBe(true);
+      for (const preference of ['no-preference', 'reduce'] as const) {
+        await page.emulateMedia({ reducedMotion: preference });
+        const beforeHover = await workRegion.boundingBox();
+        await workRegion.getByRole('heading').first().hover();
+        expect(await workRegion.boundingBox(), 'Reading surfaces remain stationary').toEqual(
+          beforeHover,
+        );
+        expect(await workRegion.evaluate((node) => getComputedStyle(node).transform)).toBe('none');
+      }
+      if (role === 'Client' && emptyDecision === 'true') {
+        const empty = await page
+          .getByRole('region', { name: 'Your next decision', exact: true })
+          .boundingBox();
+        expect(
+          empty!.height,
+          'An empty decision does not displace actionable requests',
+        ).toBeLessThan(260);
+      }
       await page.evaluate(async () => {
         await document.fonts.load('italic 32px "Instrument Serif"');
       });
@@ -706,6 +757,33 @@ test('fixture-only resilience: API failures are not successful empty decisions o
   await expect(decision.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
   await page.unroute(deliveryEndpoint);
 
+  const requests = page.getByRole('region', { name: 'Organisation requests', exact: true });
+  await page.route(queueEndpoint, (route) =>
+    new URL(route.request().url()).searchParams.get('status') === 'WAITING_FOR_CLIENT'
+      ? route.fulfill({
+          status: 200,
+          json: { success: true, data: { items: [], total: 0, page: 1, limit: 5 } },
+        })
+      : route.continue(),
+  );
+  await page.reload();
+  await ready(page);
+  await expect(
+    requests.getByRole('button', { name: 'Active requests', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(requests.getByRole('link', { name: 'View all', exact: true })).toHaveAttribute(
+    'href',
+    '/tickets?status=UNRESOLVED&order=attention',
+  );
+  await requests.getByRole('button', { name: 'Replies needed', exact: true }).click();
+  await expect(
+    requests.getByRole('heading', { name: 'No replies needed', exact: true }),
+  ).toBeVisible();
+  await expect(
+    requests.getByRole('button', { name: 'Replies needed', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.unroute(queueEndpoint);
+
   await page.route(queueEndpoint, (route) =>
     route.fulfill({
       status: 503,
@@ -715,6 +793,12 @@ test('fixture-only resilience: API failures are not successful empty decisions o
       },
     }),
   );
+  await page.reload();
+  await ready(page, true);
+  await expect(requests.getByRole('alert')).toContainText('Ticket service unavailable');
+  await expect(
+    requests.getByRole('button', { name: 'Replies needed', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
   await page.goto('/tickets');
   await ready(page, true);
   await expect(page.getByRole('main').getByRole('alert')).toContainText(

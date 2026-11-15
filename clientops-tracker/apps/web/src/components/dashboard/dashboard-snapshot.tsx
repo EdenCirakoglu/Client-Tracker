@@ -11,7 +11,11 @@ export function DashboardSnapshot({ refresh }: { refresh: number }) {
   const { user } = useAuth();
   const { data, error, loading, reload } = useApiData(api.dashboardMetrics, [refresh]);
   return (
-    <section className="portal-section" aria-labelledby="snapshot-heading">
+    <section
+      className="portal-section dashboard-snapshot"
+      data-surface="summary"
+      aria-labelledby="snapshot-heading"
+    >
       <h2 id="snapshot-heading" className="portal-section-title">
         {user?.role === 'CLIENT' ? 'Organisation snapshot' : 'Team snapshot'}
       </h2>

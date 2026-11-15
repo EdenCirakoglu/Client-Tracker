@@ -17,7 +17,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px 24px;
-  margin: 16px 0 24px;
+  margin: 12px 0 16px;
   font-size: 13px;
   color: rgb(var(--muted));
 }
@@ -35,7 +35,7 @@
   display: block;
 }
 .meridian-river {
-  padding: 20px 24px 8px;
+  padding: 16px 20px 4px;
 }
 .river-scroll {
   overflow-x: auto;
@@ -71,7 +71,7 @@
   flex-direction: column;
   gap: 5px;
   width: 100%;
-  min-height: 142px;
+  min-height: 118px;
   padding: 8px 12px;
   color: rgb(var(--muted));
   background: transparent;
@@ -120,7 +120,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 12px 20px;
+  padding: 8px 20px;
   border-top: 1px solid rgb(var(--border));
 }
 .river-comparison-picker label {
@@ -243,7 +243,7 @@
   font-size: 32px;
 }
 .decision-facts {
-  margin: 24px 0 16px;
+  margin: 16px 0 12px;
 }
 .decision-facts > div {
   padding: 10px 0;
@@ -273,7 +273,7 @@
   align-items: flex-start;
   gap: 8px;
   border-top: 1px solid rgb(var(--border));
-  margin-top: 24px;
+  margin-top: 16px;
   padding-top: 16px;
   color: rgb(var(--muted));
   font-size: 11px;
@@ -297,6 +297,30 @@
   border-bottom: 1px solid rgb(var(--border));
   padding: 12px 4px;
   font-size: 13px;
+}
+.ticket-hero {
+  margin-bottom: 0;
+}
+.ticket-journal-nav {
+  margin-bottom: 8px;
+}
+.ticket-sections > * + * {
+  margin-top: 16px;
+}
+.ticket-sections > #request {
+  padding-block: 6px;
+}
+.scope-section-heading {
+  margin-bottom: 8px;
+}
+.scope-section-heading h2 {
+  font-size: 16px;
+}
+.meridian-review-rail .decision-panel {
+  border-top-width: 1px;
+}
+.review-dialog {
+  box-shadow: -16px 0 60px rgb(0 0 0 / 0.2);
 }
 .review-dialog {
   margin: 0 0 0 auto;

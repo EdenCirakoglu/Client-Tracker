@@ -6,7 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from '../ui/states';
 import { api } from '../../lib/api';
 import { useApiData } from '../../lib/use-api-data';
 import type { UserRole } from '../../lib/types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { openedAge, ticketReference } from '../../lib/format';
 import { DeveloperWorkflow } from './developer-workflow';
 
@@ -45,8 +45,17 @@ function TicketAttention({ role, refresh }: NeedsAttentionProps) {
   if (tab === 'critical') query.set('priority', 'CRITICAL');
   const filters = query.toString();
   const state = useApiData(() => api.ticketQueue(`${filters}&limit=5`), [filters, refresh]);
+  useEffect(() => {
+    // Prefer existing work when the initial reply queue is genuinely empty, not unavailable.
+    if (role === 'CLIENT' && !selected && !state.loading && !state.error && state.data?.total === 0)
+      setSelected('active');
+  }, [role, selected, state.loading, state.error, state.data]);
   return (
-    <section aria-labelledby="attention-heading" className="portal-section min-w-0">
+    <section
+      aria-labelledby="attention-heading"
+      className="portal-section dashboard-requests min-w-0"
+      data-surface="reading"
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 id="attention-heading" className="portal-section-title">
           {role === 'CLIENT' ? 'Organisation requests' : 'Request follow-up'}
