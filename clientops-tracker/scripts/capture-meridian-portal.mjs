@@ -278,6 +278,7 @@ try {
               await page.getByRole('button', { name: 'Expand navigation', exact: true }).click();
             }
             await page.goto('/dashboard');
+            await settled(page, pending);
           }
           if (role === 'Client') {
             for (const [state, id] of extraTickets) {
@@ -292,6 +293,7 @@ try {
                 true,
               );
               await page.goto('/dashboard');
+              await settled(page, pending);
             }
           }
         }
