@@ -1,4 +1,111 @@
-# CSRF Review: 6 November 2026
+# CSRF and Production-Cookie Review
+
+## Fresh Review: 15 November 2026
+
+Reviewed from isolated PR #43 source `46c2c8575a193e0ca08088f65647552acbcef8e6`.
+PR #22 remains `9e25bc27d73ae1756c8fc185223704417de8642b`, main remains
+`cfec6e71a51975e224a2cee9ddda2238183b8b31`. `app.ts`, `session.ts`, `config/env.ts`,
+production Compose and Nginx configuration have **no diff** between #22 and #43.
+The separate security-review increment adds tests, not a production/control change.
+
+### Actual Scanner Conclusions
+
+| Alert                                                                                                                               | Exact evidence                                                                                                                                                                                                                                                                                                              | Review status                                                                                             |
+| ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| [#1](https://github.com/EdenCirakoglu/Client-Tracker/security/code-scanning/1), `js/missing-token-validation`, high / 8.8, CWE-352  | CodeQL 2.27.4; `apps/api/src/middleware/session.ts:34-42`; open on main and `refs/pull/22/head` at 9e25bc27. [Policy fails: one new high alert](https://github.com/EdenCirakoglu/Client-Tracker/runs/128788230364) despite [successful analysis](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42499216703). | No bypass reproduced. Proposed model mismatch for independent review, **not an approved false positive**. |
+| [#3](https://github.com/EdenCirakoglu/Client-Tracker/security/code-scanning/3), `js/clear-text-cookie`, medium, CWE-311/312/319/614 | Same session construction; open on main cfec6e71. No #22 instance returned by alert-instance API. Not a second new #22 policy failure.                                                                                                                                                                                      | Production configuration/proxy assumptions require separate independent assessment. No disposition made.  |
+
+### Request Path and Evidence
+
+1. Nginx terminates TLS, overwrites forwarded protocol with `https` and forwarded
+   IP with its remote address, then reaches private API port 8080.
+2. Bounded JSON parsing/auth traffic limiting precede session access. `/api` runs
+   session middleware, `Cache-Control: no-store`, then `csrfProtection` **before**
+   auth/business routers. Health/docs before this chain do not mutate business data.
+3. Unsafe methods reject a supplied foreign Origin. `csrf-sync` requires matching
+   session proof in `X-CSRF-Token`, even without Origin. Query/body proof is ignored;
+   only GET/HEAD/OPTIONS are exempt. Protected writes also reload current grants.
+
+Affected families: login/logout/password/invitation/preferences; clients/projects/
+releases; tickets/comments/triage; scope/delivery requests and decisions; user
+access/invitations; summary creation/publication. The existing **26-path** matrix
+checks rejection before validation. Real client creation, preferences and summary
+publication prove valid matching proof persists changes; role denial remains.
+
+The [pinned CodeQL 2.27.4 query](https://github.com/github/codeql/blob/codeql-cli/v2.27.4/javascript/ql/src/Security/CWE-352/MissingCsrfMiddleware.ql)
+is `@kind problem`, not a taint-path trace. It models named middleware such as
+csurf/tiny-csrf/lusca and an inline-token heuristic, not the installed `csrf-sync`
+guard wrapped by `asyncHandler`. Library source requires both strings to match
+`req.session.csrfToken`; no skip predicate is configured. This supports a model-
+coverage explanation, not proof of whole-application safety or permission to dismiss.
+
+### Production Cookies and Limits
+
+Production uses `__Host-clientops.sid`, Secure, HttpOnly, SameSite=Lax, Path=/,
+no Domain. Config rejects missing/example secrets and HTTP app **or API** origins.
+Compose sets `NODE_ENV=production`, `TRUST_PROXY=1`, demo false, no API/database
+host ports. Nginx HTTP redirects before session issuance. [Express session guidance](https://expressjs.com/en/resources/middleware/session/)
+explains Secure cookies behind a trusted TLS proxy.
+
+New `production-cookie.test.ts` uses the actual app/PG session store, production
+mode, explicitly disposable database, random independent keys and capture mail:
+
+- HTTP cannot issue a cookie; spoofed HTTPS cannot issue one when proxy trust is off.
+- Trusted-proxy response has all required cookie attributes and no-store.
+- Missing, forged, cross-session and foreign-Origin proofs return `403 CSRF_INVALID`.
+- Matching proof succeeds, clears the cookie with the same flags and rejects replay.
+
+Two config regressions reject an insecure API origin and missing production secret.
+Existing lifecycle tests cover real authenticated writes, expiry and revocation.
+**Limits:** Supertest simulates Nginx's forwarded header; it is not TLS/a browser.
+Historical HTTPS assertions in `e2e/accounts.spec.ts` and [registry evidence](RELEASE_CFEC6E71.md)
+retain their original revisions. They do not prove the future host configuration.
+`TRUST_PROXY=1` assumes direct API ingress is impossible: public API exposure would
+allow attacker-supplied forwarded headers to be trusted. XSS, compromised same-origin
+code/proxy/TLS and future routes are outside these bounded controls. SameSite alone
+is not the CSRF defense. Do not open API ingress or claim real-service acceptance.
+
+### Reproduction and Independent Decision
+
+From `clientops-tracker`, Node 24, pnpm 9.15.4, Docker Linux engine:
+
+```powershell
+pnpm install --frozen-lockfile
+$env:TEST_PG_PORT='15473'
+$env:TEST_SMTP_PORT='11073'
+$env:TEST_MAIL_PORT='18073'
+docker compose -p clientops-release-security-20261115 -f docker-compose.hardening-test.yml up -d --wait
+$env:TEST_DATABASE_URL='postgresql://clientops_test:disposable_test_password@localhost:15473/clientops_hardening_test'
+$env:DISPOSABLE_DATABASE_NAME='clientops_hardening_test'
+$env:SMTP_MODE='capture'
+$env:SMTP_HOST='localhost'
+$env:SMTP_PORT='11073'
+$env:MAILPIT_URL='http://localhost:18073'
+pnpm --filter @clientops/api exec vitest run tests/csrf-boundaries.test.ts tests/security.test.ts tests/session-config.test.ts tests/production-cookie.test.ts
+```
+
+Actual focused run: **40 tests passed / 4 files, 87.12 seconds**. No assertions,
+timeouts, retries or rate limits changed. The Windows sandbox initially denied
+Vitest workspace resolution; rerunning with filesystem permission passed. Docker's
+default subnet pool was full; an ignored override assigned only this new project
+`10.240.74.0/24`. No prior network, database or volume was removed. Captured mail only.
+Final-head/full/hosted results are recorded in the review handoff.
+
+- **Alert #1 reviewer decision:** independently inspect unsafe registrations/order,
+  library semantics, negative matrix and persisted-write/role-denial controls.
+  Approve or reject the proposed false-positive classification for this exact
+  revision, or identify a bypass requiring a focused fix. No dismissal performed.
+- **Alert #3 reviewer decision:** confirm production mode, private ingress, trusted
+  header overwrite and real browser flags on the intended host. Decide whether
+  the development-only non-Secure branch supports classification under those
+  enforced constraints, or require a specific additional control. This is not
+  acceptance of insecure cookies.
+- **Owner:** obtain independent review; leave alerts/policy unchanged until the
+  authorized decision. Tests and scanner execution cannot approve this author's
+  proposed classification. Staging and tooling risks need their separate decisions.
+
+The historical invitation/restart failure remains unexplained; later passing runs
+do not establish its root cause. No retries or skipped assertions hide that result.
 
 ## Reconciled Review: November 8
 

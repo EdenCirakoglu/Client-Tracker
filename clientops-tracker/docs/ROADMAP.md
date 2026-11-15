@@ -2,6 +2,21 @@
 
 ## Current First-Customer Launch Checklist
 
+Release preparation, rechecked 2026-11-15: main remains `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
+PR #43's completed `46c2c8575a193e0ca08088f65647552acbcef8e6` design and evidence
+are preserved while the owner completes visual acceptance. The separate
+`release/security-integration-review-2026-11-15` increment changes only tests and
+release records; no merge, deployment, alert disposition or dependency upgrade.
+
+| Release task                  | Status / tested revision and evidence                                                                                                                                                     | Next action                                                                                                                                                                    | Owner                               |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| Stack integration             | [Rechecked heads, bases and checks](RELEASE_INTEGRATION.md); #22 -> #34 -> #35 -> #36 -> #37 -> #43. #37 workflow conflict reproduced; other immediate bases mergeable.                   | Independently review #22 first; no merge until blockers resolved. After each approved parent merge, retarget/recheck the next actual main diff.                                | Maintainer + owner                  |
+| CSRF / cookie policy          | [Fresh review packet](CSRF_REVIEW.md): no bypass demonstrated; #22 policy still fails, cookie finding remains open on main. Added production proxy/cookie negative and positive controls. | Independent reviewer reproduces controls and explicitly decides each proposed classification; no dismissal or policy weakening here.                                           | Security reviewer + owner           |
+| Development tooling           | [Fresh unchanged-lock audit and metadata](DEPENDENCY_REMEDIATION.md): runtime audit zero; full audit two moderates, no compatible stable parent fix established.                          | Decide the explicit time-limited proposals or require a separately verified supported remedy. Expired November 4 deadline is not approval.                                     | Owner; maintainer monitors upstream |
+| Cloudflare Git build          | Supplied build log proves missing `previews` configuration for `npx wrangler preview`; separate from passing application CI. Public static walkthrough still HTTP 200.                    | Confirm intended static-preview target/root/build settings before any separately approved configuration; preserve current site/check.                                          | Owner                               |
+| Published release and staging | [cfec6e71 evidence](RELEASE_CFEC6E71.md) retained, not rerun/relabelled. [Private staging entry gates](PRIVATE_STAGING.md) updated.                                                       | After every approved merge: main CI, both publications, digest-pinned no-build isolated runtime verification; then explicit staging authorization and real-service acceptance. | Maintainer + operator               |
+| Visual and human acceptance   | #43 hosted CI and matched captures preserved; no redesign in this increment.                                                                                                              | Owner visual acceptance and actual human screen-reader walkthrough remain pending.                                                                                             | Owner + human tester                |
+
 Updated 2026-11-15: portal-wide Meridian is a separate, unmerged increment in
 [draft PR #43](https://github.com/EdenCirakoglu/Client-Tracker/pull/43), based on
 #37 with #36's later CI isolation fix preserved. It carries the identity into the

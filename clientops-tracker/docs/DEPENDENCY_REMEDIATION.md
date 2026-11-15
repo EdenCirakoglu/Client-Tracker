@@ -1,5 +1,40 @@
 # Dependency Remediation: Milestone 1B
 
+## Current Recheck: 2026-11-15
+
+On the unchanged PR #43 lockfile at `46c2c8575a193e0ca08088f65647552acbcef8e6`,
+`pnpm install --frozen-lockfile` passed, `pnpm audit --prod` passed with zero known
+production npm findings, and `pnpm audit` exited 1 with **two moderate advisories**.
+No manifest/lockfile, override, scanner or gate was changed. The November 4
+decision deadline passed without acceptance; later proposals are not extensions
+unless the owner explicitly approves them.
+
+| Finding / exact dependency chain                                                                                                                                                                                                                                          | Invocation, exposure and existing restrictions                                                                                                                                                                                                                                                                                                                               | Smallest supported remedy / current decision                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99): API devDependency `drizzle-kit@0.31.11 > @esbuild-kit/esm-loader@2.6.5 > @esbuild-kit/core-utils@3.3.2 > esbuild@0.18.20`; patched esbuild >=0.25.0                                             | Migration/config tooling and optional Studio. The advisory concerns development HTTP-server CORS; normal `db:generate` does not start esbuild serve. Keep trusted repository inputs only, no public Studio/serve and no customer credentials in tooling. These restrictions do not remove the vulnerable dependency.                                                         | Publisher metadata still lists stable Kit 0.31.11 and legacy loader ^2.5.5. Its direct esbuild ^0.25.4 does not replace the nested copy. No supported stable parent patch found. Prefer a future Kit/loader removal, verifying generation, populated migrations, grants/restore. A broad 1.0 RC migration or forced pre-1.0 transitive override is not a justified minimal fix. |
+| [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249): root `typescript-eslint@8.61.0 > @typescript-eslint/parser` / `eslint-plugin` / `type-utils` / `utils` -> `typescript-estree@8.61.0 > minimatch@10.2.5`; affected >=7 <11.0.1, patched >=11.0.1 | Seven dependency paths, **one advisory**, not seven distinct vulnerabilities. ESLint's repository glob/project handling, not an HTTP parser. Advisory concerns crafted patterns with optimizationLevel >=2. Review config/project inputs; do not run arbitrary customer lint config. No invocation/exploit was demonstrated in the current trusted configuration; not a fix. | Latest publisher TypeScript ESLint/estree 8.72.2 still specifies minimatch ^10.2.2, excluding patched 11.0.1. PR24/current 8.x bump cannot resolve this finding. Prefer a parent version supporting the patched major. An override needs a separate compatibility candidate covering matching semantics, lint/typecheck and supported Node engines first.                       |
+
+Reproduce metadata (read-only):
+
+```powershell
+pnpm audit --prod
+pnpm audit
+pnpm view drizzle-kit@latest version dependencies --json
+pnpm view typescript-eslint@latest version dependencies --json
+pnpm view @typescript-eslint/typescript-estree@latest version dependencies engines --json
+```
+
+**Owner decision requested, not accepted:** maintainer monitors both upstreams;
+repository owner/security reviewer decides separately for each whether restricted
+source-review/CI use may continue until **20 November 2026 or before first customer
+installation, whichever is earlier**. No unattended renewal. Keep full audit
+visible, trusted schemas/config only, no publicly served tooling, and verify
+runtime image contents before installation. Rejecting the exception means retain
+the tooling release blocker until a supported remedy passes the above checks.
+Even approval would not approve CSRF/cookie alerts, customer deployment or the
+application's security. Runtime npm audit does not cover container OS packages,
+application logic, CodeQL findings or deployment configuration.
+
 ## Current Recheck: 2026-11-08
 
 PR #22 is reconciled with main `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
