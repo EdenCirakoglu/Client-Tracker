@@ -9,6 +9,15 @@ the relevant public visitor-path acceptance.
 
 ## Contents
 
+November 16 release boundary: the Meridian interface at PR #43
+`46c2c8575a193e0ca08088f65647552acbcef8e6` is **candidate-only**, not in published
+main images. Its [real matched captures](../MERIDIAN_COMPOSITION_REVIEW.md) may be
+reviewed privately, but must not be relabelled released-product screenshots.
+The three gallery files below remain historical branding-preview captures at
+their recorded revision. Recapture the same three shipment states only after
+the approved Meridian merge, main CI and digest-pinned runtime verification.
+No new screenshots or Product Hunt submission are claimed in this preparation.
+
 - [Canonical approved v3 PNG](../../apps/web/public/brand/journal-v3.png)
   is used by the application, favicon, account screens and walkthrough.
   SHA-256: `4e84301ab7fa39a2f9a80e65eebd8b494d04677149224608304f972083cd47bd`.
@@ -89,8 +98,10 @@ and two unaccepted development-tool findings remain. No checks or policy change
 is part of branding.
 
 Keep Preview labels on the gallery/form until the advertised version is released.
-The repository is a genuine current destination; the walkthrough has **no public
-URL yet**. Contact route, final price, capacity, terms and genuine booking/checkout
+The repository is a genuine current destination. The separate [public fictional
+walkthrough](https://proud-credit-1b94.eden-cirakoglu.workers.dev/) now exists;
+it is a simulation, not the writable portal or released Meridian interface, and
+was left unchanged. Contact route, final price, capacity, terms and genuine booking/checkout
 are internal owner tasks. Do not add dead Book/Buy links or publish localhost.
 The software is free under MIT; assisted installation is a separately priced service.
 

@@ -9,7 +9,7 @@ ClientOps Tracker is an open-source support and delivery operations platform for
 
 Use or self-host the public code without purchasing a service. Optional paid work starts with **assisted installation**: a scoped private deployment, configuration, branding and onboarding. Managed hosting is a later offer, subject to real operational acceptance.
 
-[Book a demo](docs/SERVICES.md#book-a-demo) | [Buy installation](docs/SERVICES.md#buy-installation)
+[Demo information (booking not open)](docs/SERVICES.md#book-a-demo) | [Assisted installation (orders not open)](docs/SERVICES.md#one-agency-installation-package)
 
 Booking and checkout are **not yet configured**. These links currently lead to service information, not a live booking system or payment page. See the [service scope](docs/SERVICES.md) and [commercial setup guide](docs/MONETISATION.md). Sponsorship is optional support for development, not a service purchase.
 

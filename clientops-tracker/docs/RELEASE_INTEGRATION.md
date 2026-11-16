@@ -1,6 +1,93 @@
 # Release Integration Decisions
 
-## Current Preparation: 15 November 2026
+## Current Preparation: 16 November 2026
+
+Main remains `cfec6e71a51975e224a2cee9ddda2238183b8b31`. No PR merge, closure,
+alert dismissal, risk acceptance, paid resource or external deployment occurred.
+The single current completion checklist is [ROADMAP](ROADMAP.md). The separate
+preparation branch starts from #44 `8392f9026115940dd634f671c1eed9fafd676fe8`;
+it adds a read-only staging preflight and practical operator/commercial materials,
+not a new visual or product increment. #43's design and evidence are preserved.
+
+### Candidate Changes and Checks
+
+| PR                                                             | Exact head / actual parent tip                                                                  | Result and next integration action                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22) | `535692ba67ef9648af22810be718c50992571658` / main `cfec6e71a51975e224a2cee9ddda2238183b8b31`    | #44 tests backported plus explicit AI-assisted per-alert verdicts. [CI passed](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43881461471): 206 API, 30 helper, 15 browser scenarios, operational checks. [Analysis executed](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43881251528); [policy failed](https://github.com/EdenCirakoglu/Client-Tracker/runs/133347637077). Independent security/tooling decisions still block recommending merge. |
+| [#34](https://github.com/EdenCirakoglu/Client-Tracker/pull/34) | `a6a343cb9f9d278dadf9377f26d6b96d2dd90eb9` / #22 now `535692ba67ef9648af22810be718c50992571658` | Existing CI remains historical; merge-tree with refreshed parent succeeds. After approved #22 merge, retarget to main, reconcile backported tests and run fresh CI/CodeQL.                                                                                                                                                                                                                                                                                                        |
+| [#35](https://github.com/EdenCirakoglu/Client-Tracker/pull/35) | `c9cda1d89f30dc01c04cc23983611302484b6c28` / #34 `a6a343cb9f9d278dadf9377f26d6b96d2dd90eb9`     | Existing CI passes, no applicable current CodeQL head result. Retarget/revalidate only after approved parent.                                                                                                                                                                                                                                                                                                                                                                     |
+| [#36](https://github.com/EdenCirakoglu/Client-Tracker/pull/36) | `36a50f13eb30d4de6d26a989e3693b9f77035193` / #35 `c9cda1d89f30dc01c04cc23983611302484b6c28`     | Existing two-job CI passes. Fixture isolation and config diagnostics are retained in #37. Later head evidence cannot replace eventual main integration checks.                                                                                                                                                                                                                                                                                                                    |
+| [#37](https://github.com/EdenCirakoglu/Client-Tracker/pull/37) | `5d9a02affaac6388dc54549309c49ef1cf05212e` / #36 `36a50f13eb30d4de6d26a989e3693b9f77035193`     | Workflow conflict resolved without runtime changes. [Fresh run](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43883782112) is the authoritative final-head result; see final PR handoff. No applicable CodeQL head result, not a security pass.                                                                                                                                                                                                                    |
+| [#43](https://github.com/EdenCirakoglu/Client-Tracker/pull/43) | `46c2c8575a193e0ca08088f65647552acbcef8e6` / #37 now `5d9a02affaac6388dc54549309c49ef1cf05212e` | Design unchanged; historical four-job CI/45 browser scenarios retained. New parent merge-tree identifies a workflow-only conflict: preserve all four #43 jobs and exclude intro/review/portal scenarios from core. Resolve/revalidate after approved #37 integration; do not discard portal coverage.                                                                                                                                                                             |
+| [#44](https://github.com/EdenCirakoglu/Client-Tracker/pull/44) | `8392f9026115940dd634f671c1eed9fafd676fe8` / #43 `46c2c8575a193e0ca08088f65647552acbcef8e6`     | Historical CI passes; backported two test files must remain one identical copy when integrating later. Retain remaining documentation and original evidence, resolving its dated assertions explicitly.                                                                                                                                                                                                                                                                           |
+
+Some GitHub PR responses cache the old `base.sha`; the table uses actual fetched
+branch tips. #37's reconciliation commit `635b9abdc5908298c9602b1e6166fb66b7aedf6e`
+preserved #36 fixture isolation and #37 review selection. Its review job reproduced
+an axe/context-clock race (13/14 passed), not a rate-limit/login failure. Final
+head backports #43's existing `ea13aecbe01c814c1cd367a00b8eae6088e31ffa` test fix:
+frame-free assertion plus in-page axe execution. No retry, timeout increase or
+accessibility assertion removal. [Failure/artifact provenance](LOGIN_INTRO.md#november-16-integration-verification)
+remains visible. Historical invitation/restart failure `5068312` remains unexplained;
+later passes cannot establish a cause whose original diagnostics were absent.
+
+### Separate Dependency PRs
+
+All below remain open against main; actual current main is cfec6e71, regardless
+of cached older base SHAs. These are individual historical checks, not combined
+release approval. Every listed CodeQL policy check is **neutral**, not successful
+applicable analysis. No unrelated upgrade was added to this release.
+
+| PR                     | Exact head                                 | Existing application CI                                                          | Disposition                                                                             |
+| ---------------------- | ------------------------------------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| #25 ESLint JS          | `3fe5de57fdcaa5d41fe4424932c8187b343e891b` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42261968317) | Separate patch review against integrated main; not needed for these two advisories.     |
+| #26 tsx                | `9b4cf26875211f2a4c971e5ac34d617a23cc0025` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42270297694) | Separate tooling patch, refresh before any merge decision.                              |
+| #27 Helmet             | `ea4eb1478bcc9dc76f460bd3556807036ffc2371` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42261938601) | Separate security-header compatibility review; no automatic grouping.                   |
+| #29 Express 5          | `a2ff20ab03c3b0247e31fc656e6e1c9a50415e51` | [Fail](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42270296077) | Defer deliberate controller/route-type migration; no major framework change here.       |
+| #30 React DOM/types    | `ac6061245e9c95295eb7bb8037efc0fcc2881230` | [Fail](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42261997774) | Reconcile supported React/DOM/type pair separately before reconsidering.                |
+| #38 Vitest 5           | `31716cab2a8d2bbf8acfcee409ef5a088de308b8` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42990888050) | Defer coordinated major tooling work.                                                   |
+| #39 Tailwind 4         | `d6f9bf950d7dd9e8db42867cfd00be4004e9d813` | [Fail](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42990937997) | Defer; preserve the owner-reviewed visual candidate.                                    |
+| #40 express-rate-limit | `9fcf20365d06d4b011aa137b09855cbd58b49ace` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42990972985) | Separate compatible patch review with proxy/rate-limit tests against integrated main.   |
+| #41 TypeScript ESLint  | `578de39ea1083f6dc94e1e9c5d104d333da79e04` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42991120292) | Does not resolve minimatch's patched-major requirement; do not call it a remediation.   |
+| #42 Vite 8             | `717b595e5fc9dfcc54d367b77604d06e71b40539` | [Pass](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/42991682042) | Defer coordinated tooling upgrade; isolated pass does not prove combined compatibility. |
+
+### Exact Next Decision and Publication Consequence
+
+Review #22 first at the head/base above. [Per-alert source verdicts](CSRF_REVIEW.md)
+are AI-assisted and conditional, **not independent human approval**. Ask the
+selected reviewer to accept/reject each classification or specify the missing
+control. Eden must separately decide the two [bounded tooling proposals](DEPENDENCY_REMEDIATION.md).
+No merge is requested until these gates have a recorded resolution. Successful
+main push CI after an eventual approved merge automatically publishes both images.
+
+For **every** approved merge, run from a clean checkout of the resulting main:
+
+```powershell
+$repo='EdenCirakoglu/Client-Tracker'
+gh run list --repo $repo --commit $RELEASE_SHA --workflow ci.yml
+gh run list --repo $repo --commit $RELEASE_SHA --workflow docker.yml
+# Both workflows must succeed for this exact SHA; a tag alone is not verification.
+docker pull "ghcr.io/edencirakoglu/client-tracker-api:$RELEASE_SHA"
+docker pull "ghcr.io/edencirakoglu/client-tracker-web:$RELEASE_SHA"
+docker image inspect "ghcr.io/edencirakoglu/client-tracker-api:$RELEASE_SHA" --format '{{json .RepoDigests}} {{json .Config.Labels}}'
+docker image inspect "ghcr.io/edencirakoglu/client-tracker-web:$RELEASE_SHA" --format '{{json .RepoDigests}} {{json .Config.Labels}}'
+$env:RELEASE_INSTANCE='owner-approved-run'
+$env:RELEASE_HTTPS_PORT='8494' # Check availability and choose an unused fixture subnet.
+$env:RELEASE_SUBNET='10.240.76.0/24'
+node scripts/verify-registry-release.mjs $RELEASE_SHA $API_DIGEST $WEB_DIGEST
+```
+
+Record both immutable digests/revision labels and the generated
+`test-results/clientops-published-<revision-prefix>-<instance>/` report. The script
+refuses existing verification volumes and pulls by digest without rebuilding.
+Its disposable/demo-mode runtime evidence is not private production-mode host
+acceptance. Do not publish TLS keys or private rendered configurations.
+Migration 0007 requires draining old outbox writers; preserve backups and validate
+the previous **compatible** pair on a restored copy. No arbitrary old-image rollback.
+The [private staging runbook](PRIVATE_STAGING.md) supplies production-mode ingress,
+secret, SMTP, restore, monitoring and human acceptance separately.
+
+## Historical Preparation: 15 November 2026
 
 No PR is merged, retargeted, closed or approved in this preparation. No alert is
 dismissed and no deployment/check configuration changes. Visual acceptance stays

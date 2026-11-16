@@ -2,7 +2,12 @@
 
 No Product Hunt account was changed. Eden approves copy and enters the draft.
 Checked against the [official form guide](https://help.producthunt.com/en/articles/17834537-4-build-your-product-page)
-on 8 November 2026. Verify the live editor before eventual publication.
+on 16 November 2026. Verify the live editor before eventual publication.
+
+The official editor currently requires name, tagline, description, a square logo,
+at least one application image, launch tags and maker role. Recommended assets
+remain 240x240 logo and 1270x760 gallery. Keep preview wording until the approved
+release exists; old branding captures are not current released Meridian evidence.
 
 ## Name
 
@@ -41,19 +46,19 @@ confidently accepting work or requesting changes?
 
 ## Other Fields
 
-| Field                              | Draft value / owner action                                                                             |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Product link                       | https://github.com/EdenCirakoglu/Client-Tracker ; real repository, not a claim the preview is released |
-| Logo                               | Canonical v3 240px PNG linked in pack README                                                           |
-| Gallery                            | Three preview PNGs with real application captures and manifest                                         |
-| Role                               | I made this; personal maker Eden, independent project                                                  |
-| Tags                               | Choose available, accurate Open Source / Productivity / Project Management matches; at most three      |
-| Pricing                            | Free MIT software. Assisted installation quoted separately, not included or activated                  |
-| Maker comment                      | Draft above; no invented traction or claims of market uniqueness                                       |
-| Video/demo                         | Optional; record script provided, public destination not configured                                    |
-| Contact, social, booking, checkout | Leave unset until an owned, tested destination exists                                                  |
-| Company, co-makers, shoutouts      | Only true details supplied and approved by Eden; no invented affiliations                              |
-| Promo, funding, launch date        | None; leave unset                                                                                      |
+| Field                              | Draft value / owner action                                                                                                                                              |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Product link                       | https://github.com/EdenCirakoglu/Client-Tracker ; real repository, not a claim the preview is released                                                                  |
+| Logo                               | Canonical v3 240px PNG linked in pack README                                                                                                                            |
+| Gallery                            | Three preview PNGs with real application captures and manifest                                                                                                          |
+| Role                               | I made this; personal maker Eden, independent project                                                                                                                   |
+| Tags                               | Choose available, accurate Open Source / Productivity / Project Management matches; at most three                                                                       |
+| Pricing                            | Free MIT software. Assisted installation quoted separately, not included or activated                                                                                   |
+| Maker comment                      | Draft above; no invented traction or claims of market uniqueness                                                                                                        |
+| Video/demo                         | Existing fictional simulation: https://proud-credit-1b94.eden-cirakoglu.workers.dev/ ; not the working portal or evidence of release. Recording script remains a draft. |
+| Contact, social, booking, checkout | Leave unset until an owned, tested destination exists                                                                                                                   |
+| Company, co-makers, shoutouts      | Only true details supplied and approved by Eden; no invented affiliations                                                                                               |
+| Promo, funding, launch date        | None; leave unset                                                                                                                                                       |
 
 Limits from the guide: name 40, tagline 60, description 500, maker comment 5,000.
 The pack validation records actual character counts from this file. These

@@ -38,7 +38,7 @@ The code remains [MIT-licensed](LICENSE): commercial use, modification and redis
 
 Start with **assisted installation**: a scoped private deployment, configuration, branding and onboarding. Payment is for delivery expertise and an agreed service, not exclusive repository access.
 
-[Book a demo](clientops-tracker/docs/SERVICES.md#book-a-demo) | [Buy installation](clientops-tracker/docs/SERVICES.md#buy-installation)
+[Demo information (booking not open)](clientops-tracker/docs/SERVICES.md#book-a-demo) | [Assisted installation (orders not open)](clientops-tracker/docs/SERVICES.md#one-agency-installation-package)
 
 Booking and checkout are **not yet configured**. These links currently explain the proposed services; no purchase or booking can be completed here. Managed hosting comes after real operational acceptance. [Service options and sales setup](clientops-tracker/docs/MONETISATION.md) explain the separate roles of purchases, optional sponsorship and a future GitHub Marketplace integration.
 

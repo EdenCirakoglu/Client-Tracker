@@ -1,6 +1,19 @@
 # Dependency Remediation: Milestone 1B
 
-## Current Recheck: 2026-11-15
+## Current Recheck: 2026-11-16
+
+Unchanged candidate lockfile: frozen install passed; `pnpm audit --prod` reported
+zero known production npm vulnerabilities. `pnpm audit` still reports the **same
+two moderate findings** detailed below. Registry metadata still shows Kit
+0.31.11 with the legacy loader and TypeScript estree 8.72.2 with minimatch
+`^10.2.2`. Neither stable-parent check provides the required patched nested path.
+PR #41's TypeScript ESLint bump is therefore not evidence of remediation.
+No forced override, unrelated major upgrade or accepted exception was introduced.
+Owner/expiry/restrictions below remain **proposed and unapproved**, including the
+missed November 4 deadline and proposed November 20 cutoff. Customer installation
+remains blocked on a supported remedy or an explicit, bounded owner decision.
+
+## Historical Recheck: 2026-11-15
 
 On the unchanged PR #43 lockfile at `46c2c8575a193e0ca08088f65647552acbcef8e6`,
 `pnpm install --frozen-lockfile` passed, `pnpm audit --prod` passed with zero known

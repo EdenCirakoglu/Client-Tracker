@@ -28,10 +28,67 @@ The [service information page](SERVICES.md) describes the proposed initial offer
 2. Confirm the payment provider supports the seller's country, business and account. Stripe offers a hosted [Payment Link](https://docs.stripe.com/payment-links) without building a billing UI; check its [availability](https://stripe.com/global) before choosing it. No account eligibility is assumed here.
 3. Set the actual price, currency, payment conditions, cancellation/refund terms and customer support contact. Confirm capacity and deployment prerequisites before accepting an order.
 4. Create and test the external checkout in the provider's test environment. Verify the service description, receipt, cancellation path and return to the product page. Do not put API keys, customer credentials or payment details in GitHub.
-5. Replace the **Book a demo** destinations in both `README.md` files with the public product/demo page, and **Buy installation** with the actual provider-hosted checkout URL. Update `SERVICES.md` with those same destinations and remove the unavailable notices only once tested.
+5. Only after approval, replace both READMEs' unavailable **Demo information** / **Assisted installation** links with genuine **Book a demo** / **Buy installation** destinations. Update `SERVICES.md` consistently; remove unavailable notices only after testing.
 6. For the first installations, verify payment in the provider dashboard and coordinate delivery manually. A browser success redirect is not proof of payment. Do not automatically provision accounts or infrastructure from it.
 
 This setup adds no billing tables, subscription gates, payment webhooks or licence-key checks to ClientOps. Self-hosting remains available without a purchase. Tax, invoicing and customer terms remain the seller's responsibilities; a payment link does not settle those obligations.
+
+### Owner Account Procedure: Not Yet Executed
+
+1. Confirm legal seller country/entity and account eligibility privately using
+   [Stripe's country list](https://stripe.com/global), or select another supported
+   hosted provider. No eligibility is inferred from the maintainer's timezone.
+2. Configure a genuine contact inbox or booking account, availability and timezone.
+   Request only name, work email and agency workflow goals; warn against secrets,
+   customer data and server access. Test request, confirmation, cancellation and
+   timezone display using approved addresses. Do not publish a placeholder route.
+3. In the provider **sandbox/test mode**, create a one-time product named
+   `ClientOps assisted installation - one agency/project`. Copy the approved scope
+   and exclusions from SERVICES; enter the approved fixed amount/currency, quantity
+   one and tax treatment. Do not activate a live link or use real card details.
+4. Create the hosted [Payment Link](https://docs.stripe.com/payment-links/create).
+   Use a provider-hosted confirmation initially, with the copy below. Test successful
+   payment, declined payment, abandoning checkout, reopening the link and duplicate
+   attempts. Record test transaction IDs privately. Where Payment Links has no
+   configurable cancel redirect, verify closing/back returns safely with no order;
+   do not claim a custom cancellation route exists.
+5. Verify the provider dashboard's paid state and receipt, exact amount/currency,
+   service description and no subscription. A redirect or screenshot is not proof
+   of settlement. Delayed payment methods require confirmed settlement before work.
+6. Reconcile manually: one private order reference per paid transaction, accepted
+   scope, scheduled start, installation record and handover. Duplicate payments
+   require owner review/refund under approved terms, not duplicate infrastructure.
+7. Request explicit live activation only after release/staging acceptance, price,
+   terms, capacity and all tests pass. Update README/service links in a reviewed
+   change; never automatically deploy infrastructure after payment.
+
+Proposed confirmation: "Your installation request has been recorded. We will
+confirm payment and arrange the agreed setup session within two business days.
+Do not send passwords, API keys or customer records by email or through this
+checkout. Infrastructure access is arranged separately through a private channel."
+This response time is a proposal requiring capacity approval, not an active SLA.
+[Provider confirmation/fulfilment documentation](https://docs.stripe.com/payment-links/post-payment)
+supports hosted confirmation and manual dashboard verification; none was executed here.
+
+### Terms and Privacy Review Questions
+
+Before orders, the owner must settle seller identity/contact, B2B/B2C scope,
+governing jurisdiction, taxes/invoicing, cancellation before scheduling/after
+partial work, refund handling, acceptance disputes and limitation of liability.
+Have appropriate local advice review the actual agreement; this is not a legal
+compliance claim or a blanket "no refunds" policy.
+
+Document separately what booking/payment providers collect, purpose, access,
+retention/deletion, cross-border processing and customer rights/contact route.
+Do not collect infrastructure credentials through either. Installation access
+should be least-privilege and revoked at handover. Decide who controls customer
+portal data and whether a processing agreement is needed for the agreed support.
+Keep the software's MIT notices and disclaimer distinct from paid service duties.
+
+Maintain a private, minimal enquiry/order log: date, source, consent/contact
+reference, agreed scope, quote revision, test/live payment reference, status,
+delivery effort and handover. Public metrics may count real enquiries/paid orders
+only after evidence exists; no traction or customer feedback is claimed now.
 
 ### URLs and Decisions Needed Before Activation
 
