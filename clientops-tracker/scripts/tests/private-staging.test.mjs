@@ -217,6 +217,14 @@ for (const [name, mutate] of [
     },
   ],
   [
+    'outbox key reused as database password',
+    (value) => {
+      const key = value.services.api.environment.MAIL_ENCRYPTION_KEY;
+      value.services.api.environment.DATABASE_URL = `postgresql://clientops_runtime:${key}@postgres/clientops_staging`;
+      value.services.provision.environment.RUNTIME_PASSWORD = key;
+    },
+  ],
+  [
     'placeholder secret',
     (value) => {
       value.services.api.environment.SESSION_SECRET =

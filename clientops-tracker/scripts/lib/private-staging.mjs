@@ -108,9 +108,7 @@ export function validatePrivateStaging(config, { revision, mode }) {
     typeof env.SESSION_SECRET !== 'string' ||
     env.SESSION_SECRET.length < 32 ||
     !/^[a-f0-9]{64}$/i.test(env.MAIL_ENCRYPTION_KEY ?? '') ||
-    passwords.includes(env.SESSION_SECRET) ||
-    env.SESSION_SECRET === env.MAIL_ENCRYPTION_KEY ||
-    env.SESSION_SECRET === undefined
+    new Set([...passwords, env.SESSION_SECRET, env.MAIL_ENCRYPTION_KEY]).size !== 6
   )
     fail('Supply independent strong database, session and outbox secrets privately.');
   if (
