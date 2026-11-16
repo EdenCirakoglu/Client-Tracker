@@ -1,5 +1,23 @@
 # Login Logo Intro
 
+## November 16 Integration Verification
+
+PR #37 now incorporates #36's `36a50f13eb30d4de6d26a989e3693b9f77035193` fixture
+isolation and safe auth-config diagnostics. Both intro and Meridian scenarios run
+in the separate review job; core tests exclude both. No test, rate limit or
+timeout was removed or increased.
+
+The first reconciled run at `635b9abdc5908298c9602b1e6166fb66b7aedf6e`
+[failed one of 14 review scenarios](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43881516324/job/133348319062):
+mobile-dark hit `clock.runFor: Target page, context or browser has been closed`
+during axe analysis, not a login timeout. The installed axe implementation opens
+and closes a temporary result page; Playwright's clock operates on the context.
+PR #43 already has the focused harness fix in `ea13aecbe01c814c1cd367a00b8eae6088e31ffa`.
+Only that test change is backported: assert the screen contains no frames, then
+run axe directly in-page. All existing accessibility, focus, timing and 200% zoom
+assertions remain. No visual/runtime code changes. Preserve the failed run as
+evidence; the final-head checks establish whether this integration passes.
+
 ## Scope
 
 `feature/logo-intro` is based on PR #35 at
