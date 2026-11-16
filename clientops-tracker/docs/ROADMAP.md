@@ -2,6 +2,13 @@
 
 ## Current First-Customer Launch Checklist
 
+Meridian ticket review is a separate, unmerged increment in
+[PR #37](https://github.com/EdenCirakoglu/Client-Tracker/pull/37), stacked on #36.
+[Revision-specific evidence, preview and manual checks](MERIDIAN_REVIEW.md) cover
+the real Revision River, word diff and exact-revision approval. No API/schema,
+published release or security-policy change is implied. Preserve the earlier
+release results below; retarget and revalidate only after approved parent merges.
+
 Updated 2026-11-10. Main is `cfec6e71a51975e224a2cee9ddda2238183b8b31`
 after #20 and #31 merged. Its main CI, both publications and a **new**
 digest-pinned registry rehearsal passed. PR #22 now targets main and has been reconciled; it remains draft and unmerged.
@@ -44,6 +51,7 @@ into the product branch. No contact, checkout or public launch is activated.
 | Selected-client guidance       | Implemented on the #34-dependent candidate; scoped API/role guide/customer journey tests in [current evidence](FIRST_CUSTOMER_READINESS.md)                                                     | Review candidate CI and actual screenshots, then independent first-visit tasks; no parent merge inferred                           | Maintainer + owner             |
 | Remaining dependency decisions | Kit/esbuild and minimatch findings remain visible; November 4 Kit deadline expired without approval                                                                                             | Review supported remedies or make an explicit time-limited decision; no acceptance inferred from clean production audit            | Repository owner               |
 | Each future approved merge     | None authorized in this run; automatic image publication follows successful main push CI                                                                                                        | Verify exact main SHA CI, both publications and digest-pinned runtime **without rebuilding**, after each separately approved merge | Release maintainer             |
+| Meridian ticket review         | [PR #37 and exact evidence](MERIDIAN_REVIEW.md): local 205 API / 34 helper / 3 focused browser tests, production build and native zoom passed                                                   | Review the ticket-first design and final-head hosted CI; preserve parent dependency and security gates                             | Maintainer + owner             |
 | Human accessibility            | Automated checks are not a human screen-reader walkthrough                                                                                                                                      | Assign reviewer; record actual speech, versions and issues                                                                         | Accessibility reviewer         |
 | Real staging                   | Not accepted; local captured email and certificates are fixtures only                                                                                                                           | Trusted HTTPS/renewal, SMTP, encrypted off-host restore, real alerts/monitoring, recovery owner and RTO/RPO                        | Customer operator              |
 | Installation offer and pilot   | [Offer and pilot materials](FIRST_CUSTOMER_PILOT.md) prepared, not approved or purchased                                                                                                        | Approve terms/capacity and genuine booking/checkout; separately authorize pilot contact                                            | Repository owner               |

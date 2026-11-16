@@ -31,12 +31,12 @@
   --info-border: 178 201 236;
 }
 [data-theme='dark'] {
-  --surface: 20 25 23;
-  --panel: 28 35 32;
-  --subtle: 36 44 40;
+  --surface: 29 33 32;
+  --panel: 37 43 41;
+  --subtle: 45 52 49;
   --ink: 232 239 239;
-  --muted: 168 185 190;
-  --border: 66 80 85;
+  --muted: 177 193 185;
+  --border: 74 88 81;
   --action: 26 107 95;
   --accent: 121 219 197;
   --accent-bg: 28 60 55;
@@ -72,7 +72,7 @@ body {
   background: rgb(var(--surface));
   color: rgb(var(--ink));
   font-family:
-    Inter,
+    'Geist Variable',
     ui-sans-serif,
     system-ui,
     -apple-system,
