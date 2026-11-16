@@ -115,8 +115,19 @@ export type DashboardMetrics = {
   }[];
 };
 
+export interface TicketQueueItem extends Ticket {
+  client: { id: string; name: string };
+  workflow?: 'ready' | 'changes' | 'waiting';
+  workflowHref?: string;
+  nextAction?: string;
+  actionReason?: string;
+  currentWorkflow?: {
+    scope: Pick<ScopeProposal, 'id' | 'revision' | 'state' | 'approverName'> | null;
+    delivery: Pick<DeliveryRevision, 'id' | 'revision' | 'state' | 'reviewerName'> | null;
+  };
+}
 export interface TicketQueue {
-  items: (Ticket & { client: { id: string; name: string } })[];
+  items: TicketQueueItem[];
   total: number;
   page: number;
   limit: number;

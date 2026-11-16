@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, SlidersHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, SlidersHorizontal } from 'lucide-react';
 
 import { ProtectedPage } from '../../components/app-shell';
 import { PageHeader } from '../../components/page-header';
@@ -17,6 +17,12 @@ import { formatDate, titleCase, ticketReference } from '../../lib/format';
 import { ticketCategories, ticketPriorities, ticketStatuses } from '../../lib/options';
 import { useApiData } from '../../lib/use-api-data';
 import { useAuth } from '../../lib/auth';
+
+const workflowLabels: Record<string, string> = {
+  ready: 'Ready for work',
+  changes: 'Changes requested',
+  waiting: 'Waiting on client',
+};
 
 export default function TicketsPage() {
   return (
@@ -33,6 +39,7 @@ function TicketList() {
   const statusFilter = params.get('status') ?? 'ALL';
   const priorityFilter = params.get('priority') ?? 'ALL';
   const categoryFilter = params.get('category') ?? 'ALL';
+  const workflowFilter = params.get('workflow') ?? 'ALL';
   const searchParam = params.get('search') ?? '';
   const [search, setSearch] = useState(searchParam);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -40,6 +47,7 @@ function TicketList() {
     statusFilter !== 'ALL' ? titleCase(statusFilter) : '',
     priorityFilter !== 'ALL' ? titleCase(priorityFilter) : '',
     categoryFilter !== 'ALL' ? titleCase(categoryFilter) : '',
+    workflowFilter !== 'ALL' ? (workflowLabels[workflowFilter] ?? workflowFilter) : '',
     params.get('assignment') ? titleCase(params.get('assignment')!) : '',
     params.get('resolvedMonth') ? `Resolved in ${params.get('resolvedMonth')}` : '',
     params.get('assignedToId') ? 'Selected developer' : '',
@@ -62,6 +70,8 @@ function TicketList() {
     const next = new URLSearchParams(window.location.search);
     if (value && value !== 'ALL') next.set(key, value);
     else next.delete(key);
+    if (key === 'workflow' && value !== 'ALL') next.set('assignment', 'mine');
+    if (key === 'assignment' && value !== 'mine') next.delete('workflow');
     if (key !== 'page') next.delete('page');
     window.history.pushState(null, '', `/tickets?${next}`);
   };
@@ -107,7 +117,10 @@ function TicketList() {
         {activeFilters.length ? `: ${activeFilters.join(', ')}` : ': All tickets'}
         {searchParam ? `; Search: ${searchParam}` : ''}
       </p>
-      <div id="ticket-filters" className={`${filtersOpen ? 'block' : 'hidden'} md:block`}>
+      <div
+        id="ticket-filters"
+        className={`portal-section ${filtersOpen ? 'block' : 'hidden'} md:block`}
+      >
         <div className="mb-3 grid grid-cols-2 gap-3 md:grid-cols-5">
           <Input
             className="col-span-2"
@@ -158,16 +171,31 @@ function TicketList() {
 
         <div className="mb-3 grid grid-cols-2 items-center gap-3 md:flex md:flex-wrap">
           {user?.role !== 'CLIENT' ? (
-            <Select
-              className="max-w-48"
-              aria-label="Filter by assignment"
-              value={params.get('assignment') ?? 'ALL'}
-              onChange={(event) => setFilter('assignment', event.target.value)}
-            >
-              <option value="ALL">All assignments</option>
-              <option value="mine">Assigned to me</option>
-              <option value="unassigned">Unassigned</option>
-            </Select>
+            <>
+              <Select
+                className="max-w-48"
+                aria-label="Filter by assignment"
+                value={params.get('assignment') ?? 'ALL'}
+                onChange={(event) => setFilter('assignment', event.target.value)}
+              >
+                <option value="ALL">All assignments</option>
+                <option value="mine">Assigned to me</option>
+                <option value="unassigned">Unassigned</option>
+              </Select>
+              <Select
+                className="max-w-48"
+                aria-label="Filter by workflow"
+                value={workflowFilter}
+                onChange={(event) => setFilter('workflow', event.target.value)}
+              >
+                <option value="ALL">All workflows</option>
+                {Object.entries(workflowLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </>
           ) : null}
           <Select
             className="max-w-48"
@@ -187,6 +215,9 @@ function TicketList() {
           </Link>
           <span className="text-xs text-muted">
             {user?.role === 'CLIENT' ? 'Your organisation' : 'All client organisations'}
+            {workflowFilter !== 'ALL'
+              ? ` / ${workflowLabels[workflowFilter] ?? workflowFilter}`
+              : ''}
             {params.get('resolvedMonth')
               ? ` · Resolution recorded in ${params.get('resolvedMonth')} (UTC)`
               : ''}
@@ -202,8 +233,12 @@ function TicketList() {
       ) : null}
       {!ticketsState.loading && ticketsState.data && filteredTickets.length > 0 ? (
         <>
-          <p role="status" className="mb-3 text-sm text-muted">
+          <p
+            role="status"
+            className="mb-3 flex flex-wrap items-baseline justify-between gap-2 text-sm text-muted"
+          >
             {ticketsState.data.total} tickets found
+            <span className="text-xs">Page {ticketsState.data.page}</span>
           </p>
           <DataTable className="lg:[&_td]:px-3 lg:[&_td]:py-2">
             <thead>
@@ -220,7 +255,7 @@ function TicketList() {
             </thead>
             <tbody className="divide-y divide-border">
               {filteredTickets.map((ticket) => (
-                <tr key={ticket.id}>
+                <tr key={ticket.id} className="portal-row">
                   <Td className="min-w-64">
                     <Link
                       className="font-semibold text-ink hover:text-brand-700"
@@ -265,12 +300,13 @@ function TicketList() {
               ))}
             </tbody>
           </DataTable>
-          <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <Button
               variant="secondary"
               disabled={ticketsState.data.page === 1}
               onClick={() => setFilter('page', String(ticketsState.data!.page - 1))}
             >
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
               Previous
             </Button>
             <span className="text-sm text-muted">
@@ -283,6 +319,7 @@ function TicketList() {
               onClick={() => setFilter('page', String(ticketsState.data!.page + 1))}
             >
               Next
+              <ChevronRight aria-hidden="true" className="h-4 w-4" />
             </Button>
           </div>
         </>

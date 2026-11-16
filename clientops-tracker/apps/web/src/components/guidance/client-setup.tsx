@@ -17,7 +17,7 @@ export function ClientSetup() {
     () => (selected ? api.clientOnboarding(selected) : Promise.resolve(null)),
     [selected],
   );
-  const data = state.data;
+  const data = state.data?.client.id === selected ? state.data : null;
   const invitationLabels: Record<string, string> = {
     PENDING: 'Invitation queued; the mail worker acts next.',
     SENDING: 'Sending invitation; access is not activated yet.',
@@ -104,9 +104,12 @@ export function ClientSetup() {
         },
       ]
     : [];
+  const nextStep = steps.findIndex((step) => !step.complete);
+  const next = steps[nextStep];
   return (
-    <section aria-labelledby="client-setup-title" className="space-y-4">
-      <h2 id="client-setup-title" className="text-lg font-semibold">
+    <section aria-labelledby="client-setup-title" className="portal-section space-y-4">
+      <p className="portal-kicker">Client onboarding</p>
+      <h2 id="client-setup-title" className="portal-section-title">
         Set up one client
       </h2>
       <p className="text-sm text-muted">
@@ -161,13 +164,27 @@ export function ClientSetup() {
         <ErrorState message={state.error} onRetry={state.reload} />
       ) : data ? (
         <>
-          <p className="text-sm text-muted">
+          <p role="status" className="text-sm text-muted">
             {steps.filter((step) => step.complete).length} of {steps.length} steps recorded for{' '}
             {data.client.name}.
           </p>
+          {next ? (
+            <a
+              href={`#setup-step-${nextStep}`}
+              className="inline-flex min-h-11 items-center border-l-2 border-brand-600 pl-3 text-sm font-semibold text-brand-700"
+            >
+              Next: {next.title}
+            </a>
+          ) : (
+            <p className="text-sm text-brand-700">All six setup steps have a recorded result.</p>
+          )}
           <ol className="divide-y divide-border">
-            {steps.map((step) => (
-              <li key={step.title} className="flex items-start gap-3 py-4">
+            {steps.map((step, index) => (
+              <li
+                id={`setup-step-${index}`}
+                key={step.title}
+                className="portal-row flex scroll-mt-24 items-start gap-3 py-4"
+              >
                 {step.complete ? (
                   <CheckCircle2
                     aria-label="Recorded"

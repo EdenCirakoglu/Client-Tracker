@@ -32,11 +32,24 @@ async function accessible(page: Page) {
   );
 }
 
+async function settledDashboard(page: Page) {
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole('heading', { name: 'Request overview', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('status', { includeHidden: true }).filter({ hasText: /Loading|Checking/ }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel('Loading count', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
+}
+
 async function login(page: Page, role: 'Admin' | 'Developer' | 'Client') {
   await page.goto('/login');
+  const metrics = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/dashboard/metrics',
+  );
   await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
+  expect((await metrics).ok()).toBe(true);
+  await settledDashboard(page);
 }
 
 async function logout(page: Page) {
@@ -341,7 +354,7 @@ test('real administrator, developer and client workflows with persisted advisory
   await capture(page, 'client-ticket');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/dashboard');
-  await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
+  await settledDashboard(page);
   await page.getByRole('button', { name: 'Open navigation' }).click();
   await page.getByRole('link', { name: 'Tickets', exact: true }).click();
   await expect(page.getByRole('table')).toBeVisible();
@@ -366,7 +379,7 @@ test('real administrator, developer and client workflows with persisted advisory
     });
   });
   await page.goto('/dashboard');
-  await expect(page.getByText('Tickets by status', { exact: true })).toBeVisible();
+  await settledDashboard(page);
   await accessible(page);
   await capture(page, 'mobile-dashboard');
   expect(scriptErrors).toEqual([]);
@@ -411,7 +424,7 @@ test('invalid sessions redirect to login and logout propagates to another tab', 
   await login(page, 'Client');
   const secondTab = await context.newPage();
   await secondTab.goto('/dashboard');
-  await expect(secondTab.getByText('Tickets by status', { exact: true })).toBeVisible();
+  await settledDashboard(secondTab);
   let releaseLogout!: () => void;
   const gate = new Promise<void>((resolve) => {
     releaseLogout = resolve;

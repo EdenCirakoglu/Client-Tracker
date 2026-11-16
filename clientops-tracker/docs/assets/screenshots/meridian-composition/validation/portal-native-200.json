@@ -1,0 +1,80 @@
+{
+  "revision": "7f1699097fb4f283dc7da824654df7f52582246f",
+  "workingTreeDirty": false,
+  "target": "http://localhost:3082",
+  "method": "Chrome Settings page zoom, fresh temporary profiles. Not CSS zoom or viewport emulation.",
+  "authBudget": "Three sign-ins total, one per role; no retries or account/data mutations.",
+  "screenReader": "Human acceptance pending",
+  "measurements": [
+    {
+      "role": "Admin",
+      "normal": {
+        "width": 1422,
+        "dpr": 1
+      },
+      "zoom": {
+        "width": 711,
+        "dpr": 2
+      }
+    },
+    {
+      "role": "Developer",
+      "normal": {
+        "width": 1422,
+        "dpr": 1
+      },
+      "zoom": {
+        "width": 711,
+        "dpr": 2
+      }
+    },
+    {
+      "role": "Client",
+      "normal": {
+        "width": 1422,
+        "dpr": 1
+      },
+      "zoom": {
+        "width": 711,
+        "dpr": 2
+      }
+    }
+  ],
+  "checks": [
+    "Admin light /dashboard native 200%",
+    "Admin light navigation drawer native 200%",
+    "Admin dark /dashboard native 200%",
+    "Admin dark navigation drawer native 200%",
+    "Developer light /dashboard native 200%",
+    "Developer light navigation drawer native 200%",
+    "Developer dark /dashboard native 200%",
+    "Developer dark navigation drawer native 200%",
+    "Client light /dashboard native 200%",
+    "Client light /tickets native 200%",
+    "Client light /delivery native 200%",
+    "Client light /account native 200%",
+    "Client light /guide native 200%",
+    "Client light navigation drawer native 200%",
+    "Client dark /dashboard native 200%",
+    "Client dark /tickets native 200%",
+    "Client dark /delivery native 200%",
+    "Client dark /account native 200%",
+    "Client dark /guide native 200%",
+    "Client dark navigation drawer native 200%"
+  ],
+  "screenshots": [
+    "portal-native-200-admin-light-dashboard.png",
+    "portal-native-200-admin-light-navigation.png",
+    "portal-native-200-admin-dark-dashboard.png",
+    "portal-native-200-admin-dark-navigation.png",
+    "portal-native-200-developer-light-dashboard.png",
+    "portal-native-200-developer-dark-dashboard.png",
+    "portal-native-200-client-light-dashboard.png",
+    "portal-native-200-client-light-tickets.png",
+    "portal-native-200-client-light-account.png",
+    "portal-native-200-client-dark-dashboard.png",
+    "portal-native-200-client-dark-tickets.png",
+    "portal-native-200-client-dark-account.png"
+  ],
+  "result": "passed"
+}

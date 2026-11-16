@@ -120,7 +120,7 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     await expect(admin.getByRole('heading', { name: 'Installation setup' })).toBeVisible();
     const checklist = admin.getByRole('region', { name: 'Installation setup' });
     if ((await checklist.locator('details').getAttribute('open')) === null)
-      await checklist.getByText('Setup checklist', { exact: true }).click();
+      await checklist.getByText('Installation checklist', { exact: true }).click();
     await expect(
       checklist.getByRole('link', { name: /Add client organisation details/ }),
     ).toBeVisible();
@@ -227,7 +227,9 @@ test('administrator checklist, review notices, explicit summary delivery and pre
     ).toBeVisible();
     await accessible(client);
     await capture(client, 'summary-client-mobile');
-    const headings = await client.locator('main h2').allTextContents();
+    const headings = await client.locator('main h2, main h3').allTextContents();
+    expect(headings).toContain('Delivery decisions');
+    expect(headings).toContain('Resolved requests');
     expect(headings.indexOf('Delivery decisions')).toBeLessThan(
       headings.indexOf('Resolved requests'),
     );
