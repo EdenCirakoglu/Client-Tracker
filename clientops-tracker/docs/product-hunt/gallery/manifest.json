@@ -1,0 +1,69 @@
+{
+  "sourceRevision": "bfbf50eb28ee506392e12a45f0b23043c124418a",
+  "captureHarnessRevision": "b99a2f15cfa75eba516f0c20f8c4a925990d46fb",
+  "workingTreeDirtyAtStart": false,
+  "capturedAt": "2026-11-08T17:18:25.539Z",
+  "previewVersion": "0.2.0 preview (unreleased)",
+  "canonicalLogoSha256": "4e84301ab7fa39a2f9a80e65eebd8b494d04677149224608304f972083cd47bd",
+  "ticketId": "38194a75-8af5-4fa6-989b-7027e045b49e",
+  "masterAndPriorGalleryPanelsAvailable": false,
+  "frames": [
+    {
+      "filename": "01-approved-scope.png",
+      "sha256": "be759116fbbfecd15faf516d797fded09fc7ef16224f1b7ea3b87d97acbddfbf",
+      "width": 1270,
+      "height": 760,
+      "caption": "Revision 2 is approved. The comparison preserves what changed from revision 1.",
+      "alt": "Client scope revision 2 approved, with active and archived shipment search and the previous scope comparison.",
+      "sourceRevision": "bfbf50eb28ee506392e12a45f0b23043c124418a",
+      "role": "CLIENT",
+      "theme": "light",
+      "viewport": {
+        "width": 1270,
+        "height": 688
+      },
+      "route": "/tickets/38194a75-8af5-4fa6-989b-7027e045b49e",
+      "scrollTarget": "#scope .journal-comparison",
+      "sourceScreenshotSha256": "7874b6b79aa0c3905bf3502d3cf3c7efa4ce7bce2e197ea6b3bf541a898fa4dd",
+      "composition": "72px editorial preview caption; unaltered runtime viewport below. Ticket badge, where shown, is a separate crop from the same record."
+    },
+    {
+      "filename": "02-awaiting-confirmation.png",
+      "sha256": "1b749dacf8e5f189b7be021509e3abf92dc5b3c1d218d3837f076f37c2b410a1",
+      "width": 1270,
+      "height": 760,
+      "caption": "Release 1.5.0-demo is delivered. The client has not confirmed the agreed outcome.",
+      "alt": "Resolved ticket with release 1.5.0-demo delivered, awaiting client confirmation, in the v3 branded application.",
+      "sourceRevision": "bfbf50eb28ee506392e12a45f0b23043c124418a",
+      "role": "CLIENT",
+      "theme": "light",
+      "viewport": {
+        "width": 1270,
+        "height": 688
+      },
+      "route": "/tickets/38194a75-8af5-4fa6-989b-7027e045b49e",
+      "scrollTarget": "#delivery",
+      "sourceScreenshotSha256": "b5f2eda17182019c101ba784d7287ad5d186c2e1e1cf9836eabee30e394ed1e8",
+      "composition": "72px editorial preview caption; unaltered runtime viewport below. Ticket badge, where shown, is a separate crop from the same record."
+    },
+    {
+      "filename": "03-changes-requested.png",
+      "sha256": "e784bcc80d1cfbeff68df318b51f2d29f95033f5916a5c7d39f1c1a522d625d8",
+      "width": 1270,
+      "height": 760,
+      "caption": "After refresh: active NS-1042 still fails. Approved scope and the shipped release are retained.",
+      "alt": "Persisted client Changes requested feedback reports active NS-1042 failing while archived NS-0921 works. Release delivery remains recorded.",
+      "sourceRevision": "bfbf50eb28ee506392e12a45f0b23043c124418a",
+      "role": "CLIENT",
+      "theme": "light",
+      "viewport": {
+        "width": 1270,
+        "height": 688
+      },
+      "route": "/tickets/38194a75-8af5-4fa6-989b-7027e045b49e",
+      "scrollTarget": "#delivery",
+      "sourceScreenshotSha256": "8779a4cc385fac50e0cbf603b1e1b948482919e806b073513412d702cb788f83",
+      "composition": "72px editorial preview caption; unaltered runtime viewport below. Ticket badge, where shown, is a separate crop from the same record."
+    }
+  ]
+}

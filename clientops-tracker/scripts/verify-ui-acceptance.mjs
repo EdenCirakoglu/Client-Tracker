@@ -210,6 +210,22 @@ if (!before) {
       ).toEqual([]);
       await nativeCapture(`native-200-${route}`);
     }
+    await page.goto(`${origin}/walkthrough/index.html`);
+    for (const theme of ['light', 'dark']) {
+      await page.getByLabel('Appearance').selectOption(theme);
+      await page.getByRole('link', { name: 'Try the example', exact: true }).click();
+      await expect(page.locator('#review')).toBeFocused();
+      expect(
+        await page.evaluate(
+          () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+        ),
+      ).toBe(true);
+      expect(
+        (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
+          .violations,
+      ).toEqual([]);
+      await nativeCapture(`native-200-walkthrough-${theme}`);
+    }
     evidence.nativeZoom = {
       normal,
       zoom,

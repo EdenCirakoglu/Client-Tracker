@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { FieldLabel, Input } from './ui/input';
 import { ThemePicker } from './ui/preferences';
 import { PasswordInput } from './ui/password-input';
+import { BrandMark } from './ui/brand-mark';
 
 interface AccountFormProps {
   mode: 'forgot' | 'invitation' | 'reset' | 'change';
@@ -258,7 +259,11 @@ export function PublicAccountPage({ mode }: { mode: 'forgot' | 'invitation' | 'r
           <ThemePicker />
         </div>
         <div className="rounded-lg border border-border bg-panel p-6 sm:p-8">
-          <Link href="/login" className="text-sm font-semibold text-brand-700">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-3 text-sm font-semibold text-brand-700"
+          >
+            <BrandMark />
             ClientOps Tracker
           </Link>
           <AccountForm mode={mode} />

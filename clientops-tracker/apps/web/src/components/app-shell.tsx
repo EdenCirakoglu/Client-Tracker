@@ -29,6 +29,7 @@ import type { UserRole } from '../lib/types';
 import { titleCase } from '../lib/format';
 import { LoadingState } from './ui/states';
 import { ThemePicker } from './ui/preferences';
+import { BrandMark } from './ui/brand-mark';
 import { loginDestination } from '../lib/return-destination';
 import { useRecordAnchor } from '../lib/use-record-anchor';
 
@@ -196,9 +197,7 @@ export function AppShell({ children }: AppShellProps) {
             onClick={() => setSidebarOpen(false)}
             className="flex min-w-0 items-center gap-3"
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-action text-xs font-bold text-white">
-              CT
-            </span>
+            <BrandMark size={36} />
             <span className="nav-label text-sm font-semibold">
               ClientOps Tracker
               <span className="block text-xs font-normal text-muted">Operations portal</span>
@@ -290,6 +289,15 @@ export function AppShell({ children }: AppShellProps) {
             >
               <Menu className="h-5 w-5" />
             </button>
+            {!sidebarOpen ? (
+              <Link
+                href="/dashboard"
+                aria-label="ClientOps Tracker home"
+                className="shrink-0 lg:hidden"
+              >
+                <BrandMark size={32} />
+              </Link>
+            ) : null}
             <div className="min-w-0">
               <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm font-medium">
                 {nestedTicket ? (

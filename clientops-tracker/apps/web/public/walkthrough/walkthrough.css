@@ -1,0 +1,278 @@
+:root {
+  color-scheme: light;
+  --page: #f7f7f5;
+  --panel: #ffffff;
+  --ink: #1b2421;
+  --muted: #4f6059;
+  --border: #d7dfd9;
+  --brand: #175b53;
+  --tint: #e8f5f2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --page: #141917;
+    --panel: #1c2320;
+    --ink: #e8efef;
+    --muted: #a8b9be;
+    --border: #425055;
+    --brand: #79dbc5;
+    --tint: #1c3c37;
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #141917;
+  --panel: #1c2320;
+  --ink: #e8efef;
+  --muted: #a8b9be;
+  --border: #425055;
+  --brand: #79dbc5;
+  --tint: #1c3c37;
+}
+* {
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font:
+    16px/1.6 system-ui,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+a {
+  color: var(--brand);
+  text-underline-offset: 4px;
+}
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 650;
+  color: var(--ink);
+  text-decoration: none;
+}
+.identity img {
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}
+main,
+footer {
+  max-width: 1160px;
+  margin: auto;
+  padding: 32px;
+}
+h1 {
+  font-size: 30px;
+  line-height: 1.25;
+  max-width: 770px;
+  margin: 12px 0;
+}
+h2 {
+  font-size: 19px;
+  line-height: 1.4;
+  margin: 0 0 12px;
+}
+p {
+  margin: 0 0 16px;
+}
+.intro {
+  padding-bottom: 24px;
+  max-width: 850px;
+}
+.eyebrow,
+.muted,
+.disclosure {
+  color: var(--muted);
+  font-size: 14px;
+}
+.eyebrow {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.primary {
+  background: #175b53;
+  color: white;
+  border: 1px solid #175b53;
+}
+.secondary {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+.journal {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 32px;
+  border-top: 1px solid var(--border);
+}
+section {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border);
+}
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+dt {
+  color: var(--muted);
+  font-size: 14px;
+}
+dd {
+  margin: 4px 0 0;
+}
+.comparison > div + div {
+  border-left: 2px solid var(--brand);
+  padding-left: 16px;
+}
+.status {
+  color: var(--brand);
+  font-weight: 600;
+}
+aside {
+  padding-top: 28px;
+}
+aside p {
+  font-size: 14px;
+  color: var(--muted);
+}
+.facts {
+  margin-bottom: 24px;
+}
+.facts > div {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+.facts dd {
+  font-weight: 600;
+}
+.decision {
+  border-left: 3px solid var(--brand);
+  padding: 24px;
+  margin: 24px 0;
+  background: var(--panel);
+  scroll-margin-top: 16px;
+}
+label {
+  display: block;
+  font-weight: 600;
+}
+textarea,
+select {
+  font: inherit;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  background: var(--panel);
+  border-radius: 6px;
+  padding: 10px;
+}
+textarea {
+  width: 100%;
+  margin-top: 8px;
+  resize: vertical;
+}
+.theme {
+  font-size: 13px;
+}
+.theme select {
+  display: block;
+  min-height: 44px;
+}
+blockquote {
+  margin: 16px 0;
+  border-left: 2px solid var(--border);
+  padding-left: 16px;
+}
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 4px;
+}
+.skip {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: var(--panel);
+  padding: 10px;
+  z-index: 2;
+}
+.skip:focus {
+  top: 12px;
+}
+footer {
+  font-size: 14px;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  header,
+  main,
+  footer {
+    padding: 16px;
+  }
+  header {
+    gap: 12px;
+  }
+  .identity {
+    font-size: 14px;
+  }
+  .identity small {
+    display: none;
+  }
+  h1 {
+    font-size: 26px;
+  }
+  .journal,
+  .comparison {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .decision {
+    padding: 16px;
+  }
+  aside {
+    padding-top: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
