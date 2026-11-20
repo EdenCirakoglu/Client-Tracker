@@ -1,6 +1,30 @@
 # CSRF Review: 6 November 2026
 
-## Release Decision Review: November 16
+## Owner-led dispositions: 20 November 2026
+
+Under the maintainer's explicit conditional authority, Codex reviewed all active
+GitHub instances and recorded false-positive dismissals for alerts 1 and 3.
+This was owner-led and AI-assisted, not an independent audit. It does not
+establish the security of other routes added later, a running host or the product generally.
+
+- Alert 1: main cfec6e71, PR 22 535692ba, maintenance 4b2ad240 and historical
+  PR 16 ecfd346f share the same Express application and session middleware blobs,
+  and the same csrf-sync 4.2.1 implementation. All business routers are mounted
+  after the global guard. Unsafe requests require a string header matching
+  the session token; a supplied foreign Origin is also rejected. The additional
+  summary/dashboard/auth routes use those guarded mounts. Negative and persisted
+  authorised-write controls passed in [the reviewed CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43881461471).
+- Alert 3: main cfec6e71 and maintenance 4b2ad240 share the cookie, environment,
+  production Compose and gateway definitions. The insecure local HTTP cookie is
+  not the production cookie. The conclusion requires production mode, private
+  API ingress, exactly one trusted forwarding hop and Nginx overwriting the
+  protocol. Verify actual TLS, cookie attributes and port exposure on each host.
+
+GitHub returned dismissed/false positive for each alert. Reassess on any change
+to these conditions; fresh analysis and its separate policy conclusion remain
+mandatory. No scanner settings, runtime controls or assertions were changed.
+
+## Historical Release Decision Review: November 16
 
 This is an **AI-assisted source and fixture review by Codex**, not an independent
 human audit or an approved disposition. The reviewed application is PR #22 at
