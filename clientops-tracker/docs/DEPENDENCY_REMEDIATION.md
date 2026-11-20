@@ -1,6 +1,12 @@
 # Dependency Remediation: Milestone 1B
 
-## Current Recheck: 2026-11-16
+## Release evidence: 20 November 2026
+
+The [merged source decision](https://github.com/EdenCirakoglu/Client-Tracker/blob/dfd50aebb52825c9bece80c550a3cc16f9a31fa4/clientops-tracker/docs/DEPENDENCY_REMEDIATION.md#release-decision-2026-11-20) records the Next.js and minimatch fixes and the restricted Drizzle Kit exception, owned by Eden through 2 December 2026, without automatic renewal. The #45 candidate also passes a frozen install and production audit, with exactly one moderate full-audit finding. This is not an OS or application security assessment.
+
+[Dependabot's failed update](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44795983080/job/136495521979) could resolve the legacy loader only to esbuild 0.18.20. Its requested 0.28.1 floor includes the affected range of a [withdrawn Deno advisory](https://github.com/advisories/GHSA-gv7w-rqvm-qjhr); this is not a new risk acceptance. The active [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99) is patched from 0.25.0. Repository alert #4 labels the lockfile dependency runtime; the installed path is through an API devDependency. Keep the alert visible and check the actual release-image package contents as well as what the HTTP process can reach. Never expose Studio or esbuild serve or run untrusted schemas under this exception.
+
+## Historical Recheck: 2026-11-16
 
 Unchanged candidate lockfile: frozen install passed; `pnpm audit --prod` reported
 zero known production npm vulnerabilities. `pnpm audit` still reports the **same

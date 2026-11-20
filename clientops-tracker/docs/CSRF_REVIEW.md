@@ -1,6 +1,10 @@
 # CSRF and Production-Cookie Review
 
-## November 16 Candidate Decisions
+## November 20 source disposition
+
+The owner selected an owner-led, AI-assisted review, not an independent human audit. Alerts #1 and #3 were dismissed as conditional false positives after comparing their affected instances. See the [exact reviewed code and conditions](https://github.com/EdenCirakoglu/Client-Tracker/blob/531ee3e8f3d6f818ad1c7a806f20de17dac591db/clientops-tracker/docs/CSRF_REVIEW.md) and [policy conclusion](https://github.com/EdenCirakoglu/Client-Tracker/runs/136483789638). Neither exception permits disabling controls. Verify trusted HTTPS, forwarding and actual browser cookie attributes on the intended host; reopen the source assessment if routing, middleware or session configuration changes.
+
+## Historical November 16 Candidate Decisions
 
 Fresh review used the actual #22 checkout, not just #43 screenshots. **AI-assisted
 by Codex; no independent human audit or owner approval is claimed.** PR #22 now

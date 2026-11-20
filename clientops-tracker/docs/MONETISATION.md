@@ -20,7 +20,7 @@ Keep service scope, payment conditions and support commitments in a separate agr
 | GitHub sponsorship     | Development and maintenance of the open-source project                    | Optional funding, separate from service purchases         |
 | GitHub Marketplace app | A maintained integration with GitHub                                      | Longer-term route, not the current checkout               |
 
-The [service information page](SERVICES.md) describes the proposed initial offer. There is no configured booking URL, checkout, price or sponsor account in this repository yet. No managed service or live deployment is claimed.
+The [service information page](SERVICES.md) describes the initial GBP 750 offer, subject to confirmed tax treatment and measured installation cost. There is no configured booking URL, live checkout or sponsor account. No managed service or live portal deployment is claimed.
 
 ## First Sale Without In-App Billing
 
@@ -28,7 +28,7 @@ The [service information page](SERVICES.md) describes the proposed initial offer
 2. Confirm the payment provider supports the seller's country, business and account. Stripe offers a hosted [Payment Link](https://docs.stripe.com/payment-links) without building a billing UI; check its [availability](https://stripe.com/global) before choosing it. No account eligibility is assumed here.
 3. Set the actual price, currency, payment conditions, cancellation/refund terms and customer support contact. Confirm capacity and deployment prerequisites before accepting an order.
 4. Create and test the external checkout in the provider's test environment. Verify the service description, receipt, cancellation path and return to the product page. Do not put API keys, customer credentials or payment details in GitHub.
-5. Only after approval, replace both READMEs' unavailable **Demo information** / **Assisted installation** links with genuine **Book a demo** / **Buy installation** destinations. Update `SERVICES.md` consistently; remove unavailable notices only after testing.
+5. Once the contact route works, link the READMEs and service page to **Request an installation**. Agree scope and an available slot privately before issuing the deposit request; never publish a general-purpose deposit link. Remove unavailable notices only for a tested destination.
 6. For the first installations, verify payment in the provider dashboard and coordinate delivery manually. A browser success redirect is not proof of payment. Do not automatically provision accounts or infrastructure from it.
 
 This setup adds no billing tables, subscription gates, payment webhooks or licence-key checks to ClientOps. Self-hosting remains available without a purchase. Tax, invoicing and customer terms remain the seller's responsibilities; a payment link does not settle those obligations.
@@ -157,7 +157,6 @@ assets; no contact, analytics, account form or checkout until verified.
 For the separate Cloudflare Git Worker **client-tracker**, set build root to
 `clientops-tracker/installation-site` and build command to `node build.mjs`.
 Validate the exact Wrangler version locally with `npx --yes wrangler@4.162.0 deploy --dry-run`.
-Use the site's `wrangler.jsonc` with the same pinned binary for branch previews
-(`npx --yes wrangler@4.162.0 preview`); use deploy only once public acceptance
-is complete. Do not point either command at the Docker portal or the existing
-**proud-credit-1b94** walkthrough. Do not attach production secrets/bindings.
+In the personal Cloudflare dashboard, open **client-tracker** (not **proud-credit-1b94**). Before retrying, protect this Worker only with [Cloudflare Access](https://developers.cloudflare.com/workers/configuration/cloudflare-access/), allow only the approved operator inbox and verify that an anonymous browser cannot access its preview. Do not apply an account-wide policy to the public walkthrough. Under Settings > Builds set the root and build command above. Keep preview builds enabled; preview command: `npx --yes wrangler@4.162.0 preview`. Production-branch command during acceptance: `npx --yes wrangler@4.162.0 versions upload` ([upload without promotion](https://developers.cloudflare.com/workers/ci-cd/builds/)). Do not use `wrangler deploy` or promote a version until public acceptance. No portal, database, secrets or bindings belong on this Worker.
+
+The GitHub connection is not an operator login. Use the personal dashboard to apply settings, or privately configure a short-lived user token limited to Workers Builds Configuration Edit and Workers Scripts Read for the personal account ([Builds API permissions](https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/)); do not reuse the DNS token. Keep account IDs, settings exports and token references outside the repository. Retest the failed candidate preview and the unchanged public walkthrough separately. A green portal CI or local Wrangler dry run is not successful hosted preview evidence.

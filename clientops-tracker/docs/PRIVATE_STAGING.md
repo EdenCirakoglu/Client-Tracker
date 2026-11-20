@@ -1,9 +1,7 @@
 # Private Staging and Release Handoff
 
 Account handoff updated 2026-11-20. **No customer installation or real-host acceptance is evidenced.**
-The published maintenance release is `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
-It does not include the product, branding or guidance candidates. Its registry
-verification is not acceptance of their features or of real hosting services.
+Published release `dfd50aebb52825c9bece80c550a3cc16f9a31fa4` includes #22's workflow and notification changes. Its [two digests and isolated release rehearsal](RELEASE_INTEGRATION.md#integration-checkpoint-20-november-2026) are not verification of the later branding, onboarding guidance or Meridian candidates, nor acceptance of real hosting services. Do not substitute the earlier `cfec6e71` images after migrating.
 
 Use this numbered checklist with the existing [operator controls](OPERATOR_CONTROLS.md).
 Do not use the production GitHub deployment workflow for staging. Keep the public
@@ -23,6 +21,8 @@ notepad.exe "$env:LOCALAPPDATA\ClientOpsTracker\private-staging\operator.json"
 3. **Resend.** Add a sending subdomain in [Domains](https://resend.com/domains); install its provider-issued DNS records and wait for verification. In [API Keys](https://resend.com/api-keys) choose Sending access for that domain only. Save its vault reference and verified sender under `mail`; only its SMTP password goes to the host. Use implicit TLS port 2465. The personal test recipient is recorded privately. Check actual inbox receipt and the portal return destination; SMTP acceptance alone is insufficient.
 4. **Healthchecks.** From [Projects](https://healthchecks.io/projects/) create a separate staging project, two checks (application health and successful off-host backup), and an email integration to the approved inbox. Match each schedule and grace period to its installed timer. Save the two secret ping URLs in the vault and references in `monitoring`; no management API key is required on the host. Check failure, missed heartbeat, actual inbox receipt and recovery before marking accepted.
 5. **Stripe sandbox.** Open [Sandboxes](https://dashboard.stripe.com/sandboxes), select a personal sandbox, create the two GBP 375 test requests and record only the sandbox identifier under `orders`. Dashboard access within that sandbox suffices; do not give the portal a Stripe key. Use [sandbox payment methods](https://docs.stripe.com/testing-use-cases) for paid, declined and abandoned sessions; verify settled status, reference, currency and receipt separately. Leave live payments off pending seller identity, tax, reviewed cancellation terms and installation acceptance.
+
+For the already connected personal Cloudflare account in step 2, use the [separate static Worker build settings](MONETISATION.md#current-payment-contract-20-november-2026) to verify **client-tracker** privately with no production promotion. That account action requires no custom domain or paid host. Do not edit the other Worker, **proud-credit-1b94**, or point a Worker at the Compose portal.
 
 No cloud or payment credentials are needed in GitHub to perform these manual steps. Do not put Stripe, registrar, DO control-plane or DNS administration credentials into the API container.
 

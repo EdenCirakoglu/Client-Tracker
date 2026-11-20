@@ -8,7 +8,30 @@ Reviewed #22 head `531ee3e8f3d6f818ad1c7a806f20de17dac591db` against `cfec6e71a5
 
 The separately failing Git-connected Cloudflare `client-tracker` preview is a static-target configuration issue. Use the isolated installation-site instructions in [MONETISATION](MONETISATION.md). Its three-asset local build is not a successful Cloudflare deployment, the database/API staging host, or the live fictional walkthrough.
 
-[#22 merged](https://github.com/EdenCirakoglu/Client-Tracker/pull/22) as `dfd50aebb52825c9bece80c550a3cc16f9a31fa4`. [Main push CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44795137649) is distinct from the passing PR CI above. Require both published revision labels and the isolated decision/worker/recreation checks before advancing #34. The older cfec6e71 digests do not satisfy this gate.
+[#22 merged](https://github.com/EdenCirakoglu/Client-Tracker/pull/22) as `dfd50aebb52825c9bece80c550a3cc16f9a31fa4`. [Main push CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44795137649) and [both GHCR jobs](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44797572858) passed for this revision. Both pulled images' OCI revision labels matched. Neither application image was built locally.
+
+| Published image                          | Registry digest                                                           | Installed package manifests inspected under /app    |
+| ---------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
+| ghcr.io/edencirakoglu/client-tracker-api | `sha256:739435d05a90b72a974da62b17db8c0e695a8cf235780dde8ec774871cd258fd` | 130; no legacy loader, Kit or esbuild 0.18.20 found |
+| ghcr.io/edencirakoglu/client-tracker-web | `sha256:51f1d296083fcd21f1fa227ae8e6bbe260d80f8702740d13c8b1ceba9c366eac` | 138; same check passed                              |
+
+The disposable rehearsal passed nine checks: populated/idempotent migrations; startup/readiness; production-mode cookie login; ticket/comment visibility and organisation isolation; agreement, release and client acceptance with captured SMTP; database outage/recovery; fresh login retaining the decision; recreation retaining the twelve-table fingerprint; logout replay rejection. Ticket status remained IN_PROGRESS when acceptance became ACCEPTED. This was not a trusted Internet host, real inbox or off-host recovery. The temporary containers were stopped, without deleting the volume.
+
+Reproduce from the release-preparation workspace with Docker and an unused suffix, port and subnet:
+
+```powershell
+$env:RELEASE_INSTANCE='nov20-recheck'
+$env:RELEASE_HTTPS_PORT='8494'
+$env:RELEASE_SUBNET='10.240.76.0/24'
+$env:RELEASE_HTTPS_TRANSPORT='container'
+node scripts/verify-registry-release.mjs dfd50aebb52825c9bece80c550a3cc16f9a31fa4 sha256:739435d05a90b72a974da62b17db8c0e695a8cf235780dde8ec774871cd258fd sha256:51f1d296083fcd21f1fa227ae8e6bbe260d80f8702740d13c8b1ceba9c366eac
+```
+
+Original report: `test-results/clientops-published-dfd50aebb528-nov20-pr22/verification.json`, SHA-256 `d0f5f24d7426235adb7230b4b7d43f03116e459fa288d18498d92a6bdf4391ab`. Harness SHA-256 `471ec754951306fae735bed0ff2ff30f8fbdf63dcfa5f142ab7904b5ebded0e6`. [Release evidence on #22](https://github.com/EdenCirakoglu/Client-Tracker/pull/22#issuecomment-7048201194).
+
+[#34](https://github.com/EdenCirakoglu/Client-Tracker/pull/34/files) now targets this verified main. Its reconciliation at `4fc947a5078abb3a06b10393efe3723291160836` preserved the original walkthrough files. Head [9e46be31](https://github.com/EdenCirakoglu/Client-Tracker/commit/9e46be310e35c3dfda65b6043114c670e92b73bc) adds the separate three-asset installation page, nested Wrangler config and CI smoke test. Checks for this head: [application CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44808588922), [CodeQL analysis](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44808583382), [CodeQL policy](https://github.com/EdenCirakoglu/Client-Tracker/runs/136539153747). Local frozen install, lint, formatting, browser smoke (desktop/light and mobile/dark) and Wrangler 4.162.0 dry run passed, with three files and no bindings. No migrations or worker schema changes in this increment.
+
+The Git-connected `client-tracker` build failed on the preceding candidate **and** on the push to main. It is not the existing `proud-credit-1b94` walkthrough or an application CI job. On inspection the public walkthrough responded to a read-only request and its HTML differed from the repository copy. Do not republish that copy over it. Before merging this visitor-facing increment, connect the private static-preview target and verify that main builds upload a version without promoting a public deployment ([owner steps](MONETISATION.md#current-payment-contract-20-november-2026)). Retest the actual PR head; a Wrangler dry run without account access does not verify a hosted preview.
 
 ## Historical preparation: 16 November 2026
 

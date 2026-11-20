@@ -67,7 +67,50 @@ for (const [name, image] of Object.entries(images)) {
   run(['pull', image]);
   const info = JSON.parse(run(['image', 'inspect', image], true))[0];
   assert.equal(info.Config.Labels['org.opencontainers.image.revision'], revision);
-  inspected[name] = { reference: image, imageId: info.Id, revision };
+  // Inspect installed package files, not the manifest's list of devDependencies.
+  const inspectPackages = `
+    const fs = require('node:fs'), path = require('node:path');
+    const pending = ['/app']; let count = 0;
+    while (pending.length) {
+      const parent = pending.pop();
+      for (const entry of fs.readdirSync(parent, {withFileTypes:true})) {
+        const file = path.join(parent, entry.name);
+        if (entry.isDirectory()) pending.push(file);
+        if (entry.isFile() && entry.name === 'package.json' && parent.includes('/node_modules/')) {
+          const pkg = JSON.parse(fs.readFileSync(file, 'utf8'));
+          count++;
+          if (pkg.name === 'drizzle-kit' || pkg.name === '@esbuild-kit/esm-loader' ||
+              (pkg.name === 'esbuild' && pkg.version === '0.18.20')) process.exit(2);
+        }
+      }
+    }
+    if (!count) process.exit(3);
+    console.log(count);`;
+  const packageManifests = Number(
+    run(
+      [
+        'run',
+        '--rm',
+        '--read-only',
+        '--network',
+        'none',
+        '--entrypoint',
+        'node',
+        image,
+        '-e',
+        inspectPackages,
+      ],
+      true,
+    ),
+  );
+  assert.ok(Number.isSafeInteger(packageManifests) && packageManifests > 0);
+  inspected[name] = {
+    reference: image,
+    imageId: info.Id,
+    revision,
+    packageManifests,
+    legacyLoaderAbsent: true,
+  };
 }
 const environment = {
   NODE_ENV: 'production',
