@@ -1,5 +1,80 @@
 # CSRF Review: 6 November 2026
 
+## Owner-led dispositions: 20 November 2026
+
+Under the maintainer's explicit conditional authority, Codex reviewed all active
+GitHub instances and recorded false-positive dismissals for alerts 1 and 3.
+This was owner-led and AI-assisted, not an independent audit. It does not
+establish the security of other routes added later, a running host or the product generally.
+
+- Alert 1: main cfec6e71, PR 22 535692ba, maintenance 4b2ad240 and historical
+  PR 16 ecfd346f share the same Express application and session middleware blobs,
+  and the same csrf-sync 4.2.1 implementation. All business routers are mounted
+  after the global guard. Unsafe requests require a string header matching
+  the session token; a supplied foreign Origin is also rejected. The additional
+  summary/dashboard/auth routes use those guarded mounts. Negative and persisted
+  authorised-write controls passed in [the reviewed CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43881461471).
+- Alert 3: main cfec6e71 and maintenance 4b2ad240 share the cookie, environment,
+  production Compose and gateway definitions. The insecure local HTTP cookie is
+  not the production cookie. The conclusion requires production mode, private
+  API ingress, exactly one trusted forwarding hop and Nginx overwriting the
+  protocol. Verify actual TLS, cookie attributes and port exposure on each host.
+
+GitHub returned dismissed/false positive for each alert. Reassess on any change
+to these conditions; fresh analysis and its separate policy conclusion remain
+mandatory. No scanner settings, runtime controls or assertions were changed.
+
+## Historical Release Decision Review: November 16
+
+This is an **AI-assisted source and fixture review by Codex**, not an independent
+human audit or an approved disposition. The reviewed application is PR #22 at
+`9e25bc27d73ae1756c8fc185223704417de8642b`; this follow-up backports only PR #44's
+production-cookie and configuration regressions from `aeae013d3c10fcc855e31672061cc0898160acaa`.
+Runtime code, security policy, migrations and dependency versions are unchanged.
+The final-head PR check links identify the exact resulting candidate; historical
+results below remain attributed to their original revisions.
+
+| Finding                                                                                                     | Source/fixture verdict                                                                                                                                                                                  | Conditions and owner decision still required                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#1: js/missing-token-validation](https://github.com/EdenCirakoglu/Client-Tracker/security/code-scanning/1) | Substantiated false-positive classification under explicit conditions; **proposed, not approved**. No bypass reproduced.                                                                                | Approve or reject the classification after reviewing the global `/api` guard, installed `csrf-sync` comparison and negative/positive controls. Reopen whenever unsafe routes, session/token handling or origin rules change.            |
+| [#3: js/clear-text-cookie](https://github.com/EdenCirakoglu/Client-Tracker/security/code-scanning/3)        | Substantiated false-positive classification for the production configuration under explicit conditions; **proposed, not approved**. Local HTTP deliberately uses a differently named non-Secure cookie. | Production must use `NODE_ENV=production`, private API ingress, one trusted Nginx hop and HTTPS origins. Approve or reject this source-level classification separately; require actual host/browser evidence before staging acceptance. |
+
+The review traced `app.ts` through `sessionMiddleware`, no-store headers and
+`csrfProtection` before every business/auth router. Only GET/HEAD/OPTIONS are
+exempt. Tokens come only from `X-CSRF-Token`, are compared to the current session's
+random token, and rotate with login. A supplied foreign Origin is additionally
+rejected; omission of Origin does not bypass the token check. Valid CSRF proof
+does not replace current-user, organisation or designated-reviewer checks.
+The installed library performs the comparison behind an application wrapper;
+the [CodeQL 2.27.4 query](https://github.com/github/codeql/blob/codeql-cli/v2.27.4/javascript/ql/src/Security/CWE-352/MissingCsrfMiddleware.ql)
+does not model that `csrf-sync` wrapper. It is a problem query, not a demonstrated
+source-to-sink exploit trace. Scanner execution and policy approval are separate.
+
+Production cookies are `__Host-clientops.sid`, Secure, HttpOnly, SameSite=Lax,
+Path=/, with no Domain. The Compose API has no published host port; Nginx replaces
+forwarded protocol/client headers rather than forwarding caller claims. Trusting
+one proxy hop is valid only with that private ingress. Tests exercise trusted
+HTTPS, plain HTTP, untrusted forwarded HTTPS, regeneration, logout clearing and
+production configuration rejection. They do **not** inspect a future customer's
+firewall, installed certificate or environment. No alert is dismissed or suppressed.
+
+Run against a new disposable cluster with explicit `TEST_DATABASE_URL`,
+`DISPOSABLE_DATABASE_NAME=clientops_hardening_test`, captured SMTP and `MAILPIT_URL`:
+
+```powershell
+pnpm --filter @clientops/api exec vitest run tests/csrf-boundaries.test.ts tests/security.test.ts tests/session-config.test.ts tests/production-cookie.test.ts
+```
+
+Negative controls include missing, forged, cross-session, body/query and
+foreign-origin proof. Positive controls persist authorised writes and summary
+publication/preferences; a generic validation error is not counted as protection.
+Hosted CI also retains the real-browser HTTPS, logout, role and tenant tests.
+Precise next decision: an owner-selected reviewer must independently accept or
+reject **each** classification, list any missing check, and record conditions.
+Approval to classify is not approval to dismiss an alert or deploy. No production
+host is needed to review source correctness; host-dependent conditions are a
+separate mandatory staging gate, not evidence already obtained.
+
 ## Reconciled Review: November 8
 
 Main is now `cfec6e71a51975e224a2cee9ddda2238183b8b31`; PR #22 targets

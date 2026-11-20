@@ -1,6 +1,31 @@
 # Dependency Remediation: Milestone 1B
 
-## Current Recheck: 2026-11-08
+## Release decision: 2026-11-20
+
+The candidate's November 19 Next.js advisories GHSA-7qx7-33qx-rqx2,
+GHSA-f3mh-rxg3-f5g2 and GHSA-pc58-hwjq-p385 required a runtime patch.
+Next and its ESLint plugin now use the 15.5.29 patch line; the existing
+PostCSS override follows that parent. TypeScript ESLint 8.73.0 now supports
+patched minimatch 11 directly: GHSA-g3hv-75wg-m249 needs no exception.
+Frozen install and lint passed; production audit returned zero and full audit
+still reports the following moderate advisory.
+
+**Time-limited exception, owner Eden, expires 2 December 2026, no automatic
+renewal:** GHSA-67mh-4wv8-2f99, API devDependency drizzle-kit 0.31.11 ->
+@esbuild-kit/esm-loader 2.6.5 -> @esbuild-kit/core-utils 3.3.2 -> esbuild
+0.18.20 (patched >=0.25.0). The current stable Kit still includes this legacy
+loader. No HTTP handler uses Kit or accepts compiler patterns. The affected
+serve API is not called; the production API image deploys only production
+dependencies and operates with compiled migrations. Run generation only on
+reviewed schema/config in isolated development or CI with fictional data and
+no customer DB, provider credentials or production env. Do not run Studio or
+an esbuild serve endpoint under this exception. Do not run untrusted PR tooling
+with secrets. If a condition ceases to hold, stop using the exception immediately.
+At expiry stop affected release tooling until the owner verifies a supported
+parent that removes/patches the nested loader or makes a separate new decision.
+No audit exclusions or blanket overrides. This does not cover new findings.
+
+## Historical Recheck: 2026-11-08
 
 PR #22 is reconciled with main `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
 Its lockfile is unchanged from that main revision. A fresh frozen installation
