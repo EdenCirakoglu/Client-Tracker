@@ -33,7 +33,7 @@ try {
     assert(
       await page.locator('header img').evaluate((img) => img.complete && img.naturalWidth === 240),
     );
-    assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+    assert(await page.locator('html').evaluate((root) => root.scrollWidth <= root.clientWidth));
     await page.keyboard.press('Tab');
     assert.equal(await page.locator(':focus').textContent(), 'Skip to the installation offer');
     await page.keyboard.press('Enter');

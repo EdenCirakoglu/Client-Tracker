@@ -26,6 +26,14 @@ notepad.exe "$env:LOCALAPPDATA\ClientOpsTracker\private-staging\operator.json"
 
 No cloud or payment credentials are needed in GitHub to perform these manual steps. Do not put Stripe, registrar, DO control-plane or DNS administration credentials into the API container.
 
+For local CLI provisioning instead of manual DO console actions, create a short-lived personal [custom-scoped token](https://cloud.digitalocean.com/account/api/tokens). With the project and SSH public key already created, grant only reads for the necessary account/project, region/size/image/key and VPC lookups, Droplet read/create, firewall read/create/update and project update for assignment (and provider-required dependent reads). Do not grant global write, SSH console, database, Kubernetes or billing-write access. At the hidden local prompt enter the token using [doctl named contexts](https://docs.digitalocean.com/reference/doctl/reference/auth/init/):
+
+```powershell
+doctl --config "$env:LOCALAPPDATA\ClientOpsTracker\private-staging\doctl.yaml" auth init --context clientops-personal
+```
+
+Use that same config and context on each command. Keep separate Spaces and DNS credentials and revoke the provisioning token after installation. If using the console, skip this token entirely.
+
 ## Consolidated Private Input Sheet
 
 Eden is the proposed primary operator, support and recovery owner. Confirm capacity

@@ -298,8 +298,10 @@ try {
   const bluewave = await login('bluewave@example.com');
   check('login with production Secure HttpOnly SameSite cookies');
   const projects = (await northstar.call('GET', '/api/projects')).body.data;
+  const project = projects.find((item) => item.name === 'Operations Portal');
+  assert.ok(project, 'Expected the isolated fictional project');
   const created = await northstar.mutate('POST', '/api/tickets', {
-    projectId: projects[0].id,
+    projectId: project.id,
     title: 'Delivery export omits the approval date',
     description: 'Please include the agreed date in the delivery record.',
     category: 'BUG',
@@ -348,6 +350,64 @@ try {
   check(
     'ticket creation, public/internal comments, status update, CSRF and organisation isolation',
   );
+  const staff = await login('developer@example.com');
+  const reviewer = (await northstar.call('GET', '/api/auth/me')).body.data;
+  const delivery = `/api/tickets/${id}/delivery`;
+  const proposed = await staff.mutate('POST', delivery, {
+    expectedRevision: 0,
+    reviewerId: reviewer.id,
+    outcome: 'The delivery export shows its agreed approval date.',
+  });
+  assert.equal(proposed.status, 201);
+  const revisionPath = `${delivery}/${proposed.body.data.revisions[0].id}`;
+  assert.equal(
+    (await northstar.mutate('POST', `${revisionPath}/decision`, { decision: 'AGREED' })).status,
+    200,
+  );
+  const release = (await admin.call('GET', '/api/releases')).body.data.find(
+    (item) => item.projectId === project.id,
+  );
+  assert.ok(release, 'Expected same-project fixture release');
+  const delivered = await staff.mutate('POST', `${revisionPath}/request-acceptance`, {
+    releaseId: release.id,
+    deliveryNotes: 'The dated export is ready for the reviewer to check.',
+  });
+  assert.equal(delivered.status, 200);
+  assert.equal(delivered.body.data.revisions[0].state, 'AWAITING_ACCEPTANCE');
+  const decision = { decision: 'ACCEPTED', feedback: 'The agreed date is present in the export.' };
+  assert(
+    [403, 404].includes(
+      (await bluewave.mutate('POST', `${revisionPath}/decision`, decision)).status,
+    ),
+  );
+  const priorJobs = await admin.call('GET', '/api/users/deliveries');
+  assert.equal(priorJobs.status, 200);
+  const existingIds = new Set(priorJobs.body.data.recent.map((item) => item.id));
+  const decided = await northstar.mutate('POST', `${revisionPath}/decision`, decision);
+  assert.equal(decided.status, 200);
+  assert.equal(decided.body.data.revisions[0].state, 'ACCEPTED');
+  assert.equal(decided.body.data.ticketStatus, 'IN_PROGRESS');
+  assert.equal(decided.body.data.revisions[0].releaseVersion, release.version);
+  const until = Date.now() + 30000;
+  let acceptedByCapture = false;
+  do {
+    const jobs = await admin.call('GET', '/api/users/deliveries');
+    assert.equal(jobs.status, 200);
+    acceptedByCapture = jobs.body.data.recent.some(
+      (item) =>
+        !existingIds.has(item.id) &&
+        item.notificationEvent === 'DELIVERY_DECISION' &&
+        item.status === 'DELIVERED',
+    );
+    if (!acceptedByCapture) await new Promise((done) => setTimeout(done, 500));
+  } while (!acceptedByCapture && Date.now() < until);
+  assert.ok(
+    acceptedByCapture,
+    'The release worker did not complete the decision notice via fixture SMTP',
+  );
+  check(
+    'exact-revision agreement and delivery decision; other organisation denied; release worker handed a decision notice to capture SMTP',
+  );
   compose(['stop', 'postgres']);
   try {
     assert.equal((await anonymous.call('GET', '/api/health')).status, 200);
@@ -367,6 +427,11 @@ try {
   compose(['up', '-d', '--no-build', '--wait']);
   assert.deepEqual(fingerprint(), before);
   assert.deepEqual((await admin.call('GET', `/api/tickets/${id}`)).body, ticketBefore);
+  const newLogin = await login('client@example.com');
+  assert.deepEqual((await newLogin.call('GET', delivery)).body.data, decided.body.data);
+  check(
+    'new sign-in after recreation retains release, decision, actor and history independently of ticket status',
+  );
   assert.equal((await admin.call('GET', '/api/auth/me')).status, 200);
   check('full container recreation preserves twelve-table fingerprint, ticket and session');
   const replay = client(admin.cookie());

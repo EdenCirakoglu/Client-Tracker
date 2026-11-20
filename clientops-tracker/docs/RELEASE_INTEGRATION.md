@@ -8,6 +8,8 @@ Reviewed #22 head `531ee3e8f3d6f818ad1c7a806f20de17dac591db` against `cfec6e71a5
 
 The separately failing Git-connected Cloudflare `client-tracker` preview is a static-target configuration issue. Use the isolated installation-site instructions in [MONETISATION](MONETISATION.md). Its three-asset local build is not a successful Cloudflare deployment, the database/API staging host, or the live fictional walkthrough.
 
+[#22 merged](https://github.com/EdenCirakoglu/Client-Tracker/pull/22) as `dfd50aebb52825c9bece80c550a3cc16f9a31fa4`. [Main push CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44795137649) is distinct from the passing PR CI above. Require both published revision labels and the isolated decision/worker/recreation checks before advancing #34. The older cfec6e71 digests do not satisfy this gate.
+
 ## Historical preparation: 16 November 2026
 
 Main remains `cfec6e71a51975e224a2cee9ddda2238183b8b31`. No PR merge, closure,
