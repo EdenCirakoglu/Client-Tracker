@@ -1,6 +1,6 @@
 # Private Staging and Release Handoff
 
-Preparation rechecked 2026-11-16. **No first-customer release is approved for deployment.**
+Account handoff updated 2026-11-20. **No customer installation or real-host acceptance is evidenced.**
 The published maintenance release is `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
 It does not include the product, branding or guidance candidates. Its registry
 verification is not acceptance of their features or of real hosting services.
@@ -9,6 +9,23 @@ Use this numbered checklist with the existing [operator controls](OPERATOR_CONTR
 Do not use the production GitHub deployment workflow for staging. Keep the public
 fictional walkthrough unchanged; never redirect it to a writable demo.
 
+## Connect The Personal Accounts
+
+On the operator's Windows machine, run these commands from `clientops-tracker` in the release-preparation checkout. The first command creates a user/SYSTEM-only folder outside Git and preserves an existing file. The second opens that private file locally. Store passwords and keys in a personal password manager; enter item references, account IDs and non-secret settings in the file. Do not upload the file. It is an operator worksheet, not a Compose env file.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\init-personal-staging.ps1
+notepad.exe "$env:LOCALAPPDATA\ClientOpsTracker\private-staging\operator.json"
+```
+
+1. **DigitalOcean / Spaces.** Open [personal projects](https://cloud.digitalocean.com/projects), [billing](https://cloud.digitalocean.com/account/billing) and [Spaces](https://cloud.digitalocean.com/spaces). Use the control panel; a full-access personal API token is not needed. Record the personal project, public SSH key fingerprint, operator IP range and tax-inclusive monthly GBP estimate in `digitalOcean`. After release and budget gates only, use the London Basic Regular 2 vCPU/4 GiB host and a dedicated private bucket. Create a [limited bucket key](https://docs.digitalocean.com/products/spaces/how-to/manage-access/) with read/write/delete for restic maintenance on that bucket only; put its vault reference in `backup`. Escrow the independent restic password away from the host and bucket credentials.
+2. **Domain / DNS.** At [registrar search](https://porkbun.com/checkout/search), check `clientopstracker.com`, then `clientopsjournal.com` if necessary. Verify ordinary availability and both registration and renewal totals including tax before ordering; a registry not-found result is not a quote or reservation. Add the chosen zone in [Cloudflare](https://dash.cloudflare.com/). Create a [zone-limited token](https://dash.cloudflare.com/profile/api-tokens) with DNS Edit for DNS-01; do not grant account, Workers or all-zone access. Record the zone and secret reference under `dns`. Keep the Git-connected walkthrough untouched. Configure a receiving/forwarding support alias to the approved inbox and test a reply before publishing it; sending-domain verification alone does not create that inbox.
+3. **Resend.** Add a sending subdomain in [Domains](https://resend.com/domains); install its provider-issued DNS records and wait for verification. In [API Keys](https://resend.com/api-keys) choose Sending access for that domain only. Save its vault reference and verified sender under `mail`; only its SMTP password goes to the host. Use implicit TLS port 2465. The personal test recipient is recorded privately. Check actual inbox receipt and the portal return destination; SMTP acceptance alone is insufficient.
+4. **Healthchecks.** From [Projects](https://healthchecks.io/projects/) create a separate staging project, two checks (application health and successful off-host backup), and an email integration to the approved inbox. Match each schedule and grace period to its installed timer. Save the two secret ping URLs in the vault and references in `monitoring`; no management API key is required on the host. Check failure, missed heartbeat, actual inbox receipt and recovery before marking accepted.
+5. **Stripe sandbox.** Open [Sandboxes](https://dashboard.stripe.com/sandboxes), select a personal sandbox, create the two GBP 375 test requests and record only the sandbox identifier under `orders`. Dashboard access within that sandbox suffices; do not give the portal a Stripe key. Use [sandbox payment methods](https://docs.stripe.com/testing-use-cases) for paid, declined and abandoned sessions; verify settled status, reference, currency and receipt separately. Leave live payments off pending seller identity, tax, reviewed cancellation terms and installation acceptance.
+
+No cloud or payment credentials are needed in GitHub to perform these manual steps. Do not put Stripe, registrar, DO control-plane or DNS administration credentials into the API container.
+
 ## Consolidated Private Input Sheet
 
 Eden is the proposed primary operator, support and recovery owner. Confirm capacity
@@ -16,17 +33,17 @@ and name an alternate or explicitly record the solo-operator availability risk.
 Enter values in the private files below, **not chat, PRs, checkout or public forms**.
 The [roadmap](ROADMAP.md) is the completion tracker; this is the input contract.
 
-| Input / proposed default                 | Private location and required owner action                                                                                                                                                                                                                   |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Approved revision and security decisions | Record reviewed SHA, per-alert disposition and tooling limits in the release decision; no decision is inferred from CI.                                                                                                                                      |
-| Hosting, region, budget                  | DigitalOcean Ubuntu 24.04, x86_64, Basic Regular 2 vCPU / 4 GiB / 80 GiB, Frankfurt if appropriate. Approve region/data-location terms and actual quote before purchase. SSH public key/account in provider console; private key stays on operator device.   |
-| Domain and DNS                           | Owned `staging.<domain>`; DNS-01 certificate validation and zone-scoped DNS credential in root-only Certbot provider file. Confirm provider/plugin and subdomain; not a Workers deployment.                                                                  |
-| Independent secrets                      | `/etc/clientops-staging/staging.env` mode 600: four DB passwords/URLs, `SESSION_SECRET`, `MAIL_ENCRYPTION_KEY`, SMTP and backup credentials. Use `openssl rand -hex 32` separately for each value; never reuse production secrets.                           |
-| SMTP and recipients                      | Verified sender/domain, provider account and explicit list of approved inboxes kept privately. Proposed Resend SMTP: `smtp.resend.com`, port `2465`, `SMTP_SECURE=true`, user `resend`; password is a provider-issued API key. No sends authorized by setup. |
-| Backup and escrow                        | Dedicated private bucket/prefix ending `/clientops-staging`; bucket-scoped key in env. `restic-password` in `/etc/clientops-staging/backup-secrets`, separately recoverable escrow not only on VPS. Approve retention and recovery-host budget.              |
-| Alerts / external monitoring             | Private `alert-curl.conf`, `monitor-heartbeat-curl.conf`, `backup-heartbeat-curl.conf`; approved alert recipient. Provider account outside VPS failure domain. Access-restricted HTTPS probing needs its own authorised tunnel/VPN.                          |
-| Operations acceptance                    | Recovery owner/alternate, support timezone/hours, log destination/access/retention. Proposed RTO 4 hours and RPO 24 hours are targets to approve and measure, not guarantees. Daily dumps are not PITR.                                                      |
-| Commercial accounts                      | Seller country/entity, verified contact/booking account and eligible payment-provider sandbox. Final price/currency/terms and capacity need approval; no secrets or infrastructure credentials in checkout.                                                  |
+| Input / proposed default                 | Private location and required owner action                                                                                                                                                                                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Approved revision and security decisions | Record reviewed SHA, per-alert disposition and tooling limits in the release decision; no decision is inferred from CI.                                                                                                                                               |
+| Hosting, region, budget                  | DigitalOcean Ubuntu 24.04, x86_64, Basic Regular 2 vCPU / 4 GiB / 80 GiB, London if available and appropriate. Approve region/data-location terms and actual quote before purchase. SSH public key/account in provider console; private key stays on operator device. |
+| Domain and DNS                           | Owned `staging.<domain>`; DNS-01 certificate validation and zone-scoped DNS credential in root-only Certbot provider file. Confirm provider/plugin and subdomain; not a Workers deployment.                                                                           |
+| Independent secrets                      | `/etc/clientops-staging/staging.env` mode 600: four DB passwords/URLs, `SESSION_SECRET`, `MAIL_ENCRYPTION_KEY`, SMTP and backup credentials. Use `openssl rand -hex 32` separately for each value; never reuse production secrets.                                    |
+| SMTP and recipients                      | Verified sender/domain, provider account and explicit list of approved inboxes kept privately. Proposed Resend SMTP: `smtp.resend.com`, port `2465`, `SMTP_SECURE=true`, user `resend`; password is a provider-issued API key. No sends authorized by setup.          |
+| Backup and escrow                        | Dedicated private bucket/prefix ending `/clientops-staging`; bucket-scoped key in env. `restic-password` in `/etc/clientops-staging/backup-secrets`, separately recoverable escrow not only on VPS. Approve retention and recovery-host budget.                       |
+| Alerts / external monitoring             | Private `alert-curl.conf`, `monitor-heartbeat-curl.conf`, `backup-heartbeat-curl.conf`; approved alert recipient. Provider account outside VPS failure domain. Access-restricted HTTPS probing needs its own authorised tunnel/VPN.                                   |
+| Operations acceptance                    | Recovery owner/alternate, support timezone/hours, log destination/access/retention. Proposed RTO 4 hours and RPO 24 hours are targets to approve and measure, not guarantees. Daily dumps are not PITR.                                                               |
+| Commercial accounts                      | Seller country/entity, verified contact/booking account and eligible payment-provider sandbox. Final price/currency/terms and capacity need approval; no secrets or infrastructure credentials in checkout.                                                           |
 
 ### Provider Cost Check: 16 November 2026
 
@@ -42,7 +59,7 @@ These are published component prices, **not all-in quotes or purchases**. Exclud
 tax, domain, provider overage, security-log hosting, operator labour and a separate
 recovery host. An identical always-on recovery VM adds USD 24/month; a temporary
 one is usage billed. Staging kept alongside production is additional, not free.
-Confirm region availability and provider eligibility before committing a budget.
+Use personal accounts only. Confirm the London-region quote, billing tax and FX, existing project charges, storage/egress, domain and recovery-host overlap. Total recurring infrastructure must stay within GBP 40/month equivalent; ordinary domain registration AND renewal must stay within GBP 20/year including known taxes. Do not provision with an unknown all-in total.
 Power-off does not stop VM charges; retained storage/backups can remain billable.
 
 **SMTP feasibility:** DigitalOcean documents blocking ports 25/465/587 on Droplets.
@@ -60,13 +77,13 @@ timeout 10 openssl s_client -connect smtp.resend.com:2465 -servername smtp.resen
 ## Current Entry Gates
 
 Use the [exact PR stack and check results](RELEASE_INTEGRATION.md) before this
-checklist. PR #22's normal CI passes but its CodeQL policy fails; independent
-[CSRF and production-cookie review](CSRF_REVIEW.md) remains required. Both
-[development-tool decisions](DEPENDENCY_REMEDIATION.md) are still unapproved.
+checklist. The 20 November [#22 policy analysis](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44792492013) supersedes its earlier failing policy.
+The owner-led AI-assisted review classified alerts #1 and #3 under the documented ingress conditions, not as an independent audit.
+The updated #22 audit fixes the minimatch chain; only the restricted Drizzle Kit exception expires 2 December 2026. Recheck audits on every reconciled head.
 #37's conflict has been reconciled on its review branch; fresh check results and
 the intro harness backport are in RELEASE_INTEGRATION. #43's visual evidence stays tied
 to `46c2c8575a193e0ca08088f65647552acbcef8e6`, with owner acceptance pending.
-No new paid host, writable preview or public service is authorized.
+Provisioning is conditional on release verification, personal account access and the all-in budget.
 
 Cloudflare's Git build is not this portal's staging procedure. Its configured
 `npx wrangler preview` fails for missing `previews` configuration before building
@@ -87,9 +104,8 @@ and historical fixture TLS are not real-service or independent security approval
 
 ## One Operator Checklist
 
-1. **Approve the candidate and inputs, before purchase.** Resolve independent
-   CSRF/cookie **source** review and tooling-risk decisions, then approve each stacked merge
-   separately (#22 -> #34 -> #35 -> #36 -> #37 -> #43 -> remaining #44 documentation).
+1. **Verify the candidate and inputs before purchase.** Integrate sequentially under the owner's conditional authorization
+   (#22 -> #34 -> #35 -> #36 -> #37 -> #43 -> #44 -> #45).
    Source review need not wait for buying a host; actual host controls remain a
    separate acceptance gate. Successful main push CI automatically publishes
    API/web images. After **each** approved merge, record main SHA, main CI, both
@@ -97,7 +113,7 @@ and historical fixture TLS are not real-service or independent security approval
    Rebase/merge-parent, retarget and revalidate the next PR only after its parent lands.
 
 2. **Choose a dedicated host and budget.** Planning baseline: Ubuntu 24.04 LTS,
-   x86_64, 2 vCPU / 4 GiB RAM / 80 GiB disk, Frankfurt if appropriate for the
+   x86_64, 2 vCPU / 4 GiB RAM / 80 GiB disk, London if available and appropriate for the
    agency's data location. Verify regional availability and contractual requirements.
    DigitalOcean lists this Basic Droplet at **USD 24/month**; Spaces starts at
    **USD 5/month**: **USD 29/month base**, before tax, domain, SMTP, monitoring,

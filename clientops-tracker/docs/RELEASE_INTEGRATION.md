@@ -1,6 +1,14 @@
 # Release Integration Decisions
 
-## Current Preparation: 16 November 2026
+## Integration checkpoint: 20 November 2026
+
+The owner authorized sequential merges subject to application and security gates and a no-build registry rehearsal after **each** main merge. No approval by a second human is claimed. Keep the [current checklist](ROADMAP.md) separate from the historical reviews below.
+
+Reviewed #22 head `531ee3e8f3d6f818ad1c7a806f20de17dac591db` against `cfec6e71a51975e224a2cee9ddda2238183b8b31`: [CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44792500392), [JavaScript/Actions analysis](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/44792492013) and [successful policy result](https://github.com/EdenCirakoglu/Client-Tracker/runs/136483789638). Next and its ESLint plugin move to 15.5.29; the patched PostCSS override stays scoped. The TS ESLint update removes the minimatch finding. One moderate build-tool finding remains under the documented conditional exception; not a clean full audit. Source and policy results are not release-image or host results.
+
+The separately failing Git-connected Cloudflare `client-tracker` preview is a static-target configuration issue. Use the isolated installation-site instructions in [MONETISATION](MONETISATION.md). Its three-asset local build is not a successful Cloudflare deployment, the database/API staging host, or the live fictional walkthrough.
+
+## Historical preparation: 16 November 2026
 
 Main remains `cfec6e71a51975e224a2cee9ddda2238183b8b31`. No PR merge, closure,
 alert dismissal, risk acceptance, paid resource or external deployment occurred.

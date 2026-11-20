@@ -38,8 +38,7 @@ fails. The client requests changes; the scope stays approved and the release
 stays delivered. It is not a customer testimonial or a shipment-search engine.
 
 These materials preview an unreleased version. The software is MIT-licensed
-and free to self-host. Optional assisted installation is a separate service,
-with no live purchase route yet.
+and free to self-host. The initial one-agency assisted installation is GBP 750 total, subject to tax confirmation. The intended split is GBP 375 after scope and slot agreement and GBP 375 after installation acceptance. Infrastructure is separate. Orders are not open.
 
 If you run delivery at a small agency, what would you need to see before
 confidently accepting work or requesting changes?
@@ -53,7 +52,7 @@ confidently accepting work or requesting changes?
 | Gallery                            | Three preview PNGs with real application captures and manifest                                                                                                          |
 | Role                               | I made this; personal maker Eden, independent project                                                                                                                   |
 | Tags                               | Choose available, accurate Open Source / Productivity / Project Management matches; at most three                                                                       |
-| Pricing                            | Free MIT software. Assisted installation quoted separately, not included or activated                                                                                   |
+| Pricing                            | Free MIT software. Separate initial GBP 750 installation; deposit after scope and slot, not a live checkout                                                             |
 | Maker comment                      | Draft above; no invented traction or claims of market uniqueness                                                                                                        |
 | Video/demo                         | Existing fictional simulation: https://proud-credit-1b94.eden-cirakoglu.workers.dev/ ; not the working portal or evidence of release. Recording script remains a draft. |
 | Contact, social, booking, checkout | Leave unset until an owned, tested destination exists                                                                                                                   |

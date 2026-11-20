@@ -2,7 +2,7 @@
 
 <img src="clientops-tracker/apps/web/public/brand/journal-v3.png" width="48" height="48" alt="">
 
-[Fictional walkthrough preview](clientops-tracker/apps/web/public/walkthrough/index.html) |
+[Try the public fictional walkthrough](https://proud-credit-1b94.eden-cirakoglu.workers.dev/) |
 [Product Hunt draft pack](clientops-tracker/docs/product-hunt/README.md).
 Branding and the walkthrough are an unreleased review preview, not a public launch.
 
@@ -13,7 +13,9 @@ Open-source support and delivery operations platform for small software teams.
 
 **Current launch work:** [first-customer checklist](clientops-tracker/docs/ROADMAP.md)
 and [baseline/maintenance evidence](clientops-tracker/docs/LAUNCH_BASELINE.md).
-Assisted installation is the initial offer. Passing CI is not staging or customer acceptance.
+Free MIT software; optional [assisted installation](clientops-tracker/docs/SERVICES.md)
+is initially GBP 750 subject to confirmed tax treatment. Deposit after agreeing a
+scope and slot; balance after installation acceptance. Orders are not open.
 
 The first-customer guidance candidate adds **Start here** inside the portal, with
 client-scoped administrator setup and role-specific help. See the

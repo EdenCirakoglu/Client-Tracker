@@ -3,6 +3,7 @@ node_modules/
 .pnpm-store/
 
 # Build output
+installation-site/.wrangler/
 dist/
 .next/
 out/

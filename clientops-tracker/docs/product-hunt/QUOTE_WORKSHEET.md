@@ -1,6 +1,10 @@
 # Private Quote Worksheet Template
 
-## November 16 Measurement Status
+## Current costing: 20 November 2026
+
+Initial total GBP 750 subject to verified tax treatment. Collect two GBP 375 payments, not a subscription. At GBP 30/hour, the planning range of 15-21 hours (including two support hours) costs GBP 450-630. As an illustration only, for a UK Stripe account with two standard domestic UK cards at [1.5% + 20p](https://stripe.com/gb/pricing), allow about GBP 11.66 total fees after per-charge rounding. That leaves about GBP 108-288 before tax and other direct costs. Do not infer a UK seller, a VAT exemption, or a particular card mix. If GBP 750 includes sales tax, subtract that liability before judging the margin. Customer infrastructure is separate; allocate the operator's staging and acquisition costs separately. Break-even total hours = (750 minus applicable tax, actual fees and allocated costs) / 30. Record actual hands-on work, elapsed time, restore time and two support hours once. If uneconomic, change scope or fee before accepting payment.
+
+## Historical November 16 Measurement Status
 
 **Full installation rehearsal: not performed. Fixed fee: not approved.** The
 required accounts, host and real-recipient authorization have not been supplied.

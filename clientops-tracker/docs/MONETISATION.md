@@ -137,3 +137,27 @@ The existing portal is not a listed Marketplace app. A future reviewed ticket-to
 Use the [operator controls](OPERATOR_CONTROLS.md) and [staging acceptance handoff](RELEASE_CANDIDATE.md) before offering managed hosting: trusted HTTPS/renewal, independent secrets, real SMTP acceptance, restored off-host backups, alerts, security-log retention and named support/recovery owners. Local fixture results do not substitute for external-service acceptance.
 
 Keep migrations, integrations, workflow adaptations and agency/freelancer branding within an agreed scope. Hosting, implementation expertise and support can be paid value while the code remains MIT. Any future separately licensed premium component needs an explicit boundary and appropriate rights; do not describe existing public MIT features as purchase-only or relicense contributions without authority.
+
+## Current payment contract (20 November 2026)
+
+Use personal seller accounts only. Initial price GBP 750 total, subject to
+confirmed tax treatment. After privately agreeing scope, cancellation terms and
+an available slot, issue a single-customer GBP 375 deposit. Issue a separate
+GBP 375 balance only after installation acceptance. Never collect VPS secrets
+in Stripe or a public enquiry form. Check the matching payment or invoice ID,
+GBP amount, paid status, customer reference and test/live mode in Stripe before
+recording either instalment. Do not fulfil a second time for a repeated event.
+In sandbox verify decline/cancel do not book work, successful payment creates
+one receipt, and final acceptance releases only the balance. Retain refund and
+manual cancellation evidence separately. No sandbox or live charge is claimed.
+
+Static service page: from the workspace run `node installation-site/build.mjs`.
+Open `installation-site/dist/index.html`. It contains only three allowlisted
+assets; no contact, analytics, account form or checkout until verified.
+For the separate Cloudflare Git Worker **client-tracker**, set build root to
+`clientops-tracker/installation-site` and build command to `node build.mjs`.
+Validate the exact Wrangler version locally with `npx --yes wrangler@4.162.0 deploy --dry-run`.
+Use the site's `wrangler.jsonc` with the same pinned binary for branch previews
+(`npx --yes wrangler@4.162.0 preview`); use deploy only once public acceptance
+is complete. Do not point either command at the Docker portal or the existing
+**proud-credit-1b94** walkthrough. Do not attach production secrets/bindings.
