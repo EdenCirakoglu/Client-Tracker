@@ -1,5 +1,35 @@
 # CSRF and Production-Cookie Review
 
+## November 20 source disposition
+
+The owner selected an owner-led, AI-assisted review, not an independent human audit. Alerts #1 and #3 were dismissed as conditional false positives after comparing their affected instances. See the [exact reviewed code and conditions](https://github.com/EdenCirakoglu/Client-Tracker/blob/531ee3e8f3d6f818ad1c7a806f20de17dac591db/clientops-tracker/docs/CSRF_REVIEW.md) and [policy conclusion](https://github.com/EdenCirakoglu/Client-Tracker/runs/136483789638). Neither exception permits disabling controls. Verify trusted HTTPS, forwarding and actual browser cookie attributes on the intended host; reopen the source assessment if routing, middleware or session configuration changes.
+
+## Historical November 16 Candidate Decisions
+
+Fresh review used the actual #22 checkout, not just #43 screenshots. **AI-assisted
+by Codex; no independent human audit or owner approval is claimed.** PR #22 now
+includes #44's two configuration and six production-cookie regressions, without
+changing runtime controls. [Exact review packet at tested head 535692ba](https://github.com/EdenCirakoglu/Client-Tracker/blob/535692ba67ef9648af22810be718c50992571658/clientops-tracker/docs/CSRF_REVIEW.md)
+records the trace and per-alert conditions. Forty focused tests passed locally
+against a new disposable PostgreSQL/Mailpit cluster. Existing databases were not used.
+
+| Alert                             | Verdict from source/local fixtures                                                                                                                                                                                                      | Decision not yet made                                                                                                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #1, `js/missing-token-validation` | Substantiated false-positive classification under explicit conditions: all unsafe `/api` routes pass the session-bound header-token guard; missing/forged/cross-session proofs fail, authorised writes persist. No demonstrated bypass. | Independent reviewer accepts/rejects the model-coverage explanation for the actual revision, including routes and installed library. Not approved or dismissed.           |
+| #3, `js/clear-text-cookie`        | Substantiated false-positive classification **for production mode** under private-ingress/trusted-proxy conditions. HTTP development intentionally uses a separate cookie. Production positive/negative cookie controls pass.           | Separate source disposition plus later host evidence: trusted TLS, private API ports, overwritten forwarding headers and actual browser flags. Not approved or dismissed. |
+
+[Fresh analysis execution](https://github.com/EdenCirakoglu/Client-Tracker/actions/runs/43881251528)
+succeeded, but [the #22 CodeQL policy still fails](https://github.com/EdenCirakoglu/Client-Tracker/runs/133347637077).
+This review does not turn that check green. The reviewer should reproduce the
+four-file command in #22's packet and identify any missing path/control before a
+disposition. Source review can occur before a host is purchased; host acceptance
+must still prove its assumptions before installation is accepted. XSS, compromised
+same-origin code/proxy and future routes are not ruled out by these fixtures.
+
+#44 retains its original tests and history. When it is reconciled after parent
+merges, retain one identical copy of each test; do not duplicate the backport or
+drop the remaining release documentation. Test success is not risk acceptance.
+
 ## Fresh Review: 15 November 2026
 
 Reviewed from isolated PR #43 source `46c2c8575a193e0ca08088f65647552acbcef8e6`.

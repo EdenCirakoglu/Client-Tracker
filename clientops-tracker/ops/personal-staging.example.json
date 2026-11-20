@@ -1,0 +1,41 @@
+{
+  "digitalOcean": {
+    "project": "clientops-staging",
+    "region": "lon1",
+    "size": "s-2vcpu-4gb",
+    "sshPublicKeyFingerprint": "",
+    "operatorIpCidr": "",
+    "allInMonthlyGbp": null,
+    "personalAccessTokenVaultReferenceIfUsingApi": ""
+  },
+  "dns": {
+    "domain": "",
+    "registrationAndRenewalGbpIncludingTax": [null, null],
+    "cloudflareZoneId": "",
+    "dnsOnlyTokenVaultReference": ""
+  },
+  "backup": {
+    "privateSpacesBucket": "",
+    "regionEndpoint": "",
+    "bucketOnlyAccessKeyVaultReference": "",
+    "resticPasswordIndependentEscrowReference": ""
+  },
+  "mail": {
+    "verifiedSender": "",
+    "testedSupportAlias": "",
+    "approvedTestInbox": "",
+    "sendingOnlyKeyVaultReference": ""
+  },
+  "monitoring": {
+    "healthPingUrlVaultReference": "",
+    "backupPingUrlVaultReference": "",
+    "verifiedEmailIntegration": false
+  },
+  "orders": {
+    "mode": "sandbox",
+    "stripeSandboxId": "",
+    "sellerCountry": "",
+    "taxTreatmentConfirmed": false,
+    "cancellationTermsReviewed": false
+  }
+}

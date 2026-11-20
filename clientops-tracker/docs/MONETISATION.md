@@ -20,7 +20,7 @@ Keep service scope, payment conditions and support commitments in a separate agr
 | GitHub sponsorship     | Development and maintenance of the open-source project                    | Optional funding, separate from service purchases         |
 | GitHub Marketplace app | A maintained integration with GitHub                                      | Longer-term route, not the current checkout               |
 
-The [service information page](SERVICES.md) describes the proposed initial offer. There is no configured booking URL, checkout, price or sponsor account in this repository yet. No managed service or live deployment is claimed.
+The [service information page](SERVICES.md) describes the initial GBP 750 offer, subject to confirmed tax treatment and measured installation cost. There is no configured booking URL, live checkout or sponsor account. No managed service or live portal deployment is claimed.
 
 ## First Sale Without In-App Billing
 
@@ -28,10 +28,67 @@ The [service information page](SERVICES.md) describes the proposed initial offer
 2. Confirm the payment provider supports the seller's country, business and account. Stripe offers a hosted [Payment Link](https://docs.stripe.com/payment-links) without building a billing UI; check its [availability](https://stripe.com/global) before choosing it. No account eligibility is assumed here.
 3. Set the actual price, currency, payment conditions, cancellation/refund terms and customer support contact. Confirm capacity and deployment prerequisites before accepting an order.
 4. Create and test the external checkout in the provider's test environment. Verify the service description, receipt, cancellation path and return to the product page. Do not put API keys, customer credentials or payment details in GitHub.
-5. Replace the **Book a demo** destinations in both `README.md` files with the public product/demo page, and **Buy installation** with the actual provider-hosted checkout URL. Update `SERVICES.md` with those same destinations and remove the unavailable notices only once tested.
+5. Once the contact route works, link the READMEs and service page to **Request an installation**. Agree scope and an available slot privately before issuing the deposit request; never publish a general-purpose deposit link. Remove unavailable notices only for a tested destination.
 6. For the first installations, verify payment in the provider dashboard and coordinate delivery manually. A browser success redirect is not proof of payment. Do not automatically provision accounts or infrastructure from it.
 
 This setup adds no billing tables, subscription gates, payment webhooks or licence-key checks to ClientOps. Self-hosting remains available without a purchase. Tax, invoicing and customer terms remain the seller's responsibilities; a payment link does not settle those obligations.
+
+### Owner Account Procedure: Not Yet Executed
+
+1. Confirm legal seller country/entity and account eligibility privately using
+   [Stripe's country list](https://stripe.com/global), or select another supported
+   hosted provider. No eligibility is inferred from the maintainer's timezone.
+2. Configure a genuine contact inbox or booking account, availability and timezone.
+   Request only name, work email and agency workflow goals; warn against secrets,
+   customer data and server access. Test request, confirmation, cancellation and
+   timezone display using approved addresses. Do not publish a placeholder route.
+3. In the provider **sandbox/test mode**, create a one-time product named
+   `ClientOps assisted installation - one agency/project`. Copy the approved scope
+   and exclusions from SERVICES; enter the approved fixed amount/currency, quantity
+   one and tax treatment. Do not activate a live link or use real card details.
+4. Create the hosted [Payment Link](https://docs.stripe.com/payment-links/create).
+   Use a provider-hosted confirmation initially, with the copy below. Test successful
+   payment, declined payment, abandoning checkout, reopening the link and duplicate
+   attempts. Record test transaction IDs privately. Where Payment Links has no
+   configurable cancel redirect, verify closing/back returns safely with no order;
+   do not claim a custom cancellation route exists.
+5. Verify the provider dashboard's paid state and receipt, exact amount/currency,
+   service description and no subscription. A redirect or screenshot is not proof
+   of settlement. Delayed payment methods require confirmed settlement before work.
+6. Reconcile manually: one private order reference per paid transaction, accepted
+   scope, scheduled start, installation record and handover. Duplicate payments
+   require owner review/refund under approved terms, not duplicate infrastructure.
+7. Request explicit live activation only after release/staging acceptance, price,
+   terms, capacity and all tests pass. Update README/service links in a reviewed
+   change; never automatically deploy infrastructure after payment.
+
+Proposed confirmation: "Your installation request has been recorded. We will
+confirm payment and arrange the agreed setup session within two business days.
+Do not send passwords, API keys or customer records by email or through this
+checkout. Infrastructure access is arranged separately through a private channel."
+This response time is a proposal requiring capacity approval, not an active SLA.
+[Provider confirmation/fulfilment documentation](https://docs.stripe.com/payment-links/post-payment)
+supports hosted confirmation and manual dashboard verification; none was executed here.
+
+### Terms and Privacy Review Questions
+
+Before orders, the owner must settle seller identity/contact, B2B/B2C scope,
+governing jurisdiction, taxes/invoicing, cancellation before scheduling/after
+partial work, refund handling, acceptance disputes and limitation of liability.
+Have appropriate local advice review the actual agreement; this is not a legal
+compliance claim or a blanket "no refunds" policy.
+
+Document separately what booking/payment providers collect, purpose, access,
+retention/deletion, cross-border processing and customer rights/contact route.
+Do not collect infrastructure credentials through either. Installation access
+should be least-privilege and revoked at handover. Decide who controls customer
+portal data and whether a processing agreement is needed for the agreed support.
+Keep the software's MIT notices and disclaimer distinct from paid service duties.
+
+Maintain a private, minimal enquiry/order log: date, source, consent/contact
+reference, agreed scope, quote revision, test/live payment reference, status,
+delivery effort and handover. Public metrics may count real enquiries/paid orders
+only after evidence exists; no traction or customer feedback is claimed now.
 
 ### URLs and Decisions Needed Before Activation
 
@@ -80,3 +137,26 @@ The existing portal is not a listed Marketplace app. A future reviewed ticket-to
 Use the [operator controls](OPERATOR_CONTROLS.md) and [staging acceptance handoff](RELEASE_CANDIDATE.md) before offering managed hosting: trusted HTTPS/renewal, independent secrets, real SMTP acceptance, restored off-host backups, alerts, security-log retention and named support/recovery owners. Local fixture results do not substitute for external-service acceptance.
 
 Keep migrations, integrations, workflow adaptations and agency/freelancer branding within an agreed scope. Hosting, implementation expertise and support can be paid value while the code remains MIT. Any future separately licensed premium component needs an explicit boundary and appropriate rights; do not describe existing public MIT features as purchase-only or relicense contributions without authority.
+
+## Current payment contract (20 November 2026)
+
+Use personal seller accounts only. Initial price GBP 750 total, subject to
+confirmed tax treatment. After privately agreeing scope, cancellation terms and
+an available slot, issue a single-customer GBP 375 deposit. Issue a separate
+GBP 375 balance only after installation acceptance. Never collect VPS secrets
+in Stripe or a public enquiry form. Check the matching payment or invoice ID,
+GBP amount, paid status, customer reference and test/live mode in Stripe before
+recording either instalment. Do not fulfil a second time for a repeated event.
+In sandbox verify decline/cancel do not book work, successful payment creates
+one receipt, and final acceptance releases only the balance. Retain refund and
+manual cancellation evidence separately. No sandbox or live charge is claimed.
+
+Static service page: from the workspace run `node installation-site/build.mjs`.
+Open `installation-site/dist/index.html`. It contains only three allowlisted
+assets; no contact, analytics, account form or checkout until verified.
+For the separate Cloudflare Git Worker **client-tracker**, set build root to
+`clientops-tracker/installation-site` and build command to `node build.mjs`.
+Validate the exact Wrangler version locally with `npx --yes wrangler@4.162.0 deploy --dry-run`.
+In the personal Cloudflare dashboard, open **client-tracker** (not **proud-credit-1b94**). Before retrying, protect this Worker only with [Cloudflare Access](https://developers.cloudflare.com/workers/configuration/cloudflare-access/), allow only the approved operator inbox and verify that an anonymous browser cannot access its preview. Do not apply an account-wide policy to the public walkthrough. Under Settings > Builds set the root and build command above. Keep preview builds enabled; preview command: `npx --yes wrangler@4.162.0 preview`. Production-branch command during acceptance: `npx --yes wrangler@4.162.0 versions upload` ([upload without promotion](https://developers.cloudflare.com/workers/ci-cd/builds/)). Do not use `wrangler deploy` or promote a version until public acceptance. No portal, database, secrets or bindings belong on this Worker.
+
+The GitHub connection is not an operator login. Use the personal dashboard to apply settings, or privately configure a short-lived user token limited to Workers Builds Configuration Edit and Workers Scripts Read for the personal account ([Builds API permissions](https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/)); do not reuse the DNS token. Keep account IDs, settings exports and token references outside the repository. Retest the failed candidate preview and the unchanged public walkthrough separately. A green portal CI or local Wrangler dry run is not successful hosted preview evidence.

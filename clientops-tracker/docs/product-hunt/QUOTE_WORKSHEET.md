@@ -1,5 +1,42 @@
 # Private Quote Worksheet Template
 
+## Current costing: 20 November 2026
+
+Initial total GBP 750 subject to verified tax treatment. Collect two GBP 375 payments, not a subscription. At GBP 30/hour, the planning range of 15-21 hours (including two support hours) costs GBP 450-630. As an illustration only, for a UK Stripe account with two standard domestic UK cards at [1.5% + 20p](https://stripe.com/gb/pricing), allow about GBP 11.66 total fees after per-charge rounding. That leaves about GBP 108-288 before tax and other direct costs. Do not infer a UK seller, a VAT exemption, or a particular card mix. If GBP 750 includes sales tax, subtract that liability before judging the margin. Customer infrastructure is separate; allocate the operator's staging and acquisition costs separately. Break-even total hours = (750 minus applicable tax, actual fees and allocated costs) / 30. Record actual hands-on work, elapsed time, restore time and two support hours once. If uneconomic, change scope or fee before accepting payment.
+
+## Historical November 16 Measurement Status
+
+**Full installation rehearsal: not performed. Fixed fee: not approved.** The
+required accounts, host and real-recipient authorization have not been supplied.
+This run measured local diagnostics only: frozen installation in the preparation
+worktree took 28 seconds; the four focused security test files took 77.73 seconds.
+Neither measures hands-on installation, DNS waiting, SMTP receipt, an off-host
+restore, handover or support. Do not replace the planning range with these figures.
+
+For the approved rehearsal, keep this log in a private copy:
+
+| Phase                            | UTC start/end | Active minutes | Unattended minutes | Rework minutes (part of active) | Evidence / unresolved work           |
+| -------------------------------- | ------------- | -------------- | ------------------ | ------------------------------- | ------------------------------------ |
+| Scope, host, DNS and access      | Pending       | Pending        | Pending            | Pending                         | Provider/account approval            |
+| Installation, TLS and secrets    | Pending       | Pending        | Pending            | Pending                         | Approved revision + image digests    |
+| Email, backup/restore, alerts    | Pending       | Pending        | Pending            | Pending                         | Actual receipts/restore timings      |
+| Accounts and workflow onboarding | Pending       | Pending        | Pending            | Pending                         | Persistent separate client decisions |
+| Handover and revocation          | Pending       | Pending        | Pending            | Pending                         | Signed responsibilities              |
+| Follow-up support                | Pending       | Pending        | Pending            | Pending                         | Actual time within agreed allowance  |
+
+Start a stopwatch when actively working; pause for unattended waits. Record
+overlapping waits once in wall-clock elapsed, not as labour. Rework belongs in
+active time and is labelled, not charged twice. RTO separately measures detection
+to accepted recovery; RPO measures newest recoverable record. End only after the
+complete scope is accepted. List exclusions rather than describing a partial run
+as a complete rehearsal.
+
+Pricing remains a calculation for approval, not a public price. Example sensitivity
+only: 15-21 hours at an **assumed**, unapproved USD 50/hour with 20% contingency
+would be USD 900-1,260 before tax/fees/provider costs. This is neither measured
+effort nor a recommendation to charge that amount. Replace hours, rate, margin,
+support and tax assumptions after the full rehearsal and owner review.
+
 Owner-review material, not a public offer or approved price. Fill a private copy,
 never commit prospect identity, provider credentials, payment details or private
 quotes. Scope: one agency, one agreed environment and initial project.
