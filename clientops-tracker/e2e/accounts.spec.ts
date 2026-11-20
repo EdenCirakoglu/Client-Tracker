@@ -134,7 +134,9 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await expect(page.getByRole('link', { name: 'Accounts', exact: true })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Clients', exact: true })).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Your delivery journal', exact: true }),
+  ).toBeVisible();
   const resetTab = await context.newPage();
   await resetTab.goto('/forgot-password');
   await resetTab.getByLabel('Email', { exact: true }).fill(address);
@@ -151,7 +153,7 @@ test('bootstrap administrator invites a client; initial setup, HTTPS session, re
   await expect(resetTab.getByRole('heading', { name: 'Password updated' })).toBeVisible();
   await expect(resetTab.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Tickets', exact: true }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/login\?next=%2Ftickets$/);
   await expect(page.getByRole('status')).toContainText('Your session has ended');
   await resetTab.close();
   await login(page, address, `${password}-new`);

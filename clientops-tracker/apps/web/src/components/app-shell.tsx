@@ -29,6 +29,8 @@ import type { UserRole } from '../lib/types';
 import { titleCase } from '../lib/format';
 import { LoadingState } from './ui/states';
 import { ThemePicker } from './ui/preferences';
+import { loginDestination } from '../lib/return-destination';
+import { useRecordAnchor } from '../lib/use-record-anchor';
 
 interface NavItem {
   label: string;
@@ -55,7 +57,8 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, status, logout } = useAuth();
+  const { user, status, logout, preserveDestination } = useAuth();
+  useRecordAnchor(pathname, status === 'authenticated');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -140,8 +143,15 @@ export function AppShell({ children }: AppShellProps) {
     };
   }, [sidebarOpen]);
   useEffect(() => {
-    if (status === 'anonymous') router.replace('/login');
-  }, [router, status]);
+    if (status === 'anonymous')
+      router.replace(
+        preserveDestination
+          ? loginDestination(
+              window.location.pathname + window.location.search + window.location.hash,
+            )
+          : '/login',
+      );
+  }, [router, status, preserveDestination]);
   if (status === 'loading' || !user)
     return (
       <main className="min-h-screen bg-surface p-6">

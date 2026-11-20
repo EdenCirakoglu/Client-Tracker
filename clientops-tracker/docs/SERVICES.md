@@ -4,6 +4,10 @@ Open-source support and delivery operations for small software teams, with a pro
 
 **Availability:** booking and external checkout are not configured. This page describes the intended offer; it does not accept orders or promise a live hosted service.
 
+Review materials: [first-customer interview, five-minute demo, usability task and
+pricing worksheet](FIRST_CUSTOMER_PILOT.md). Effort estimates, support window,
+price and terms are proposals awaiting owner approval, not a live quotation.
+
 ## Book a Demo
 
 The planned walkthrough covers client requests, staff work queues, scoped project access, release-linked delivery, acceptance and progress summaries using fictional data. Discuss the team's workflow and installation requirements before agreeing a service.

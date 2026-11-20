@@ -4,7 +4,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { pool } from '../src/db/client';
 import { errorHandler } from '../src/middleware/error';
 import { validateRequest } from '../src/middleware/validate';
-import { summaryBody, summaryListQuery } from '../src/services/summary.service';
+import { publishSummaryBody, summaryBody, summaryListQuery } from '../src/services/summary.service';
 import { deliveryDecisionBody, proposeOutcomeBody } from '../src/validators/delivery';
 
 const id = 'e9a69201-7771-4fb8-bfb8-55e622aa1cc5';
@@ -13,6 +13,7 @@ describe('Zod 4 request contract compatibility', () => {
   afterAll(() => pool.end());
 
   it('retains omitted defaults, coercion, trimming and strict object validation', () => {
+    expect(publishSummaryBody.parse({})).toEqual({ recipientIds: [] });
     expect(summaryBody.parse({ clientId: id, weekStart: '2026-01-01' })).toEqual({
       clientId: id,
       weekStart: '2026-01-01',
@@ -41,7 +42,13 @@ describe('Zod 4 request contract compatibility', () => {
   });
 
   it('rejects oversized collections before expanding individual invalid-entry errors', () => {
-    // Use the maintenance summary contract, not the product-only notification schema.
+    // Bounded fixtures exercise the advisory without attempting resource exhaustion.
+    const recipients = publishSummaryBody.safeParse({ recipientIds: Array(51).fill({}) });
+    expect(recipients.success).toBe(false);
+    if (!recipients.success) {
+      expect(recipients.error.issues).toHaveLength(1);
+      expect(recipients.error.issues[0]?.code).toBe('too_big');
+    }
     for (const field of ['upcoming', 'blocked']) {
       const summary = summaryBody.safeParse({
         clientId: id,

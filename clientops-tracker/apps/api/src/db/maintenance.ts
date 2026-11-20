@@ -12,7 +12,8 @@ const pool = new Pool({
 try {
   // Fixed-size batches keep routine retention work from monopolising the database.
   const statements = [
-    `DELETE FROM mail_outbox WHERE id IN (SELECT id FROM mail_outbox WHERE completed_at < now() - interval '30 days' AND status IN ('DELIVERED','FAILED','EXPIRED') LIMIT 500)`,
+    // Retain payload-free workflow receipts so later publication retries cannot re-enqueue an old event.
+    `DELETE FROM mail_outbox WHERE id IN (SELECT id FROM mail_outbox WHERE kind <> 'WORKFLOW' AND completed_at < now() - interval '30 days' AND status IN ('DELIVERED','FAILED','EXPIRED') LIMIT 500)`,
     `DELETE FROM account_tokens WHERE id IN (SELECT id FROM account_tokens WHERE expires_at < now() - interval '30 days' LIMIT 500)`,
     `DELETE FROM auth_sessions WHERE sid_hash IN (SELECT sid_hash FROM auth_sessions WHERE absolute_expires_at < now() - interval '30 days' LIMIT 500)`,
     `DELETE FROM web_sessions WHERE sid IN (SELECT sid FROM web_sessions WHERE expire < now() LIMIT 500)`,

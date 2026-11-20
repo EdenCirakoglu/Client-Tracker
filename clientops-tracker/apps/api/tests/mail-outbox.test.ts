@@ -33,7 +33,7 @@ describe('Durable account mail', () => {
     const payload = decryptMail(job.id, job.payload!);
     expect(payload.kind).toBe('INVITATION');
     expect(job.payload).not.toContain('queued@accounts.example');
-    if (payload.kind === 'RECOVERY_REQUEST') throw new Error('Incorrect fixture');
+    if (payload.kind !== 'INVITATION') throw new Error('Incorrect fixture');
     expect(JSON.stringify(await db.select().from(accountTokens))).not.toContain(payload.token);
     const send = vi.fn().mockResolvedValue(undefined);
     await drainMail(1, send);
@@ -90,6 +90,7 @@ describe('Durable account mail', () => {
     await invite();
     const original = await queued();
     const payload = decryptMail(original.id, original.payload!);
+    if (payload.kind !== 'INVITATION') throw new Error('Incorrect fixture');
     const logging = vi.spyOn(console, 'error').mockImplementation(() => {});
     try {
       await drainMail(1, vi.fn().mockRejectedValue(new Error(JSON.stringify(payload))));
@@ -105,7 +106,6 @@ describe('Durable account mail', () => {
       await db.update(mailOutbox).set({ availableAt: new Date(Date.now() - 1000) });
       const send = vi.fn().mockResolvedValue(undefined);
       await deliverMail((await claimMail())!, send);
-      if (payload.kind === 'RECOVERY_REQUEST') throw new Error('Incorrect fixture');
       expect(send).toHaveBeenCalledTimes(1);
       expect(send).toHaveBeenCalledWith(payload.email, payload.token, 'INVITATION');
       expect((await queued()).attempts).toBe(2);

@@ -2,6 +2,14 @@
 
 ## Current Published Maintenance Baseline
 
+PR #31 is now merged as `cfec6e71a51975e224a2cee9ddda2238183b8b31`.
+Its exact-main CI, both publication jobs and fresh digest-pinned local runtime
+checks passed on November 8. See [current release evidence](RELEASE_CFEC6E71.md).
+PR #22 remains unmerged and now targets main; source and security-policy review
+remain separate from the published maintenance-image results.
+
+### Historical PR #20 Baseline
+
 Main `e114a0e64c9736b84db2fdb2d9ed330c650eb136` (PR #20) passed exact-main CI,
 both automatic publishing jobs and isolated digest-pinned runtime verification
 on 6 November 2026. See [release evidence](RELEASE_E114A0E.md) for immutable

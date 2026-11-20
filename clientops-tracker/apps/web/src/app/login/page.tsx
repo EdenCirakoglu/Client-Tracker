@@ -11,6 +11,7 @@ import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import Link from 'next/link';
 import { ThemePicker } from '../../components/ui/preferences';
+import { destinationAfterLogin } from '../../lib/return-destination';
 
 const demoUsers = [
   { label: 'Admin', email: 'admin@example.com', icon: ShieldCheck },
@@ -35,7 +36,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/dashboard');
+      router.replace(destinationAfterLogin(window.location.search));
     }
   }, [router, status]);
 
@@ -45,7 +46,6 @@ export default function LoginPage() {
 
     try {
       await login(nextEmail, nextPassword);
-      router.replace('/dashboard');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Login failed.');
     } finally {

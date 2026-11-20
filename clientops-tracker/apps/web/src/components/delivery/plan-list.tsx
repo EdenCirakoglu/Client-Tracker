@@ -4,6 +4,7 @@ import type { DeliveryPlanItem, DeliveryView } from '../../lib/types';
 import { ticketReference } from '../../lib/format';
 
 export const deliveryViewLabels: Record<DeliveryView, string> = {
+  mine: 'My decisions',
   followup: 'Delivery follow-up',
   overdue: 'Past agreed target',
   upcoming: 'Due in next 7 days',
@@ -20,7 +21,7 @@ export function DeliveryPlanList({ items }: DeliveryPlanListProps) {
   return (
     <ul className="divide-y divide-border">
       {items.map((item) => (
-        <li key={item.id} className="py-4">
+        <li key={item.id} className="py-3">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <p className="mb-1 text-xs text-muted">
@@ -43,7 +44,7 @@ export function DeliveryPlanList({ items }: DeliveryPlanListProps) {
           <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted">
             <span>
               {item.source === 'delivery'
-                ? `Target: ${item.targetDate ?? 'Not set'}${item.targetDate ? ' (UTC)' : ''} / Owner: ${item.ownerName ?? 'Not recorded'}`
+                ? `${item.state === 'PROPOSED' ? 'Proposed target' : item.state === 'CHANGES_REQUESTED' ? 'Recorded target' : 'Agreed target'}: ${item.targetDate ?? 'Not set'}${item.targetDate ? ' (UTC)' : ''} / Owner: ${item.ownerName ?? 'Not recorded'}`
                 : `Scope revision ${item.revision}`}
             </span>
             <Link

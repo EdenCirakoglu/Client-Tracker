@@ -56,13 +56,26 @@ export function MailDeliveryStatus({ refresh }: DeliveryStatusProps) {
               <tbody className="divide-y divide-border">
                 {state.data.recent.map((item) => (
                   <tr key={item.id}>
-                    <Td>{item.kind === 'INVITATION' ? 'Invitation' : 'Password recovery'}</Td>
+                    <Td>
+                      {item.kind === 'WORKFLOW'
+                        ? titleCase(item.notificationEvent ?? 'WORKFLOW')
+                        : item.kind === 'INVITATION'
+                          ? 'Invitation'
+                          : 'Password recovery'}
+                      {item.recipientName ? (
+                        <span className="mt-1 block text-xs text-muted">{item.recipientName}</span>
+                      ) : null}
+                    </Td>
                     <Td>
                       {item.status === 'DELIVERED'
                         ? 'Accepted by mail server'
                         : item.status === 'FAILED'
-                          ? 'Failed; request a new link after resolving delivery'
-                          : titleCase(item.status)}
+                          ? item.kind === 'WORKFLOW'
+                            ? 'Failed; contact the recipient after resolving delivery'
+                            : 'Failed; request a new link after resolving delivery'
+                          : item.status === 'EXPIRED' && item.lastError
+                            ? `Not sent: ${titleCase(item.lastError)}`
+                            : titleCase(item.status)}
                     </Td>
                     <Td>{item.attempts}</Td>
                     <Td>{formatDateTime(item.createdAt)}</Td>
@@ -71,7 +84,7 @@ export function MailDeliveryStatus({ refresh }: DeliveryStatusProps) {
               </tbody>
             </DataTable>
           ) : (
-            <p className="text-sm text-muted">No account emails requested yet.</p>
+            <p className="text-sm text-muted">No emails requested yet.</p>
           )}
         </>
       ) : null}
