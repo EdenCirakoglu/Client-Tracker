@@ -1,0 +1,28 @@
+{
+  "revision": "8d805122ad11eea7f217bd77d9d0958e25b1d610",
+  "checkedAt": "2026-11-10T17:23:04.895Z",
+  "project": "clientops-customer-accounts",
+  "applicationImages": {
+    "api": "sha256:10329bdfdba4709d83ca3ed0cf71d91d49553e06268fd9d6f9884f03b4136bb3",
+    "web": "sha256:f4617f4ef7c8d5e86a2c2bd17dcd613614a0e90c5b2df1c42943ede4fed2018a"
+  },
+  "checks": {
+    "existingBusinessFingerprintUnchanged": true,
+    "databasePreserved": true,
+    "authenticatedSessionsPreserved": true,
+    "acceptedAndChangesRequestedPersisted": true,
+    "clientSafeExports": true
+  },
+  "records": [
+    {
+      "ticket_id": "7547d5a2-7d08-41cd-889d-f73c4e4f9e9f",
+      "id": "f1ef61d3-1b4d-4f8c-9107-23c11431431e",
+      "state": "ACCEPTED"
+    },
+    {
+      "ticket_id": "9bc0355b-6715-4e91-b314-fc9def5137d5",
+      "id": "062ba467-17f1-405d-b0f2-6489a1dada13",
+      "state": "CHANGES_REQUESTED"
+    }
+  ]
+}

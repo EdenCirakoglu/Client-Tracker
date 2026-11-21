@@ -1,5 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { LoadingState } from '../../components/ui/states';
 import { Mail, Save, X } from 'lucide-react';
 import { ProtectedPage } from '../../components/app-shell';
 import { Button } from '../../components/ui/button';
@@ -11,6 +13,7 @@ import Link from 'next/link';
 import { MailDeliveryStatus } from '../../components/mail-delivery-status';
 
 function Accounts() {
+  const selectedClient = useSearchParams().get('clientId') ?? '';
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -38,6 +41,12 @@ function Accounts() {
   useEffect(() => {
     if (user?.role === 'ADMIN') void load();
   }, [user?.role]);
+  useEffect(() => {
+    if (clients.some((client) => client.id === selectedClient)) {
+      setRole('CLIENT');
+      setClientId(selectedClient);
+    }
+  }, [clients, selectedClient]);
   function reset() {
     setEditing(null);
     setName('');
@@ -80,6 +89,14 @@ function Accounts() {
   return (
     <>
       <h1 className="text-2xl font-semibold text-ink">Accounts</h1>
+      {clients.some((client) => client.id === selectedClient) ? (
+        <Link
+          className="mt-2 inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+          href={`/guide?clientId=${selectedClient}`}
+        >
+          Back to this client's setup
+        </Link>
+      ) : null}
       {error ? (
         <p role="alert" className="mt-4 text-sm text-red-700">
           {error}
@@ -158,7 +175,11 @@ function Accounts() {
           <h2 className="text-lg font-semibold">
             {editing ? 'Manage account' : 'Invite a teammate or client'}
           </h2>
-          <form className="mt-4 space-y-4" onSubmit={(event) => void submit(event)}>
+          <form
+            id="invite-account"
+            className="mt-4 scroll-mt-24 space-y-4"
+            onSubmit={(event) => void submit(event)}
+          >
             <div>
               <FieldLabel htmlFor="account-name">Name</FieldLabel>
               <Input
@@ -251,7 +272,9 @@ function Accounts() {
 export default function Page() {
   return (
     <ProtectedPage>
-      <Accounts />
+      <Suspense fallback={<LoadingState />}>
+        <Accounts />
+      </Suspense>
     </ProtectedPage>
   );
 }

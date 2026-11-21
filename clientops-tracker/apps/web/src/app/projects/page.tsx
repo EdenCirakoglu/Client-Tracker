@@ -1,7 +1,8 @@
 'use client';
 import Link from 'next/link';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Save } from 'lucide-react';
 
 import { ProtectedPage } from '../../components/app-shell';
@@ -26,7 +27,9 @@ const emptyProjectForm = {
   status: 'ACTIVE' as ProjectStatus,
 };
 
-export default function ProjectsPage() {
+function Projects() {
+  const params = useSearchParams();
+  const selectedClient = params.get('clientId') ?? '';
   const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [clientFilter, setClientFilter] = useState('ALL');
@@ -34,8 +37,15 @@ export default function ProjectsPage() {
   const [form, setForm] = useState(emptyProjectForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
   const projectsState = useApiData(() => api.projects(), []);
   const clientsState = useApiData(() => api.clients(), []);
+  useEffect(() => {
+    if (clientsState.data?.some((client) => client.id === selectedClient)) {
+      setClientFilter(selectedClient);
+      setForm((value) => ({ ...value, clientId: selectedClient }));
+    }
+  }, [selectedClient, clientsState.data]);
 
   const clientById = useMemo(
     () => new Map((clientsState.data ?? []).map((client) => [client.id, client])),
@@ -57,6 +67,7 @@ export default function ProjectsPage() {
     event.preventDefault();
     setSaving(true);
     setFormError(null);
+    setMessage('');
 
     try {
       if (editing) {
@@ -75,7 +86,12 @@ export default function ProjectsPage() {
       }
 
       setEditing(null);
-      setForm(emptyProjectForm);
+      setForm({ ...emptyProjectForm, clientId: selectedClient });
+      setMessage(
+        editing
+          ? 'Project updated.'
+          : 'Project created. You can now invite a client contact or record a request.',
+      );
       await projectsState.reload();
     } catch (caught) {
       setFormError(caught instanceof Error ? caught.message : 'Project could not be saved.');
@@ -97,6 +113,19 @@ export default function ProjectsPage() {
   return (
     <ProtectedPage>
       <PageHeader description="Delivery status and project ownership." title="Projects" />
+      {canManage && selectedClient && clientById.has(selectedClient) ? (
+        <Link
+          className="mb-4 inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+          href={`/guide?clientId=${selectedClient}`}
+        >
+          Back to this client's setup
+        </Link>
+      ) : null}
+      {message ? (
+        <p role="status" className="mb-4 text-sm text-brand-700">
+          {message}
+        </p>
+      ) : null}
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
         <Select
@@ -202,7 +231,7 @@ export default function ProjectsPage() {
               title={editing ? 'Edit project' : 'Create project'}
               description="Project ownership and delivery status."
             />
-            <form className="space-y-4 p-5" onSubmit={handleSubmit}>
+            <form id="project-form" className="scroll-mt-24 space-y-4 p-5" onSubmit={handleSubmit}>
               {!editing ? (
                 <div>
                   <FieldLabel htmlFor="projects-client">Client</FieldLabel>
@@ -282,5 +311,13 @@ export default function ProjectsPage() {
         ) : null}
       </div>
     </ProtectedPage>
+  );
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <Projects />
+    </Suspense>
   );
 }

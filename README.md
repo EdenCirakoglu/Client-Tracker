@@ -15,6 +15,13 @@ Open-source support and delivery operations platform for small software teams.
 and [baseline/maintenance evidence](clientops-tracker/docs/LAUNCH_BASELINE.md).
 Assisted installation is the initial offer. Passing CI is not staging or customer acceptance.
 
+The first-customer guidance candidate adds **Start here** inside the portal, with
+client-scoped administrator setup and role-specific help. See the
+[user guide](clientops-tracker/docs/FIRST_CUSTOMER_GUIDE.md) and
+[private staging checklist](clientops-tracker/docs/PRIVATE_STAGING.md).
+It depends on the unmerged product/branding candidates; it is not in the published
+`cfec6e71` images. The existing public fictional walkthrough remains separate.
+
 Manage client projects, support tickets, comments, releases, and advisory rule-based triage through a role-aware Next.js dashboard and an Express REST API backed by PostgreSQL and Drizzle.
 
 Connect requests to agreed outcomes, named delivery owners, target dates, release-linked
