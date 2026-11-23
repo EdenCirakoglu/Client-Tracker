@@ -114,6 +114,9 @@ jobs:
       - name: Install test browser
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Verify isolated installation site
+        run: node installation-site/check.mjs
+
       - name: Build and start isolated production-style stack
         run: node scripts/hardening-stack.mjs start
 
