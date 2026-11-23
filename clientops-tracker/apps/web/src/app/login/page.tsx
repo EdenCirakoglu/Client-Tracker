@@ -11,6 +11,7 @@ import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import Link from 'next/link';
 import { ThemePicker } from '../../components/ui/preferences';
+import { BrandMark } from '../../components/ui/brand-mark';
 import { destinationAfterLogin } from '../../lib/return-destination';
 
 const demoUsers = [
@@ -62,9 +63,7 @@ export default function LoginPage() {
         <div className="overflow-hidden rounded-lg border border-border bg-panel">
           <section className="border-b border-border p-6 sm:p-8">
             <div>
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-action text-sm font-bold text-white">
-                CT
-              </div>
+              <BrandMark size={40} />
               <h1 className="mt-4 text-[28px] font-semibold leading-tight">ClientOps Tracker</h1>
               <p className="mt-3 text-sm leading-6 text-muted">
                 Support and delivery operations for your team and clients.

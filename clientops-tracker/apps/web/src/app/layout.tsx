@@ -7,6 +7,10 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'ClientOps Tracker',
   description: 'Full-stack client operations tracking platform.',
+  icons: {
+    icon: { url: '/brand/journal-v3.png', type: 'image/png', sizes: '240x240' },
+    apple: { url: '/brand/journal-v3.png', type: 'image/png', sizes: '240x240' },
+  },
 };
 
 export default function RootLayout({

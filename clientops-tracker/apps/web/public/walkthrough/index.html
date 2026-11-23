@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'"
+    />
+    <title>ClientOps Tracker | Fictional walkthrough preview</title>
+    <link rel="icon" type="image/png" href="../brand/journal-v3.png" />
+    <link rel="stylesheet" href="walkthrough.css" />
+    <script src="walkthrough.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to example</a>
+    <header>
+      <a class="identity" href="./index.html" aria-label="ClientOps Tracker walkthrough home">
+        <img src="../brand/journal-v3.png" width="40" height="40" alt="" />
+        <span>ClientOps Tracker<small>Independent, open-source project</small></span>
+      </a>
+      <label class="theme"
+        >Appearance
+        <select id="theme">
+          <option value="system">System</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+    </header>
+    <main id="main">
+      <div class="intro">
+        <p class="eyebrow">0.2.0 preview / fictional example / not released</p>
+        <h1>Shipment search: what was agreed, what still needs work.</h1>
+        <p>
+          Northstar Logistics asked its agency to find active and archived shipments by reference. A
+          release shipped, but one agreed case still fails. The client's response belongs beside the
+          agreement.
+        </p>
+        <div class="actions">
+          <a class="primary" href="#review">Try the example</a>
+          <a
+            class="secondary"
+            href="https://github.com/EdenCirakoglu/Client-Tracker/blob/main/clientops-tracker/docs/DEPLOYMENT.md"
+            >Self-host with Docker</a
+          >
+        </div>
+        <p class="disclosure">
+          A no-login simulation, separate from the portal and its database. Nothing here sends email
+          or creates an account. The public main release and this review preview differ.
+        </p>
+      </div>
+      <div class="journal">
+        <div>
+          <section aria-labelledby="request-title">
+            <p class="eyebrow">Original request</p>
+            <h2 id="request-title">Find shipments by customer reference</h2>
+            <p>
+              Both active and archived shipments must be searchable. Northstar's Operations Portal
+              is the fictional project.
+            </p>
+          </section>
+          <section aria-labelledby="agreement-title">
+            <p class="eyebrow">Scope agreement</p>
+            <h2 id="agreement-title">Revision 2: active and archived</h2>
+            <p>
+              <span class="status">Approved scope</span> The reviewer agreed to both cases,
+              excluding bulk exports and historical imports.
+            </p>
+            <dl class="comparison">
+              <div>
+                <dt>Previous revision 1</dt>
+                <dd>Find active shipments. Archived shipments excluded.</dd>
+              </div>
+              <div>
+                <dt>Agreed revision 2</dt>
+                <dd>Find active <strong>and archived</strong> shipments by customer reference.</dd>
+              </div>
+            </dl>
+            <p class="muted">
+              Estimate: two engineering days, not actual time. No agreed target date. The earlier
+              request to revise the scope remains part of the example.
+            </p>
+          </section>
+          <section aria-labelledby="delivery-title">
+            <p class="eyebrow">Delivery evidence</p>
+            <h2 id="delivery-title">Release 1.5.0-demo shipped</h2>
+            <p>
+              The agreed outcome checks active reference <strong>NS-1042</strong> and archived
+              reference <strong>NS-0921</strong>.
+            </p>
+            <p>
+              Archived NS-0921 is found. Active NS-1042 still returns no result, according to the
+              fictional client's feedback.
+            </p>
+            <p class="muted">
+              This is a delivery-record example, not a working shipment-search engine.
+            </p>
+          </section>
+          <section id="review" tabindex="-1" aria-labelledby="review-title" class="decision">
+            <p class="eyebrow">Your next decision / simulated</p>
+            <h2 id="review-title">Tell the agency what remains unresolved</h2>
+            <form id="feedback-form">
+              <label for="feedback">Changes requested</label>
+              <textarea
+                id="feedback"
+                required
+                maxlength="1000"
+                rows="3"
+                aria-describedby="feedback-note"
+              >
+Archived NS-0921 works, but active NS-1042 still returns no result.</textarea
+              >
+              <p id="feedback-note" class="muted">
+                Fictional text only. This action changes this page, not a real ticket.
+              </p>
+              <button class="primary" type="submit">Simulate requesting changes</button>
+            </form>
+            <div id="result" hidden>
+              <p role="status">
+                Simulated feedback recorded. The agreement and release remain unchanged.
+              </p>
+              <blockquote id="saved-feedback"></blockquote>
+              <button id="reset" class="secondary" type="button">Reset example</button>
+            </div>
+            <noscript
+              ><p>
+                JavaScript is required for the optional simulation. The complete fictional record is
+                readable above.
+              </p></noscript
+            >
+          </section>
+        </div>
+        <aside aria-labelledby="record-title">
+          <h2 id="record-title">Three separate facts</h2>
+          <dl class="facts">
+            <div>
+              <dt>Ticket</dt>
+              <dd>Resolved by the team</dd>
+            </div>
+            <div>
+              <dt>Delivery</dt>
+              <dd>Release 1.5.0-demo shipped</dd>
+            </div>
+            <div>
+              <dt>Client acceptance</dt>
+              <dd id="acceptance">Awaiting confirmation</dd>
+            </div>
+          </dl>
+          <p>
+            No completion percentage combines these facts. Requesting changes does not undo the
+            release or silently reopen the ticket.
+          </p>
+          <h2>Free software. Optional assistance.</h2>
+          <p>
+            ClientOps Tracker is MIT-licensed and free to self-host. Assisted installation for one
+            agency is a separate, scoped paid service. No price or checkout is active.
+          </p>
+          <a href="https://github.com/EdenCirakoglu/Client-Tracker">View the repository</a>
+        </aside>
+      </div>
+    </main>
+    <footer>
+      Preview materials for independent review. Fictional people and records. Human accessibility
+      and real-service launch acceptance remain pending.
+    </footer>
+  </body>
+</html>

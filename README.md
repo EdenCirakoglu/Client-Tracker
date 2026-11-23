@@ -1,5 +1,11 @@
 # ClientOps Tracker
 
+<img src="clientops-tracker/apps/web/public/brand/journal-v3.png" width="48" height="48" alt="">
+
+[Fictional walkthrough preview](clientops-tracker/apps/web/public/walkthrough/index.html) |
+[Product Hunt draft pack](clientops-tracker/docs/product-hunt/README.md).
+Branding and the walkthrough are an unreleased review preview, not a public launch.
+
 [![CI](https://github.com/EdenCirakoglu/Client-Tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/EdenCirakoglu/Client-Tracker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
