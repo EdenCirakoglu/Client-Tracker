@@ -1,0 +1,54 @@
+{
+  "revision": "8d805122ad11eea7f217bd77d9d0958e25b1d610",
+  "workingTreeDirty": false,
+  "checkedAt": "2026-11-10T17:24:09.860Z",
+  "stage": "after",
+  "runtimeImages": {
+    "api": "sha256:10329bdfdba4709d83ca3ed0cf71d91d49553e06268fd9d6f9884f03b4136bb3",
+    "web": "sha256:f4617f4ef7c8d5e86a2c2bd17dcd613614a0e90c5b2df1c42943ede4fed2018a"
+  },
+  "screens": [
+    "admin-dashboard",
+    "desktop-tickets",
+    "ticket-detail",
+    "admin-mobile-dashboard",
+    "admin-mobile-tickets",
+    "developer-dashboard",
+    "developer-mobile-dashboard",
+    "developer-mobile-tickets",
+    "client-dashboard",
+    "client-mobile-dashboard",
+    "client-mobile-tickets",
+    "native-200-dashboard",
+    "native-200-guide",
+    "native-200-delivery",
+    "native-200-summaries",
+    "native-200-tickets",
+    "native-200-ticket-review",
+    "native-200-users",
+    "native-200-summary-detail",
+    "native-200-account",
+    "native-200-keyboard-focus",
+    "native-200-login",
+    "native-200-forgot-password",
+    "native-200-reset-password",
+    "native-200-set-password",
+    "native-200-walkthrough-light",
+    "native-200-walkthrough-dark"
+  ],
+  "screenReader": "Manual acceptance pending",
+  "nativeZoom": {
+    "normal": {
+      "dpr": 1,
+      "width": 1422,
+      "outer": 1440
+    },
+    "zoom": {
+      "dpr": 2,
+      "width": 711,
+      "outer": 1440
+    },
+    "browser": "157.0.8103.39",
+    "method": "Chrome Settings Page zoom 200%, temporary isolated profile"
+  }
+}

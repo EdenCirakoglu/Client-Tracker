@@ -1,7 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '../../../lib/auth';
 import { Send } from 'lucide-react';
 
 import { ProtectedPage } from '../../../components/app-shell';
@@ -16,8 +18,10 @@ import { ticketCategories, ticketPriorities } from '../../../lib/options';
 import type { TicketCategory, TicketPriority } from '../../../lib/types';
 import { useApiData } from '../../../lib/use-api-data';
 
-export default function NewTicketPage() {
+function NewTicket() {
   const router = useRouter();
+  const selectedProject = useSearchParams().get('projectId') ?? '';
+  const { user } = useAuth();
   const projectsState = useApiData(() => api.projects(), []);
   const [projectId, setProjectId] = useState('');
   const [title, setTitle] = useState('');
@@ -28,6 +32,9 @@ export default function NewTicketPage() {
   const [saving, setSaving] = useState(false);
 
   const projects = useMemo(() => projectsState.data ?? [], [projectsState.data]);
+  useEffect(() => {
+    if (projects.some((project) => project.id === selectedProject)) setProjectId(selectedProject);
+  }, [projects, selectedProject]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -57,6 +64,27 @@ export default function NewTicketPage() {
         description="Tell us what happened and which project needs attention."
         title="Create ticket"
       />
+      {!projectsState.loading && !projectsState.error && projects.length === 0 ? (
+        <section
+          className="mb-5 max-w-3xl border-l-2 border-brand-600 pl-4"
+          aria-label="Project needed"
+        >
+          <h2 className="text-base font-semibold">
+            A project is needed before you can submit a request
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            {user?.role === 'ADMIN'
+              ? 'Create a project for the right client first, then return to this request.'
+              : 'Your agency administrator needs to create a project for your organisation. You cannot submit this form yet.'}
+          </p>
+          <Link
+            className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 underline"
+            href={user?.role === 'ADMIN' ? '/projects#project-form' : '/guide'}
+          >
+            {user?.role === 'ADMIN' ? 'Create project' : 'Read the request guide'}
+          </Link>
+        </section>
+      ) : null}
 
       <div className="max-w-3xl">
         <Card>
@@ -148,5 +176,13 @@ export default function NewTicketPage() {
         </Card>
       </div>
     </ProtectedPage>
+  );
+}
+
+export default function NewTicketPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <NewTicket />
+    </Suspense>
   );
 }

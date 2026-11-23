@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { Check, Download, Plus, Send } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -215,8 +216,35 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
                 ) : null}
               </>
             ) : (
-              <p className="text-sm text-muted">No outcome has been proposed yet.</p>
+              <p className="text-sm text-muted">
+                No outcome has been proposed yet.{' '}
+                {internal
+                  ? 'Agree what success looks like with a named client reviewer before delivering for acceptance.'
+                  : 'The team acts next: they will propose acceptance criteria for your reviewer.'}
+              </p>
             )}
+            {current ? (
+              <p
+                className="border-l-2 border-brand-600 pl-3 text-sm leading-6"
+                aria-label="Who acts next"
+              >
+                {current.state === 'PROPOSED'
+                  ? `${current.reviewerName} acts next: review this revision and agree the outcome or request changes. Delivery cannot be submitted for acceptance before agreement.`
+                  : current.state === 'AGREED'
+                    ? `${current.ownerName ?? 'The team'} acts next: link a release from this project, add client-visible delivery notes and request acceptance.`
+                    : current.state === 'AWAITING_ACCEPTANCE'
+                      ? `${current.reviewerName} acts next: compare the delivery evidence with the agreed outcome and record a decision below.`
+                      : current.state === 'CHANGES_REQUESTED'
+                        ? `${current.ownerName ?? 'The team'} acts next: read the recorded feedback and propose a revised outcome for fresh agreement.`
+                        : 'Client acceptance is recorded. The ticket status and release remain separate records.'}
+              </p>
+            ) : null}
+            <Link
+              href="/guide"
+              className="inline-flex min-h-11 items-center text-sm text-brand-700 underline"
+            >
+              Request-to-acceptance guide
+            </Link>
             {internal && !editing ? (
               <Button
                 type="button"
@@ -273,7 +301,8 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
                   </Select>
                   {!reviewers.length ? (
                     <p className="mt-2 text-sm text-muted">
-                      An administrator needs to invite an active client contact first.
+                      An administrator must invite a contact for this client, and the contact must
+                      activate their account before they can review.
                     </p>
                   ) : null}
                 </div>
@@ -369,7 +398,7 @@ export function TicketDeliveryRecord({ ticketId, projectId }: DeliveryRecordProp
             ) : null}
             {canDecide ? (
               <form onSubmit={decide} className="space-y-4">
-                <fieldset disabled={busy} className="space-y-2">
+                <fieldset id="delivery-decision" disabled={busy} className="scroll-mt-24 space-y-2">
                   <legend className="mb-2 text-sm font-semibold">Your decision</legend>
                   <label className="flex min-h-10 items-center gap-2 text-sm">
                     <input
