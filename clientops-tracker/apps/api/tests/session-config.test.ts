@@ -30,6 +30,14 @@ describe('Production session configuration', () => {
     vi.stubEnv('APP_ORIGIN', 'http://portal.example');
     await expect(import('../src/config/env')).rejects.toThrow('HTTPS origins');
   });
+  it('rejects an insecure API origin even when the application origin is HTTPS', async () => {
+    vi.stubEnv('API_ORIGIN', 'http://api.example');
+    await expect(import('../src/config/env')).rejects.toThrow('HTTPS origins');
+  });
+  it('rejects a missing production session secret rather than using the development default', async () => {
+    vi.stubEnv('SESSION_SECRET', undefined);
+    await expect(import('../src/config/env')).rejects.toThrow('real SESSION_SECRET');
+  });
   it('accepts an explicit random secret and HTTPS without connecting to email or databases', async () => {
     const { env } = await import('../src/config/env');
     expect(env.APP_ORIGIN).toBe('https://portal.example');
