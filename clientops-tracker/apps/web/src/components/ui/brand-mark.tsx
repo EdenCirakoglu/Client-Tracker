@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
 interface BrandMarkProps {
-  size?: 16 | 24 | 32 | 36 | 40 | 48;
+  size?: 16 | 24 | 32 | 36 | 40 | 48 | 144;
 }
 
 // The surrounding link or adjacent application name supplies the accessible name.

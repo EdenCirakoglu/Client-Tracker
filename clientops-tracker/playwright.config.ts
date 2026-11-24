@@ -37,6 +37,8 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
     channel: process.env.BROWSER_CHANNEL,
     viewport: { width: 1440, height: 1000 },
+    // The logo intro is modal for ~2s; only login-intro.spec.ts opts back in to it.
+    reducedMotion: 'reduce',
     trace: 'off',
     screenshot: 'only-on-failure',
   },

@@ -5,7 +5,18 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 async function login(page: Page, role: string) {
+  const configuration = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/auth/config',
+  );
   await page.goto('/login');
+  const response = await configuration;
+  expect(
+    response.status(),
+    `Demo login configuration; auth budget remaining: ${response.headers()['ratelimit'] ?? 'unknown'}`,
+  ).toBe(200);
+  expect((await response.json()).data.demoEnabled, 'Disposable demo access must be enabled').toBe(
+    true,
+  );
   await page.getByRole('button', { name: `Continue as ${role}`, exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 }
