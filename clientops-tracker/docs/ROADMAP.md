@@ -2,6 +2,31 @@
 
 ## Current First-Customer Launch Checklist
 
+Updated 2026-11-15: portal-wide Meridian is a separate, unmerged increment in
+[draft PR #43](https://github.com/EdenCirakoglu/Client-Tracker/pull/43), based on
+#37 with #36's later CI isolation fix preserved. It carries the identity into the
+shared shell, three role dashboards and operational/account routes. The new
+personal workflow queue preserves separate ticket, delivery and acceptance facts.
+[Current portal evidence and preview](MERIDIAN_PORTAL.md) and the
+[complete route checklist](MERIDIAN_PORTAL_ROUTES.md) supersede neither the
+historical #37 captures nor published-release evidence below.
+
+The [November 15 composition follow-up](MERIDIAN_COMPOSITION_REVIEW.md) replaces
+dashboard column wrappers with direct role regions, adds shared tonal surface
+variants and tightens real ticket review. Owner fidelity acceptance is still
+pending; engineering visual checks are not that acceptance. Its current source
+checkpoint is `31fde615b722edfc4f1561ceee264af364ecff65`; final-head CI and capture
+provenance remain linked from the draft PR. Next action: inspect the same-data
+Admin and Client ticket comparisons, then review all role/mobile states. Owner:
+maintainer for verification, repository owner for acceptance. No merge is requested.
+
+| Portal task                   | Status / evidence                                                                                                                                          | Next action                                                                                                                                     | Owner              |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| Full-portal Meridian          | Implemented; role hierarchy, selected-client setup and named-reviewer feedback in #43                                                                      | Review final-head CI, matched captures and route checklist                                                                                      | Maintainer + owner |
+| Specification fidelity        | [Visual reconciliation](MERIDIAN_SPEC_RECONCILIATION.md): 232/72 shell, compact setup, 12-column task grid, genuine typography and shared reading surfaces | Review matching dashboard/ticket captures and final-head checks; keep unimplemented product capabilities explicitly deferred                    | Maintainer + owner |
+| Integration sequence          | #43 remains stacked on #37; no merge or automatic publication requested                                                                                    | After separately approved parent merges, retarget and revalidate against actual main; verify every resulting image by digest without rebuilding | Maintainer         |
+| Security and human acceptance | Inherited CSRF/cookie decision and development-tool risks remain open; human screen-reader walkthrough pending                                             | Independent security review and actual human acceptance; do not infer either from automated UI checks                                           | Owner + reviewers  |
+
 Meridian ticket review is a separate, unmerged increment in
 [PR #37](https://github.com/EdenCirakoglu/Client-Tracker/pull/37), stacked on #36.
 [Revision-specific evidence, preview and manual checks](MERIDIAN_REVIEW.md) cover

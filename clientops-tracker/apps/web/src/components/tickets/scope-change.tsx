@@ -208,7 +208,7 @@ export function ScopeChange({
   if (!loading && !error && !current && category !== 'FEATURE_REQUEST') return null;
   return (
     <section id="scope" aria-busy={loading} aria-labelledby="scope-title" className="scroll-mt-24">
-      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+      <div className="scope-section-heading flex flex-wrap items-center justify-between gap-2">
         <h2 id="scope-title" className="text-lg font-semibold">
           Scope change
         </h2>

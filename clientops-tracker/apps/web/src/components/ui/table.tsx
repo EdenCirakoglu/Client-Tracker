@@ -7,7 +7,7 @@ export function DataTable({
 }) {
   return (
     <div
-      className={`min-w-0 overflow-hidden rounded-lg border border-border bg-panel ${className}`}
+      className={`portal-records min-w-0 overflow-hidden border-y border-border bg-panel ${className}`}
     >
       <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Records table">
         <table className="min-w-full divide-y divide-border text-sm">{children}</table>
@@ -20,7 +20,7 @@ export function Th({ children }: { children: React.ReactNode }) {
   return (
     <th
       scope="col"
-      className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-muted"
+      className="whitespace-nowrap px-4 py-3 text-left text-xs font-medium text-muted"
     >
       {children}
     </th>

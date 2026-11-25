@@ -1,0 +1,123 @@
+{
+  "revision": "74d7c63d9aff1fdc33f14054faf51cfa29ea7095",
+  "buildId": "Z740SpRkk6pA_v7E3k-f4",
+  "checkedAt": "2026-11-15T12:47:53.770Z",
+  "target": "http://localhost:3082",
+  "verified": [
+    {
+      "path": "/_next/static/css/4f03f0d0faa6b1bf.css",
+      "sha256": "8ee88ec22c750e9e39fd5463068735272e56e8ca3737cc41866ecc0bb7f4f316"
+    },
+    {
+      "path": "/_next/static/css/fe915cc7dfc24c0b.css",
+      "sha256": "4951dbf44b9befef7aab34fb6c1d85d0a6a026755d9af3ff9f6edbba92733883"
+    },
+    {
+      "path": "/_next/static/chunks/ce06663f-95b2097d5e835876.js",
+      "sha256": "766c6e5a1d7a730ae1b9298e84735eccf888d329312e9f39005a2836e7e4d356"
+    },
+    {
+      "path": "/_next/static/chunks/485-2f5179d49c4afc30.js",
+      "sha256": "958bfbbb1469f55cb54a9a56c5e1596e32ada739935b0f0ed65e064cd39a1cc8"
+    },
+    {
+      "path": "/_next/static/chunks/main-app-7f0363fdb3324e6a.js",
+      "sha256": "d8bbed1712ade0f370734f115d23ef4593160e630861ced2cf8f85e63468983c"
+    },
+    {
+      "path": "/_next/static/chunks/app/layout-e8be6ef96ec7a1b4.js",
+      "sha256": "53b9f2e189627c9fcabb6d0938b2cf6b1aaea35b0dbaf3d956d6c216d29be950"
+    },
+    {
+      "path": "/_next/static/chunks/597-840e08cfe3e018be.js",
+      "sha256": "0cf1780658187022c25c7fdac1d772243a3e6f23b5db3adcd56d144cdf65e65e"
+    },
+    {
+      "path": "/_next/static/chunks/app/login/page-bd794b4ce61b9ce6.js",
+      "sha256": "964d45ca4a4ccaf6f3207e549a8f877ed0f191a13fe0642727fba87b695a2fb2"
+    },
+    {
+      "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+    },
+    {
+      "path": "/_next/static/chunks/165-c8206b9e3634dd22.js",
+      "sha256": "94968ae2cbfc9e002a184c5c51ddc55faf5ee50c0776faf03dbfc9d235e9263d"
+    },
+    {
+      "path": "/_next/static/chunks/app/projects/page-c1233155c1d55955.js",
+      "sha256": "492e59c3876053696d2841fd524d4e2a9e9475dcc6ad281ae9106dd32f42b07a"
+    },
+    {
+      "path": "/_next/static/chunks/webpack-5061f71c1ab6f2b6.js",
+      "sha256": "f2500f9bc239f070ea33e251173a38792191b5f5c33aa34fcdd115493344a58d"
+    }
+  ],
+  "measurements": {
+    "body": {
+      "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": "14px",
+      "lineHeight": "21.7px",
+      "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "width": 1440
+    },
+    "title": {
+      "fontFamily": "\"Instrument Serif\", Georgia, serif",
+      "fontSize": "40px",
+      "lineHeight": "46px",
+      "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "width": 229.8125
+    },
+    "label": {
+      "fontFamily": "\"JetBrains Mono Variable\", monospace",
+      "fontSize": "11px",
+      "lineHeight": "normal",
+      "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "width": 229.8125
+    },
+    "sidebar": {
+      "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": "14px",
+      "lineHeight": "21.7px",
+      "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "width": 232
+    },
+    "header": {
+      "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": "14px",
+      "lineHeight": "21.7px",
+      "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "0px",
+      "width": 1208
+    },
+    "surface": {
+      "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": "14px",
+      "lineHeight": "21.7px",
+      "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+      "radius": "18px",
+      "width": 1144
+    },
+    "fonts": [
+      {
+        "family": "Geist Variable",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "JetBrains Mono Variable",
+        "style": "normal",
+        "weight": "100 800"
+      },
+      {
+        "family": "Instrument Serif",
+        "style": "normal",
+        "weight": "400"
+      }
+    ]
+  }
+}

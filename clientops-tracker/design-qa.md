@@ -1,6 +1,83 @@
 # Meridian Design QA
 
-final result: passed
+final result: passed (engineering visual QA; owner fidelity acceptance pending)
+
+## November 15 Composition Follow-Up
+
+Current visual QA uses the original Meridian concept and the
+owner's journal-logo / `#1d2120` / real-product overrides. The November 14 result
+below is historical and was not accepted by the owner as sufficient fidelity.
+
+Resolved in the current application: direct role-specific grid regions instead of
+two wrapper stacks; opaque primary/reading/summary gradients with inset highlights;
+compact selected-client setup and snapshot counts; earlier scope River/diff/action;
+active requests shown after a successful empty initial reply query. Explicit tab
+selection and error states are preserved. The first new developer capture showed
+excessive grid whitespace; the three-record preview was then implemented, retaining
+the full count and filtered destination.
+
+The [composition review](docs/MERIDIAN_COMPOSITION_REVIEW.md) records source revisions,
+commands, failures and the full route mapping. Final matched captures use clean
+`8ebccd7` before and `7f169909` after, with the same fictional records and capture
+conditions. Admin first-screen and developer desktop pairs were inspected together;
+the final client scope comparison, mobile changes-requested record, empty client
+queue and native-zoom focus capture were also inspected. No additional actionable
+clipping, overlap or illegibility was found in these views. This does not mean
+every PNG was manually inspected, nor that the concept is reproduced pixel for pixel.
+
+The current implementation improves composition and tonal hierarchy without
+inventing concept metrics or changing the decision model. Delivery acceptance
+keeps its longer evidence-first form and real history. Normal tracking, the lighter
+canvas, original logo and real reviewer controls are deliberate deviations.
+The [capture index](docs/assets/screenshots/meridian-composition/README.md) separates
+visual inspection from automated results. Native 200% zoom, keyboard drawer and
+axe checks passed on `7f169909`; final-head hosted status is in the PR handoff.
+Human screen-reader and owner design acceptance remain separate and pending.
+
+## November 14 Specification Fidelity Follow-Up
+
+Source: the supplied `ClientOps-Meridian-Design-Spec.md` v1.0 and original ticket
+concept, subject to the owner's charcoal/journal-logo/real-backend overrides.
+The concept remains a reference, not evidence of a deployed feature.
+
+Application implementation: `3297183`; before app is unchanged from `79c71b7`.
+Both captures use Next production rendering, fictional retained records, DPR 1,
+reduced motion, 1440x1000 / 390x844 and matching light/dark + sidebar settings.
+[Full manifests](docs/assets/screenshots/meridian-fidelity/README.md) preserve
+the exact source SHA, route, role, dimensions and hashes for each capture.
+
+Comparison: matched before/after dashboard and ticket captures were opened together
+in the review. Full-page images show reading order; the admin viewport capture
+shows first-screen proportions. Focused inspection covered River/current marker,
+diff typography, decision action, form corners and header. The concept's invented
+SLA/draft/signature and different dimensions are not presented as a pixel match.
+
+Resolved visual differences: 256/72 sidebar becomes 232/72; 72px header becomes
+64px minimum; 30px statements become 40px (32px mobile); desktop ticket hero
+becomes 48px; flat sections become opaque 18px reading surfaces; the dominant
+eight-column task region is separated from four-column support by 16px. Selected
+client setup remains first but is compact and horizontal at desktop. Forms and
+review controls share 10px/12px tokens. The journal raster remains unchanged.
+
+The first post-change inspection found no additional actionable P0/P1/P2 clipping,
+overlap or illegibility in the matched states. The mobile River intentionally
+scrolls; the current node stays visible and the actual diff stacks without page
+overflow. Reading cards remain stationary, with restrained inset highlights rather
+than floating shadows or glass behind text. Short uppercase evidence labels retain
+normal tracking; working text is Geist, display statements Instrument Serif, and
+record labels JetBrains Mono. Genuine Instrument Serif italic is available locally;
+font synthesis is disabled. No unsupported data or promised response time is added.
+
+Local role regression checks include 390/768/1280/1440, real decisions, permissions,
+persisted feedback, keyboard/axe and theme/sidebar persistence. Native Chrome 200%
+zoom passed for all three roles and both themes. Hosted final-head results belong
+to the current PR handoff. Human screen-reader acceptance remains outstanding.
+The [reconciliation table](docs/MERIDIAN_SPEC_RECONCILIATION.md) records intentional
+product deferrals; this is not a claim that the entire specification is complete.
+
+## Historical Ticket-Review QA
+
+The following results and captures retain their original revision attribution.
 
 ## Comparison Conditions
 

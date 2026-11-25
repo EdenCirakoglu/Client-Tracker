@@ -141,7 +141,15 @@ try {
           ).toBeVisible();
         if (screen === 'home')
           await expect(
-            page.getByRole('heading', { name: 'Needs attention', exact: true }),
+            page.getByRole('heading', {
+              name:
+                role === 'Client'
+                  ? 'Your next decision'
+                  : role === 'Developer'
+                    ? 'Your next actions'
+                    : 'Client setup',
+              exact: true,
+            }),
           ).toBeVisible();
         if (screen === 'summary')
           await expect(

@@ -1,0 +1,70 @@
+{
+  "revision": "ae6d93ee8b52967a2e461676392c425fb4c1336c",
+  "captureCondition": "Before portal source edits; inherited Meridian ticket candidate, local Next development preview; historical files retained unchanged.",
+  "target": "http://localhost:3082/dashboard",
+  "fixtureTicket": "4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+  "themes": ["light", "dark"],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "sidebar": "expanded",
+  "fullPage": true,
+  "reducedMotion": "reduce",
+  "captures": [
+    {
+      "filename": "dashboard-admin-dark-1440.png",
+      "sha256": "d3e7f21c343611c1e0e11b825c06bfaa9304b3c7e08d2e081fdc5abc6af91ada"
+    },
+    {
+      "filename": "dashboard-admin-dark-390.png",
+      "sha256": "4609b8ba98c832a9df60f7e0b8a413accb1e479d8baac096ef36e18da9cc7f7d"
+    },
+    {
+      "filename": "dashboard-admin-light-1440.png",
+      "sha256": "98313822a569217330e89fdd4a398c275507b4e5ccf63580e391a77247f4f7ff"
+    },
+    {
+      "filename": "dashboard-admin-light-390.png",
+      "sha256": "86eb120059458c75e52a8dcca9e6b6ed1d6618eed138bb5e224dd60b4310f33c"
+    },
+    {
+      "filename": "dashboard-client-dark-1440.png",
+      "sha256": "676bcf7150459ccde9808677afab42c14da1b82ae7be01681e0a71c65d9504a7"
+    },
+    {
+      "filename": "dashboard-client-dark-390.png",
+      "sha256": "8af41435081215e4a54727c5729f4d3a12896b0128e4d7514f9bb7be703f5277"
+    },
+    {
+      "filename": "dashboard-client-light-1440.png",
+      "sha256": "0ba49626ffc52aaec6902cfff4c4562d9cd4624723fcaac858eff373b10aff49"
+    },
+    {
+      "filename": "dashboard-client-light-390.png",
+      "sha256": "2b81476b2eb11a5855d07827d2f2a2107cf80e72079291d731abefac9e550e79"
+    },
+    {
+      "filename": "dashboard-developer-dark-1440.png",
+      "sha256": "6ad90cce51e4b984577b3c171024b33efabd318b24cc62ddc2bc5d9629410ec6"
+    },
+    {
+      "filename": "dashboard-developer-dark-390.png",
+      "sha256": "d1b668eb238b1201f21829583b47b8baba87463e93c9a224270ec8916b2c55e5"
+    },
+    {
+      "filename": "dashboard-developer-light-1440.png",
+      "sha256": "02d4867cd159cc69d52467e8003460bb2c7c020115ae68a1f9289e9113074cdb"
+    },
+    {
+      "filename": "dashboard-developer-light-390.png",
+      "sha256": "657cc3d9ee8cf218a2b554726d2714bd1f3aad2785f25ade3ba842f39afe3762"
+    }
+  ]
+}

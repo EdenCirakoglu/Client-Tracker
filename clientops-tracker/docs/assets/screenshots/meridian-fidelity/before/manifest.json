@@ -1,0 +1,277 @@
+{
+  "capturedAt": "2026-11-14T15:45:50.962Z",
+  "revision": "7814b669dece1f43862783ce9c31233c6230090a",
+  "workingTreeDirty": false,
+  "target": "http://localhost:3082",
+  "channel": "chrome",
+  "sidebar": "expanded",
+  "roles": ["Admin", "Developer", "Client"],
+  "themes": ["light", "dark"],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "result": "passed",
+  "captures": [
+    {
+      "capturedAt": "2026-11-14T15:45:53.930Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-admin-light-1440.png",
+      "fullPage": true,
+      "sha256": "59a403fede4a89aaf64898f93eda08359dfb256d87bbc8bdbe2d62428dee92d8"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:54.221Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-admin-light-390.png",
+      "fullPage": true,
+      "sha256": "7558dd73ac41e5b7a394ecc675a5b28980b684815c04fa7cc9e11b821fcd24e0"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:54.578Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-admin-dark-1440.png",
+      "fullPage": true,
+      "sha256": "cc5c1c4dcf298f9e1618cdd1d92dc2dd6288867629120db3e8038790979c893e"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:54.842Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "admin-dark-first-screen.png",
+      "fullPage": false,
+      "sha256": "26f66f5834a6d368b4131c625244ccbec317db2a51c61bdf517320a4b0f1e960"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:55.007Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-admin-dark-390.png",
+      "fullPage": true,
+      "sha256": "002c4ac52c400e1b11d97b15cc7fa3bc71e1aa1704845d65892b1de563abce59"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:56.868Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-developer-light-1440.png",
+      "fullPage": true,
+      "sha256": "12940b725d240d877ffd6bc3547eca761c9813004f33c4939af260ce6de49681"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:57.195Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-developer-light-390.png",
+      "fullPage": true,
+      "sha256": "57aeb231db5202dfd26617f3c228dad35d3e183c18ce0b04e4dba02a548ac87d"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:57.625Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-developer-dark-1440.png",
+      "fullPage": true,
+      "sha256": "0bb76df1ac75db48b7c58eb309f3451ba39af9d19549546418e8742b4f5b0ddc"
+    },
+    {
+      "capturedAt": "2026-11-14T15:45:58.042Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-developer-dark-390.png",
+      "fullPage": true,
+      "sha256": "cfb5083657f092653a7f668eb8937eb56353b68a4e0c084c29063feb632be71f"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:00.514Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-client-light-1440.png",
+      "fullPage": true,
+      "sha256": "000f804318324f123baef7a12e6f17893c143051ee04e905b733543c606145d3"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:01.333Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "ticket-client-light-1440.png",
+      "fullPage": true,
+      "sha256": "bab42a3e28e931032864673fc8c493ad479ed9e071a14a1ee794e8bc6c4fd712"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:01.687Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "ticket-client-light-1440-collapsed.png",
+      "fullPage": true,
+      "sha256": "daaaf8adcdf9749c603a972c685ec3359a3699f2db6a851a4604a12494065c7e"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:02.355Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-client-light-1440-collapsed.png",
+      "fullPage": true,
+      "sha256": "d906006ac167cead6f9273f79ff39809fa944bca88339488cdf9ac307cb11713"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:03.042Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-client-light-390.png",
+      "fullPage": true,
+      "sha256": "1c4e1fc4c8cdd1d67f77bd8533ead0580d7db0d854234b1a7465739f80c7b2b1"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:03.665Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "ticket-client-light-390.png",
+      "fullPage": true,
+      "sha256": "5801bbc53590fe2502e29ebf1efa2b2887c3a873e21bc5a33f1d70251304b003"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:04.361Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-client-dark-1440.png",
+      "fullPage": true,
+      "sha256": "bbf8a252a532fd83180b8d705fb2d92628ced2ad734f80e5b8aaa816da0cc757"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:05.041Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "ticket-client-dark-1440.png",
+      "fullPage": true,
+      "sha256": "640abb5a5c32e2b74b4f240363fa4202c35f7e8415929e671f9d08b5c6e4bfb4"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:05.375Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "ticket-client-dark-1440-collapsed.png",
+      "fullPage": true,
+      "sha256": "2e8e6f744f5cc161ec1ec5edf407a54a1f4f21dd6a999fbe0b0b8ff55efdd561"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:06.017Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-client-dark-1440-collapsed.png",
+      "fullPage": true,
+      "sha256": "d4cfa9e5877e4c73de0c1f8415450b4b398d72f130d2750d3fef3c6711127a64"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:06.898Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-client-dark-390.png",
+      "fullPage": true,
+      "sha256": "a279e2795368d9d97880278518a59101d19455e8a6ddfc6a2761e25184aee935"
+    },
+    {
+      "capturedAt": "2026-11-14T15:46:08.319Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "ticket-client-dark-390.png",
+      "fullPage": true,
+      "sha256": "d1b002ecd645dbf0ba02cf87e49b5ee1ced1f2781fb0313fa761afbafa977aa5"
+    }
+  ],
+  "browserVersion": "157.0.8103.79",
+  "completedAt": "2026-11-14T15:46:09.474Z"
+}

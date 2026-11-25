@@ -1,0 +1,1312 @@
+{
+  "capturedAt": "2026-11-15T13:18:43.458Z",
+  "revision": "7f1699097fb4f283dc7da824654df7f52582246f",
+  "workingTreeDirty": false,
+  "target": "http://localhost:3082",
+  "channel": "chrome",
+  "sidebar": "expanded",
+  "roles": ["Admin", "Developer", "Client", "EmptyClient"],
+  "themes": ["light", "dark"],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "result": "passed",
+  "captures": [
+    {
+      "capturedAt": "2026-11-15T13:18:46.248Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-admin-light-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(145deg, rgb(238, 243, 239), rgb(247, 249, 247)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "4e7d8e14301bd9685846e3b6a6f12f1f43f377448ccfa916455175eb4f02e008"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:46.901Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-admin-light-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(145deg, rgb(238, 243, 239), rgb(247, 249, 247)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "088e5642f72e7570cc84945692c0134f0c85462b3978521f67d49f410b3b30e8"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:47.537Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-admin-dark-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(145deg, rgb(41, 51, 45), rgb(36, 43, 39)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "4756e1ac25bf3fb8ceff96de3af55adc58425e1513783e3358a21b47f79e3eaa"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:48.185Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "admin-dark-first-screen.png",
+      "fullPage": false,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(145deg, rgb(41, 51, 45), rgb(36, 43, 39)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "265980b5eeee05cac7786ef25f63aadd03b6403eb3d2ed613d44572a62a006a4"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:48.503Z",
+      "role": "Admin",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-admin-dark-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(145deg, rgb(41, 51, 45), rgb(36, 43, 39)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "35b67b5980ca6605673d1957786b728bc62fa7a34af042b152f1b795fb389bed"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:50.574Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-developer-light-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "90eb673f23e7c7ba30c06c5d260566f5dcd810a497dea67a26ddad2c7a94c73f"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:51.009Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-developer-light-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "fffcb8ea2a5790ba9937bdd4bf0805d9c6aaa686366a2984b818798c923953f6"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:51.498Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-developer-dark-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "95543cdfa46d9face85912664f45b334728d990d5c17a96290a7aa63fef71f18"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:51.956Z",
+      "role": "Developer",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-developer-dark-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "e9cfb9c8df75dd02d596e6e3673864bb585f93ec4089da2a177eb3f5009ac2ce"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:53.790Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-client-light-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "7511697c4f587cc3a1c7af4f0068c84837b488e98f8ac5875eacd6cc3e872f30"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:54.651Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "ticket-client-light-1440.png",
+      "fullPage": true,
+      "route": "/tickets/4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(255, 255, 255), rgb(247, 250, 248)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "273954e9cbcfb1b2ce46aa85eb97f165a7dc8d18fe510a5ef576627c80a0d6c4"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:55.221Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "ticket-client-light-1440-collapsed.png",
+      "fullPage": true,
+      "route": "/tickets/4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+      "sidebar": "collapsed",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(255, 255, 255), rgb(247, 250, 248)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "f8264f882fb7320b943ff49ff25439a2d40902e5fc2a67e93aa6c30dddc5c7bd"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:56.325Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-client-light-1440-collapsed.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "collapsed",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "d9a5e984660ab2bd422352ecb7b1c41bbbe6951c71d246f1b9c340b255c323f3"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:57.957Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "ticket-delivered-light-1440.png",
+      "fullPage": true,
+      "route": "/tickets/744d8874-81c8-4f19-b686-22f350ee3d61",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "6c37941ea41dbf8b7b759e0d377dc046797f744409f1e0114bd09c3f1271ab03"
+    },
+    {
+      "capturedAt": "2026-11-15T13:18:59.312Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "ticket-changes-light-1440.png",
+      "fullPage": true,
+      "route": "/tickets/7cef6856-e97d-45a1-81de-3deb5ae2b88f",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(255, 255, 255), rgb(247, 250, 248)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "cd583c82d0c0003d9c9f0af882b9f5e5c6b8d159198c6c54d4946df4464daab1"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:00.140Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-client-light-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "fbb3e5c0b4c117436abd496e201ab575538f24eeb2309a02d04dbe5a21fbc504"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:00.866Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "ticket-client-light-390.png",
+      "fullPage": true,
+      "route": "/tickets/4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "34.56px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(255, 255, 255), rgb(247, 250, 248)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "dd1b51ad2169e3ab0858ab29078f6b4c601a0627effc96bbe5ef4b1d11d77278"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:02.049Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "ticket-delivered-light-390.png",
+      "fullPage": true,
+      "route": "/tickets/744d8874-81c8-4f19-b686-22f350ee3d61",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "34.56px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(229, 242, 235), rgb(245, 250, 247) 78%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "475d107e12d4fa1907affeec24ea83f1c1ae38fc986012cfb20620450beb38b9"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:03.361Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "ticket-changes-light-390.png",
+      "fullPage": true,
+      "route": "/tickets/7cef6856-e97d-45a1-81de-3deb5ae2b88f",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "34.56px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(135deg, rgb(255, 255, 255), rgb(247, 250, 248)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "063c3ff6b94a0d37abad5db5352e0423fedd7a788f5eb44ea5d0f39ec2d96e16"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:04.255Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-client-dark-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "7e806dc1db19a53f2b3e150cf277e6c95d41061b33e9e87fe83b22aec3f70d87"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:05.150Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "ticket-client-dark-1440.png",
+      "fullPage": true,
+      "route": "/tickets/4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(44, 57, 50), rgb(37, 45, 41) 70%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "a0fbb2535f21c3d7b4c8219302d232898d46e2e0f1b84c361ffb10e0c94b6b1f"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:05.749Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "ticket-client-dark-1440-collapsed.png",
+      "fullPage": true,
+      "route": "/tickets/4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+      "sidebar": "collapsed",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(44, 57, 50), rgb(37, 45, 41) 70%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "36a336010921d0345c17e7432a67d36f6b137cc3c58bd10525e71e22a434824a"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:06.866Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-client-dark-1440-collapsed.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "collapsed",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "c130afa5a9e0100c859b1816d632466c26f997b9533b87e24d094873ad26ad70"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:08.653Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "ticket-delivered-dark-1440.png",
+      "fullPage": true,
+      "route": "/tickets/744d8874-81c8-4f19-b686-22f350ee3d61",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "0aeb58ab47a5f0c2284dc39b7a7df36878f0e746495486c521ea6b5f6b54b2dc"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:09.989Z",
+      "role": "Client",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "ticket-changes-dark-1440.png",
+      "fullPage": true,
+      "route": "/tickets/7cef6856-e97d-45a1-81de-3deb5ae2b88f",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "48px",
+          "lineHeight": "51.84px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(44, 57, 50), rgb(37, 45, 41) 70%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "d0a0f88ba07a8badf9c43671b4a5b359835525fdec696d123f264c72d36e6be1"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:11.110Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-client-dark-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "941bcb4429a4b1d503805aa28ad059e5ada33ab7b4a6f9c0f005072a86d0aa4f"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:11.994Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "ticket-client-dark-390.png",
+      "fullPage": true,
+      "route": "/tickets/4e08c8ea-e7c4-4eda-acc9-37cb9418256a",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "34.56px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(44, 57, 50), rgb(37, 45, 41) 70%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "e71e6b07fbd6cebb61ef12fae3c896960e53e40e179d846c05a7c7e70bc03adb"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:13.406Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "ticket-delivered-dark-390.png",
+      "fullPage": true,
+      "route": "/tickets/744d8874-81c8-4f19-b686-22f350ee3d61",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "34.56px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(48, 75, 62), rgb(38, 56, 47) 72%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "382614718b60e289fc8df26c8a99b1e3d396c26801955dfc4d336212a12640d8"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:14.598Z",
+      "role": "Client",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "ticket-changes-dark-390.png",
+      "fullPage": true,
+      "route": "/tickets/7cef6856-e97d-45a1-81de-3deb5ae2b88f",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "34.56px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(135deg, rgb(44, 57, 50), rgb(37, 45, 41) 70%) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "96fac1eccd8268f856cd68f1d2256f2ad6c8552658175963a582dbe28735362c"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:16.956Z",
+      "role": "EmptyClient",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "filename": "dashboard-emptyclient-light-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(145deg, rgb(238, 243, 239), rgb(247, 249, 247)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "18b23807cb6579e952d0a81a92128c806e5bbc53c8296c3d931e6afa8fc812bc"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:17.355Z",
+      "role": "EmptyClient",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "filename": "dashboard-emptyclient-light-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(247, 247, 245) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(255, 255, 255) linear-gradient(145deg, rgb(238, 243, 239), rgb(247, 249, 247)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "b2766e53432aa44281ae4789798745e747d0af7123841bb755087d91ba2e17d4"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:17.776Z",
+      "role": "EmptyClient",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "filename": "dashboard-emptyclient-dark-1440.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "40px",
+          "lineHeight": "46px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(145deg, rgb(41, 51, 45), rgb(36, 43, 39)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "658c4acd1256f52b0248ca704e531acff992a58f73c30c0fe7a0526ba14086dc"
+    },
+    {
+      "capturedAt": "2026-11-15T13:19:18.188Z",
+      "role": "EmptyClient",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "filename": "dashboard-emptyclient-dark-390.png",
+      "fullPage": true,
+      "route": "/dashboard",
+      "sidebar": "expanded",
+      "scrollY": 0,
+      "reducedMotion": "reduce",
+      "styles": {
+        "body": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(29, 33, 32) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "heading": {
+          "fontFamily": "\"Instrument Serif\", Georgia, serif",
+          "fontSize": "32px",
+          "lineHeight": "36.8px",
+          "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "0px"
+        },
+        "surface": {
+          "fontFamily": "\"Geist Variable\", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "14px",
+          "lineHeight": "21.7px",
+          "background": "rgb(37, 43, 41) linear-gradient(145deg, rgb(41, 51, 45), rgb(36, 43, 39)) repeat scroll 0% 0% / auto padding-box border-box",
+          "borderRadius": "18px"
+        }
+      },
+      "sha256": "16545230182ef29cfe2a932ae841c50f73a84f8fbce3967af8abdbcda15620b2"
+    }
+  ],
+  "browserVersion": "157.0.8103.79",
+  "completedAt": "2026-11-15T13:19:18.929Z"
+}

@@ -48,65 +48,67 @@ function DeliveryPlanPage() {
           </Button>
         }
       />
-      <div className="mb-5 flex flex-wrap items-end gap-4">
-        <div className="w-full sm:w-72">
-          <FieldLabel htmlFor="delivery-view">Show</FieldLabel>
-          <Select
-            id="delivery-view"
-            value={view}
-            onChange={(e) => setFilter('view', e.target.value)}
-          >
-            {(Object.entries(deliveryViewLabels) as [DeliveryView, string][]).map(
-              ([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+      <section className="portal-section" aria-label="Delivery filters">
+        <div className="mb-4 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="min-w-0">
+            <FieldLabel htmlFor="delivery-view">Show</FieldLabel>
+            <Select
+              id="delivery-view"
+              value={view}
+              onChange={(e) => setFilter('view', e.target.value)}
+            >
+              {(Object.entries(deliveryViewLabels) as [DeliveryView, string][]).map(
+                ([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ),
+              )}
+            </Select>
+          </div>
+          <div className="min-w-0">
+            <FieldLabel htmlFor="delivery-project">Project</FieldLabel>
+            <Select
+              id="delivery-project"
+              disabled={projects.loading || !!projects.error}
+              value={projectId}
+              onChange={(e) => setFilter('projectId', e.target.value)}
+            >
+              <option value="">All permitted projects</option>
+              {projects.data?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
                 </option>
-              ),
-            )}
-          </Select>
-        </div>
-        <div className="w-full sm:w-72">
-          <FieldLabel htmlFor="delivery-project">Project</FieldLabel>
-          <Select
-            id="delivery-project"
-            disabled={projects.loading || !!projects.error}
-            value={projectId}
-            onChange={(e) => setFilter('projectId', e.target.value)}
+              ))}
+            </Select>
+          </div>
+          <Link
+            href="/delivery"
+            className="inline-flex min-h-10 items-center text-sm font-semibold text-brand-700"
           >
-            <option value="">All permitted projects</option>
-            {projects.data?.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+            Reset filters
+          </Link>
         </div>
-        <Link
-          href="/delivery"
-          className="inline-flex min-h-10 items-center text-sm font-semibold text-brand-700"
-        >
-          Reset filters
-        </Link>
-      </div>
-      {projects.error ? <ErrorState message={projects.error} onRetry={projects.reload} /> : null}
-      <p className="mb-3 text-xs text-muted">
-        {user?.role === 'CLIENT' ? 'Your organisation' : 'All client organisations'}
-        {projectId
-          ? ` / ${projects.data?.find((p) => p.id === projectId)?.name ?? 'Selected project'}`
-          : ''}
-      </p>
+        {projects.error ? <ErrorState message={projects.error} onRetry={projects.reload} /> : null}
+        <p className="mb-3 text-xs text-muted">
+          {user?.role === 'CLIENT' ? 'Your organisation' : 'All client organisations'}
+          {projectId
+            ? ` / ${projects.data?.find((p) => p.id === projectId)?.name ?? 'Selected project'}`
+            : ''}
+        </p>
+      </section>
       {error ? (
         <ErrorState message={error} onRetry={reload} />
       ) : loading ? (
         <LoadingState label="Loading delivery plan..." />
       ) : data ? (
-        <>
+        <section className="portal-section" aria-labelledby="delivery-results-title">
           <div className="flex flex-wrap justify-between gap-2 border-b border-border pb-3">
-            <h2 className="text-base font-semibold">
+            <h2 id="delivery-results-title" className="portal-section-title">
               {deliveryViewLabels[view as DeliveryView]}{' '}
               <span className="tabular-nums">({data.total})</span>
             </h2>
-            <p className="text-xs text-muted">As of {data.today} (UTC)</p>
+            <p className="portal-kicker">As of {data.today} (UTC)</p>
           </div>
           {data.items.length ? (
             <DeliveryPlanList items={data.items} />
@@ -117,9 +119,15 @@ function DeliveryPlanPage() {
                 Choose another view or project. Delivery records begin with an outcome proposed on a
                 ticket.
               </p>
+              <Link
+                href="/tickets"
+                className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
+              >
+                Open tickets
+              </Link>
             </div>
           )}
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-4">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
             <Button
               variant="secondary"
               disabled={data.page === 1}
@@ -145,7 +153,7 @@ function DeliveryPlanPage() {
             {data.today} up to {data.through} (exclusive, UTC). Delivery and acceptance remain
             separate from ticket resolution.
           </p>
-        </>
+        </section>
       ) : null}
     </ProtectedPage>
   );

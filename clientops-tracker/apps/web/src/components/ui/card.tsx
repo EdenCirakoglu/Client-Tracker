@@ -1,10 +1,17 @@
 export function Card({
   children,
   className = '',
+  surface = 'reading',
   ...props
-}: React.ComponentPropsWithoutRef<'section'>) {
+}: React.ComponentPropsWithoutRef<'section'> & {
+  surface?: 'primary' | 'reading' | 'summary';
+}) {
   return (
-    <section {...props} className={`min-w-0 rounded-lg border border-border bg-panel ${className}`}>
+    <section
+      {...props}
+      data-surface={surface}
+      className={`portal-panel min-w-0 rounded-lg border border-border bg-panel ${className}`}
+    >
       {children}
     </section>
   );
@@ -20,7 +27,7 @@ export function CardHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="portal-panel-header flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-base font-semibold text-ink">{title}</h2>
         {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
